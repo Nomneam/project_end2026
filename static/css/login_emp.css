@@ -1,0 +1,87 @@
+/* ใช้ตัวแปรเดิมจากที่คุณส่งมา */
+:root {
+    --primary-red: #dc3545;
+    --light-red: #f8d7da;
+    --dark-red: #a52a2a;
+    --gray-light: #f8f9fa;
+    --gray-medium: #6c757d;
+    --gray-dark: #343a40;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--gray-light); /* พื้นหลังเทาจางๆ ช่วยให้การ์ดสีขาวดูเด่น */
+    font-family: 'Sarabun', sans-serif;
+}
+
+.login-card {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05); /* เงาบางๆ */
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #eee;
+    border-top: 5px solid var(--primary-red); /* แถบสีแดงด้านบน */
+}
+
+/* ปรับโลโก้เป็นแบบ Minimal: พื้นขาว ขอบแดง */
+.login-card .logo {
+    background-color: #ffffff;
+    color: var(--primary-red);
+    width: 80px;
+    height: 80px;
+    line-height: 74px; /* ลบขนาด Border ออกเพื่อให้กึ่งกลาง */
+    border-radius: 50%;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto 1.5rem auto;
+    border: 3px solid var(--primary-red); 
+}
+
+.login-title {
+    color: var(--gray-dark);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ปรับแต่งช่อง Input */
+.form-label {
+    color: var(--gray-medium);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+}
+
+.form-control:focus {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
+}
+
+/* ปุ่มสีแดงตามสไตล์หลัก */
+.btn-login {
+    background-color: var(--primary-red);
+    border-color: var(--primary-red);
+    color: white;
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.btn-login:hover {
+    background-color: var(--dark-red);
+    border-color: var(--dark-red);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+}
