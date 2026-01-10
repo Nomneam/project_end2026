@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประเภทข่าว - ระบบจัดการข่าวออนไลน์</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="bi bi-newspaper"></i> ระบบข่าวออนไลน์
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="owner-dashboard.html"><i class="bi bi-speedometer2"></i> แดชบอร์ด Owner</a></li>
+            <li><a href="admin-dashboard.html"><i class="bi bi-gear"></i> แดชบอร์ด Admin</a></li>
+            <li><a href="news-management.html"><i class="bi bi-file-text"></i> รวมข่าว</a></li>
+            <li><a href="category-management.html" class="active"><i class="bi bi-tags"></i> ประเภทข่าว</a></li>
+            <li><a href="news-editor.html"><i class="bi bi-pencil-square"></i> เขียนข่าว</a></li>
+            <li><a href="ad-review.html"><i class="bi bi-badge-ad"></i> ตรวจสอบโฆษณา</a></li>
+            <li><a href="reporter-dashboard.html"><i class="bi bi-journal-text"></i> แดชบอร์ด Reporter</a></li>
+            <li><a href="index.html"><i class="bi bi-house"></i> หน้าหลัก</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2 class="mb-4">จัดการประเภทข่าว</h2>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>ประเภทข่าวหลัก/ย่อย</span>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="bi bi-plus-circle"></i> เพิ่มประเภทข่าว
+                </button>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ชื่อประเภทหลัก</th>
+                            <th>ประเภทย่อย</th>
+                            <th>จำนวนข่าว</th>
+                            <th>วันที่เพิ่ม</th>
+                            <th>วันที่แก้ไข</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ข่าวการเมือง</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    <li>- การเมืองในประเทศ</li>
+                                    <li>- การเมืองต่างประเทศ</li>
+                                </ul>
+                            </td>
+                            <td>15</td>
+                            <td>01/01/2565</td>
+                            <td>15/12/2565</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editCategoryModal"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ข่าวเศรษฐกิจ</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    <li>- ตลาดหุ้น</li>
+                                    <li>- ธุรกิจ</li>
+                                    <li>- การลงทุน</li>
+                                </ul>
+                            </td>
+                            <td>12</td>
+                            <td>01/01/2565</td>
+                            <td>10/12/2565</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editCategoryModal"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ข่าวกีฬา</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    <li>- ฟุตบอล</li>
+                                    <li>- กีฬาอื่นๆ</li>
+                                </ul>
+                            </td>
+                            <td>8</td>
+                            <td>05/01/2565</td>
+                            <td>20/12/2565</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editCategoryModal"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ข่าวบันเทิง</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    <li>- ดารา</li>
+                                    <li>- ดนตรี</li>
+                                    <li>- ภาพยนตร์</li>
+                                </ul>
+                            </td>
+                            <td>7</td>
+                            <td>10/01/2565</td>
+                            <td>25/12/2565</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editCategoryModal"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCategoryModalLabel">เพิ่มประเภทข่าวใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="categoryName" class="form-label">ชื่อประเภทข่าวหลัก</label>
+                            <input type="text" class="form-control" id="categoryName" placeholder="กรอกชื่อประเภทข่าว">
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoryDescription" class="form-label">คำอธิบาย</label>
+                            <textarea class="form-control" id="categoryDescription" rows="3" placeholder="กรอกคำอธิบายประเภทข่าว"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subCategories" class="form-label">ประเภทย่อย</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control sub-category-input" placeholder="กรอกประเภทย่อย">
+                                <button class="btn btn-outline-secondary add-sub-category" type="button">เพิ่ม</button>
+                            </div>
+                            <div id="subCategoriesList" class="list-group mb-2"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary">บันทึก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCategoryModalLabel">แก้ไขประเภทข่าว</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="editCategoryName" class="form-label">ชื่อประเภทข่าวหลัก</label>
+                            <input type="text" class="form-control" id="editCategoryName" value="ข่าวการเมือง">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCategoryDescription" class="form-label">คำอธิบาย</label>
+                            <textarea class="form-control" id="editCategoryDescription" rows="3">ข่าวเกี่ยวกับการเมืองทั้งในประเทศและต่างประเทศ</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSubCategories" class="form-label">ประเภทย่อย</label>
+                            <div class="list-group mb-2">
+                                <div class="d-flex justify-content-between align-items-center list-group-item">
+                                    <span>การเมืองในประเทศ</span>
+                                    <button type="button" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center list-group-item">
+                                    <span>การเมืองต่างประเทศ</span>
+                                    <button type="button" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <input type="text" class="form-control edit-sub-category-input" placeholder="เพิ่มประเภทย่อยใหม่">
+                                <button class="btn btn-outline-secondary add-edit-sub-category" type="button">เพิ่ม</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add sub-category functionality
+            const addSubCategoryBtn = document.querySelector('.add-sub-category');
+            const subCategoryInput = document.querySelector('.sub-category-input');
+            const subCategoriesList = document.getElementById('subCategoriesList');
+            
+            if (addSubCategoryBtn) {
+                addSubCategoryBtn.addEventListener('click', function() {
+                    const subCategoryValue = subCategoryInput.value.trim();
+                    if (subCategoryValue) {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'd-flex justify-content-between align-items-center list-group-item';
+                        listItem.innerHTML = `
+                            <span>${subCategoryValue}</span>
+                            <button type="button" class="btn btn-sm btn-danger remove-sub-category"><i class="bi bi-trash"></i></button>
+                        `;
+                        subCategoriesList.appendChild(listItem);
+                        subCategoryInput.value = '';
+                        
+                        // Add remove functionality
+                        listItem.querySelector('.remove-sub-category').addEventListener('click', function() {
+                            listItem.remove();
+                        });
+                    }
+                });
+            }
+            
+            // Add edit sub-category functionality
+            const addEditSubCategoryBtn = document.querySelector('.add-edit-sub-category');
+            const editSubCategoryInput = document.querySelector('.edit-sub-category-input');
+            const editSubCategoriesList = document.querySelector('#editCategoryModal .list-group');
+            
+            if (addEditSubCategoryBtn) {
+                addEditSubCategoryBtn.addEventListener('click', function() {
+                    const subCategoryValue = editSubCategoryInput.value.trim();
+                    if (subCategoryValue) {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'd-flex justify-content-between align-items-center list-group-item';
+                        listItem.innerHTML = `
+                            <span>${subCategoryValue}</span>
+                            <button type="button" class="btn btn-sm btn-danger remove-edit-sub-category"><i class="bi bi-trash"></i></button>
+                        `;
+                        editSubCategoriesList.appendChild(listItem);
+                        editSubCategoryInput.value = '';
+                        
+                        // Add remove functionality
+                        listItem.querySelector('.remove-edit-sub-category').addEventListener('click', function() {
+                            listItem.remove();
+                        });
+                    }
+                });
+            }
+            
+            // Remove existing sub-categories
+            document.querySelectorAll('.remove-sub-category, .remove-edit-sub-category').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.list-group-item').remove();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

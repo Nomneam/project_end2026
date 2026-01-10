@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ด Reporter - ระบบจัดการข่าวออนไลน์</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="bi bi-newspaper"></i> ระบบข่าวออนไลน์
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="owner-dashboard.html"><i class="bi bi-speedometer2"></i> แดชบอร์ด Owner</a></li>
+            <li><a href="admin-dashboard.html"><i class="bi bi-gear"></i> แดชบอร์ด Admin</a></li>
+            <li><a href="news-management.html"><i class="bi bi-file-text"></i> รวมข่าว</a></li>
+            <li><a href="category-management.html"><i class="bi bi-tags"></i> ประเภทข่าว</a></li>
+            <li><a href="news-editor.html"><i class="bi bi-pencil-square"></i> เขียนข่าว</a></li>
+            <li><a href="ad-review.html"><i class="bi bi-badge-ad"></i> ตรวจสอบโฆษณา</a></li>
+            <li><a href="reporter-dashboard.html" class="active"><i class="bi bi-journal-text"></i> แดชบอร์ด Reporter</a></li>
+            <li><a href="index.html"><i class="bi bi-house"></i> หน้าหลัก</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2 class="mb-4">แดชบอร์ด Reporter</h2>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">ข่าวทั้งหมดที่เขียน</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value">3.2K</div>
+                    <div class="stat-label">ยอดวิวทั้งหมด</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">สถิติข่าวแยกตามประเภท</div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ประเภทข่าว</th>
+                                    <th>จำนวนบทความ</th>
+                                    <th>ยอดวิวรวม</th>
+                                    <th>ยอดวิวเฉลี่ย</th>
+                                    <th>ข่าวล่าสุด</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ข่าวการเมือง</td>
+                                    <td>15</td>
+                                    <td>1,245</td>
+                                    <td>83</td>
+                                    <td>รัฐบาลเปิดตัวนโยบายใหม่</td>
+                                </tr>
+                                <tr>
+                                    <td>ข่าวเศรษฐกิจ</td>
+                                    <td>12</td>
+                                    <td>876</td>
+                                    <td>73</td>
+                                    <td>ตลาดหุ้นปรับตัวขึ้น</td>
+                                </tr>
+                                <tr>
+                                    <td>ข่าวกีฬา</td>
+                                    <td>8</td>
+                                    <td>654</td>
+                                    <td>82</td>
+                                    <td>ทีมชาติไทยชนะฟุตบอล</td>
+                                </tr>
+                                <tr>
+                                    <td>ข่าวบันเทิง</td>
+                                    <td>7</td>
+                                    <td>472</td>
+                                    <td>67</td>
+                                    <td>ศิลปินดังเปิดตัวอัลบั้มใหม่</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">กราฟยอดวิวข่าว</div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="viewsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="daily-views-tab" data-bs-toggle="tab" data-bs-target="#daily-views" type="button" role="tab">รายวัน</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="monthly-views-tab" data-bs-toggle="tab" data-bs-target="#monthly-views" type="button" role="tab">รายเดือน</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="category-views-tab" data-bs-toggle="tab" data-bs-target="#category-views" type="button" role="tab">ตามประเภท</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="viewsTabContent">
+                            <div class="tab-pane fade show active" id="daily-views" role="tabpanel">
+                                <div class="chart-container">
+                                    <canvas id="dailyViewsChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="monthly-views" role="tabpanel">
+                                <div class="chart-container">
+                                    <canvas id="monthlyViewsChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="category-views" role="tabpanel">
+                                <div class="chart-container">
+                                    <canvas id="categoryViewsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>ข่าวล่าสุดของฉัน</span>
+                        <a href="news-editor.html" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle"></i> เขียนข่าวใหม่
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>หัวข้อข่าว</th>
+                                        <th>ประเภท</th>
+                                        <th>วันที่เผยแพร่</th>
+                                        <th>ยอดวิว</th>
+                                        <th>สถานะ</th>
+                                        <th>จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>รัฐบาลเปิดตัวนโยบายใหม่ส่งเสริมเศรษฐกิจ</td>
+                                        <td>ข่าวการเมือง</td>
+                                        <td>10/01/2566</td>
+                                        <td>1,245</td>
+                                        <td><span class="status-badge status-published">เผยแพร่แล้ว</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-info"><i class="bi bi-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ตลาดหุ้นปรับตัวขึ้นเกือบ 2% หลังข่าวดีจากต่างประเทศ</td>
+                                        <td>ข่าวเศรษฐกิจ</td>
+                                        <td>09/01/2566</td>
+                                        <td>876</td>
+                                        <td><span class="status-badge status-published">เผยแพร่แล้ว</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-info"><i class="bi bi-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ทีมชาติไทยชนะฟุตบอลชิงแชมป์เอเชีย</td>
+                                        <td>ข่าวกีฬา</td>
+                                        <td>08/01/2566</td>
+                                        <td>654</td>
+                                        <td><span class="status-badge status-published">เผยแพร่แล้ว</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-info"><i class="bi bi-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Daily Views Chart
+            initLineChart('dailyViewsChart', 'ยอดวิว', {
+                labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                values: [420, 530, 480, 620, 590, 710, 680, 750, 720, 810]
+            });
+            
+            // Initialize Monthly Views Chart
+            initBarChart('monthlyViewsChart', 'ยอดวิว', {
+                labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.'],
+                values: [850, 920, 880, 950, 1020, 980]
+            });
+            
+            // Initialize Category Views Chart
+            initDoughnutChart('categoryViewsChart', 
+                ['ข่าวการเมือง', 'ข่าวเศรษฐกิจ', 'ข่าวกีฬา', 'ข่าวบันเทิง'],
+                [1245, 876, 654, 472],
+                ['#dc3545', '#0d6efd', '#198754', '#fd7e14']
+            );
+        });
+    </script>
+</body>
+</html>
