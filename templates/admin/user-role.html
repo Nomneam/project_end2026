@@ -1,174 +1,236 @@
 {% extends "layout/admin-layout.html" %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/advert-review.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user.css') }}">
 {% endblock %}
 
 {% block content %}
-   <!-- Main Content -->
-    <main class="main-content">
-        <div class="page-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="page-title">User & Role Permissions</h1>
-                    <p class="page-subtitle">จัดการผู้ใช้งานและสิทธิ์การเข้าถึง</p>
-                </div>
-                <div>
-                    <button class="btn btn-primary">
-                        ➕ เพิ่มผู้ใช้งาน
-                    </button>
-                </div>
-            </div>
+<main class="main-content p-4">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="page-title fw-bold" style="color: #000000;">User & Role</h1>
+            <p class="text-muted mb-0">จัดการและเพิ่มผู้ใช้งานในระบบ</p>
         </div>
+        <button class="btn-add-user shadow-sm" onclick="showAddModal()">
+            <i class="bi bi-person-plus-fill me-2"></i>เพิ่มผู้ใช้งานใหม่
+        </button>
+    </div>
 
-        <!-- Role Summary Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="role-card">
-                    <div class="role-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--color-danger);">
-                        👑
+    <div class="row g-4 mb-5">
+        {% for role in role_summary %}
+        <div class="col-md-4">
+            <div class="role-card border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <div class="role-icon-box 
+                        {% if role.role_name == 'Admin' %}bg-role-admin
+                        {% elif role.role_name == 'Reporter' %}bg-role-reporter
+                        {% else %}bg-role-owner{% endif %}">
+                        <i class="bi {% if role.role_name == 'Admin' %}bi-shield-lock
+                                   {% elif role.role_name == 'Reporter' %}bi-file-earmark-bar-graph
+                                   {% else %}bi-person-workspace{% endif %}"></i>
                     </div>
-                    <div class="role-content">
-                        <div class="role-label">Admin</div>
-                        <div class="role-value">2 คน</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="role-card">
-                    <div class="role-icon" style="background-color: rgba(59, 130, 246, 0.1); color: var(--color-info);">
-                        🏭
-                    </div>
-                    <div class="role-content">
-                        <div class="role-label">Production</div>
-                        <div class="role-value">5 คน</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="role-card">
-                    <div class="role-icon" style="background-color: rgba(34, 197, 94, 0.1); color: var(--color-success);">
-                        📦
-                    </div>
-                    <div class="role-content">
-                        <div class="role-label">Warehouse</div>
-                        <div class="role-value">4 คน</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="role-card">
-                    <div class="role-icon" style="background-color: rgba(249, 115, 22, 0.1); color: var(--color-primary);">
-                        🛒
-                    </div>
-                    <div class="role-content">
-                        <div class="role-label">Sales</div>
-                        <div class="role-value">3 คน</div>
+                    <div>
+                        <span class="info-label text-uppercase small fw-bold" style="color: #94a3b8; letter-spacing: 0.05em;">
+                            {{ role.role_name }}
+                        </span>
+                        <h2 class="mb-0 fw-bold" style="color: #1e293b;">
+                            {{ role.count }} <small class="fs-6 text-muted fw-normal">คน</small>
+                        </h2>
                     </div>
                 </div>
             </div>
         </div>
+        {% endfor %}
+    </div>
 
-        <!-- Users Table -->
-        <div class="card">
-            <div class="card-title">รายชื่อผู้ใช้งาน</div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ชื่อผู้ใช้</th>
-                                <th>ชื่อ-นามสกุล</th>
-                                <th>อีเมล</th>
-                                <th>บทบาท</th>
-                                <th>แผนก</th>
-                                <th>สถานะ</th>
-                                <th>ล่าสุด</th>
-                                <th>จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>admin</strong></td>
-                                <td>ผู้ดูแลระบบ</td>
-                                <td>admin@example.com</td>
-                                <td><span class="badge badge-danger">Admin</span></td>
-                                <td>IT</td>
-                                <td><span class="badge badge-success">ใช้งาน</span></td>
-                                <td>21 ม.ค. 2024</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>production01</strong></td>
-                                <td>สมชาย ผลิตดี</td>
-                                <td>production01@example.com</td>
-                                <td><span class="badge badge-info">Production</span></td>
-                                <td>การผลิต</td>
-                                <td><span class="badge badge-success">ใช้งาน</span></td>
-                                <td>21 ม.ค. 2024</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>warehouse01</strong></td>
-                                <td>สมหญิง คลังสินค้า</td>
-                                <td>warehouse01@example.com</td>
-                                <td><span class="badge badge-success">Warehouse</span></td>
-                                <td>คลังสินค้า</td>
-                                <td><span class="badge badge-success">ใช้งาน</span></td>
-                                <td>20 ม.ค. 2024</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>sales01</strong></td>
-                                <td>สมศักดิ์ ขายดี</td>
-                                <td>sales01@example.com</td>
-                                <td><span class="badge badge-warning">Sales</span></td>
-                                <td>งานขาย</td>
-                                <td><span class="badge badge-success">ใช้งาน</span></td>
-                                <td>21 ม.ค. 2024</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>purchase01</strong></td>
-                                <td>สมปอง ซื้อดี</td>
-                                <td>purchase01@example.com</td>
-                                <td><span class="badge badge-pending">Purchase</span></td>
-                                <td>จัดซื้อ</td>
-                                <td><span class="badge badge-success">ใช้งาน</span></td>
-                                <td>19 ม.ค. 2024</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>viewer01</strong></td>
-                                <td>สมหมาย ดูข้อมูล</td>
-                                <td>viewer01@example.com</td>
-                                <td><span class="badge badge-pending">Read-only</span></td>
-                                <td>บริหาร</td>
-                                <td><span class="badge badge-success">ใช้งาน</span></td>
-                                <td>18 ม.ค. 2024</td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="table-header-panel shadow-sm mb-0">
+        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-people-fill me-2"></i>รายชื่อผู้ใช้งานในระบบ</h5>
+    </div>
+    
+    <div class="main-table-card shadow-sm bg-white border-0" style="border-radius: 0 0 24px 24px !important; overflow: hidden;">
+        <div class="table-responsive p-0">
+            <table class="table custom-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">User Identity</th>
+                        <th>Email Address</th>
+                        <th class="text-center">Role</th>
+                        <th class="text-center">System Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center py-2">
+                                <div class="user-avatar-circle me-3 shadow-sm">
+                                    {{ u.emp_username[0]|upper }}
+                                </div>
+                                <div>
+                                    <div class="username-text fw-bold" style="color: #1e293b;">{{ u.emp_username }}</div>
+                                    <small class="text-muted">{{ u.emp_fname }} {{ u.emp_lname }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted small">{{ u.emp_email }}</td>
+                        <td class="text-center">
+                            <span class="badge-pro 
+                                {% if u.role_id == 1 %}badge-ruby
+                                {% elif u.role_id == 2 %}badge-slate
+                                {% else %}badge-owner{% endif %}">
+                                {{ u.role_name|upper }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="status-indicator active">ใช้งาน</span>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn-action-minimal me-1 shadow-sm" 
+                                onclick="openEditModal(this)"
+                                data-id="{{ u.emp_id }}"
+                                data-username="{{ u.emp_username }}"
+                                data-fname="{{ u.emp_fname }}"
+                                data-lname="{{ u.emp_lname }}"
+                                data-email="{{ u.emp_email }}"
+                                data-role="{{ u.role_id }}">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn-action-minimal text-danger shadow-sm" onclick="deleteUser('{{ u.emp_id }}')">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </div>
+
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered"> 
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2 text-danger"></i>เพิ่มผู้ใช้งานใหม่</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('user_role.add_user') }}" method="POST" class="swal-submit">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="emp_username" class="form-control" placeholder="ระบุชื่อผู้ใช้งาน" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="กำหนดรหัสผ่าน" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">ชื่อจริง</label>
+                            <input type="text" name="emp_fname" class="form-control" placeholder="ชื่อ" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">นามสกุล</label>
+                            <input type="text" name="emp_lname" class="form-control" placeholder="นามสกุล" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">เลขบัตรประชาชน</label>
+                            <input type="text" name="emp_idcard" class="form-control" maxlength="13" placeholder="13 หลัก">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">เบอร์โทรศัพท์</label>
+                            <input type="text" name="emp_phone" class="form-control" maxlength="10" placeholder="0XXXXXXXXX">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">อีเมล</label>
+                            <input type="email" name="emp_email" class="form-control" placeholder="name@company.com" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">สิทธิ์การใช้งาน</label>
+                            <select name="role_id" class="form-select">
+                                <option value="1">Admin</option>
+                                <option value="2">Reporter</option>
+                                <option value="3" selected>Owner</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">ที่อยู่</label>
+                            <textarea name="emp_address" class="form-control" rows="2" placeholder="ที่อยู่ปัจจุบัน"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-danger"></i>แก้ไขข้อมูลผู้ใช้งาน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editUserForm" method="POST" class="swal-submit">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label text-muted">Username (Read Only)</label>
+                            <input type="text" id="edit_username" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">ชื่อจริง</label>
+                            <input type="text" name="emp_fname" id="edit_fname" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">นามสกุล</label>
+                            <input type="text" name="emp_lname" id="edit_lname" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">เลขบัตรประชาชน</label>
+                            <input type="text" name="emp_idcard" id="edit_idcard" class="form-control" maxlength="13">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">เบอร์โทรศัพท์</label>
+                            <input type="text" name="emp_phone" id="edit_phone" class="form-control" maxlength="10">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">อีเมล</label>
+                            <input type="email" name="emp_email" id="edit_email" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">บทบาท</label>
+                            <select name="role_id" id="edit_role" class="form-select">
+                                <option value="1">Admin</option>
+                                <option value="2">Reporter</option>
+                                <option value="3">Owner</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">ที่อยู่</label>
+                            <textarea name="emp_address" id="edit_address" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light text-end">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="submit" class="btn btn-primary px-4">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</main>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="{{ url_for('static', filename='js/advert-review.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user_role.js') }}"></script>
 {% endblock %}
