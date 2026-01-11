@@ -10,30 +10,30 @@
 <div class="main-content">
   <div class="container-fluid">
 
-    <h2 class="mb-4">แดชบอร์ด Admin</h2>
+    <h2 class="mb-4"> Dashboard Admin</h2>
 
     <div class="row">
       <div class="col-md-3">
         <div class="stat-card">
-          <div class="stat-value text-danger">18</div>
+          <div class="stat-value text-success">{{ online_count }}</div>
           <div class="stat-label">ผู้ใช้งานออนไลน์</div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="stat-card">
-          <div class="stat-value">10</div>
+          <div class="stat-value text-secondary">{{ offline_count }}</div>
           <div class="stat-label">ผู้ใช้งานออฟไลน์</div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="stat-card">
-          <div class="stat-value">28</div>
+          <div class="stat-value text-primary">{{ total_staff }}</div>
           <div class="stat-label">จำนวนพนักงานทั้งหมด</div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="stat-card">
-          <div class="stat-value">15</div>
+          <div class="stat-value text-danger">{{ pending_ads_count }}</div>
           <div class="stat-label">โฆษณาที่รออนุมัติ</div>
         </div>
       </div>
@@ -59,26 +59,24 @@
               <thead>
                 <tr>
                   <th>โฆษณา</th>
-                  <th>ตำแหน่ง</th>
                   <th>สถานะ</th>
                 </tr>
               </thead>
               <tbody>
+                {% for ad in adverts %}
                 <tr>
-                  <td>โฆษณา A</td>
-                  <td>แบนเนอร์หลัก</td>
-                  <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
+                  <td>{{ ad.adv_name }}</td>
+                  <td>
+                    {% if ad.status == 'approved' %}
+                      <span class="badge bg-success">อนุมัติแล้ว</span>
+                    {% elif ad.status == 'submitted' %}
+                      <span class="badge bg-warning text-dark">รออนุมัติ</span>
+                    {% else %}
+                      <span class="badge bg-secondary">{{ ad.status }}</span>
+                    {% endif %}
+                  </td>
                 </tr>
-                <tr>
-                  <td>โฆษณา B</td>
-                  <td>แบนเนอร์ข้าง</td>
-                  <td><span class="badge bg-warning text-dark">รออนุมัติ</span></td>
-                </tr>
-                <tr>
-                  <td>โฆษณา C</td>
-                  <td>โพสต์โปรโมท</td>
-                  <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
-                </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
@@ -95,34 +93,34 @@
               <table class="table table-striped align-middle">
                 <thead>
                   <tr>
-                    <th>ชื่อ</th>
+                    <th>ชื่อ-นามสกุล</th>
                     <th>อีเมล</th>
-                    <th>ตำแหน่ง</th>
-                    <th>สถานะ</th>
+                    <th>บทบาท</th>
                     <th>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {% for emp in employees %}
                   <tr>
-                    <td>สมชาย ใจดี</td>
-                    <td>somchai@example.com</td>
-                    <td>ผู้ดูแลระบบ</td>
-                    <td><span class="badge bg-success">ออนไลน์</span></td>
+                    <td>{{ emp.emp_fname }} {{ emp.emp_lname }}</td>
+                    <td>{{ emp.emp_email }}</td>
+                    <td>
+                        {% if emp.role_id == 1 %}
+                            <span class="badge bg-danger">Admin</span>
+                        {% elif emp.role_id == 2 %}
+                            <span class="badge bg-primary">Reporter</span>
+                        {% elif emp.role_id == 3 %}
+                            <span class="badge bg-warning">Owner</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">Staff</span>
+                        {% endif %}
+                    </td>
                     <td>
                       <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
                       <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                     </td>
                   </tr>
-                  <tr>
-                    <td>สมหญิง รักงาน</td>
-                    <td>somying@example.com</td>
-                    <td>นักเขียนข่าว</td>
-                    <td><span class="badge bg-success">ออนไลน์</span></td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                    </td>
-                  </tr>
+                  {% endfor %}
                 </tbody>
               </table>
             </div>
@@ -144,7 +142,8 @@
       data: {
         labels: ['ออนไลน์', 'ออฟไลน์'],
         datasets: [{
-          data: [18, 10],
+          // ตรงนี้คงไว้เป็นค่า Static ตามที่คุณต้องการ
+          data: [18, 10], 
           backgroundColor: ['#198754', '#6c757d'],
           borderWidth: 0
         }]

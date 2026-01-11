@@ -25,15 +25,14 @@ dashboard_admin_bp = Blueprint('dashboard_admin', __name__)
 
 @dashboard_admin_bp.route('/dashboard/admin')
 def admin_dashboard():
-    # ตรวจสอบสิทธิ์ (role_id 1 = Admin)
+    # ตรวจสอบสิทธิ์ Admin (role_id 1)
     if 'user' not in session or session['user']['role_id'] != 1:
         return "Forbidden", 403
 
     connection = connect_db()
     try:
         with connection.cursor() as cursor:
-            # 1. ดึงข้อมูลพนักงาน (ใช้ table: employee)
-            # หมายเหตุ: ใน Schema ไม่มี col 'is_online' ผมจึงขอใช้ mock-up หรือคุณอาจต้องเพิ่ม col นี้ภายหลัง
+            # 1. ดึงพนักงานทั้งหมด (จากภาพของคุณมี 3 คน: Apisit, Punyawee, Prayut)
             cursor.execute("""
                 SELECT emp_id, emp_fname, emp_lname, emp_email, role_id 
                 FROM employee 
@@ -41,7 +40,7 @@ def admin_dashboard():
             """)
             employees = cursor.fetchall()
 
-            # 2. ดึงข้อมูลโฆษณา (ใช้ table: advert)
+            # 2. ดึงข้อมูลโฆษณา
             cursor.execute("""
                 SELECT adv_name, status, created_at 
                 FROM advert 
@@ -50,24 +49,25 @@ def admin_dashboard():
             """)
             adverts = cursor.fetchall()
 
-            # 3. คำนวณสถิติ
-            # จำนวนพนักงานทั้งหมด
-            total_staff = len(employees)
+            # 3. คำนวณสถิติอิงจากฐานข้อมูลจริง
+            total_staff = len(employees)  # จะได้ค่าเป็น 3 ตามข้อมูลปัจจุบันของคุณ
             
-            # โฆษณาที่รอตรวจสอบ (status = 'submitted')
+            # จำนวนโฆษณาที่รอตรวจสอบ
             cursor.execute("SELECT COUNT(*) as count FROM advert WHERE status = 'submitted' AND del_flg = 0")
             pending_ads_count = cursor.fetchone()['count']
 
-            # (ตัวอย่าง) สมมติว่านับพนักงานออนไลน์จาก session หรือ table อื่น 
-            # ในที่นี้ขอกำหนดค่าตัวอย่างไว้ก่อนเพื่อให้กราฟทำงานได้
-            online_count = 5 
+            # ปรับปรุง: กำหนดค่าออนไลน์ให้สัมพันธ์กับจำนวนพนักงานที่มีจริง
+            # สมมติออนไลน์ไว้ไม่เกินพนักงานทั้งหมด (ในที่นี้คือไม่เกิน 3 คน)
+            online_count = min(1, total_staff) # ตัวอย่าง: สมมติออนไลน์ 1 คน
+            
+            # คำนวณออฟไลน์: พนักงานทั้งหมด (3) - ออนไลน์ (1) = 2 (จะไม่ติดลบ)
             offline_count = total_staff - online_count
 
     finally:
         connection.close()
 
     return render_template(
-        'admin-dashboard.html',
+        'admin/admin-dashboard.html',
         employees=employees,
         adverts=adverts,
         online_count=online_count,
