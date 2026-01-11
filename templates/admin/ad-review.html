@@ -1,281 +1,140 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตรวจสอบโฆษณา - ระบบจัดการข่าวออนไลน์</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-toggle" id="mobileToggle">
-        <i class="bi bi-list"></i>
-    </button>
+{% extends "layout/admin-layout.html" %}
+{% block title %}ตรวจสอบโฆษณา{% endblock %}
 
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <i class="bi bi-newspaper"></i> ระบบข่าวออนไลน์
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">ตรวจสอบโฆษณา</h2>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-danger text-white">
+            <i class="bi bi-list-check me-2"></i>รายการโฆษณาที่ต้องตรวจสอบ
         </div>
-        <ul class="sidebar-menu">
-            <li><a href="owner-dashboard.html"><i class="bi bi-speedometer2"></i> แดชบอร์ด Owner</a></li>
-            <li><a href="admin-dashboard.html"><i class="bi bi-gear"></i> แดชบอร์ด Admin</a></li>
-            <li><a href="news-management.html"><i class="bi bi-file-text"></i> รวมข่าว</a></li>
-            <li><a href="category-management.html"><i class="bi bi-tags"></i> ประเภทข่าว</a></li>
-            <li><a href="news-editor.html"><i class="bi bi-pencil-square"></i> เขียนข่าว</a></li>
-            <li><a href="ad-review.html" class="active"><i class="bi bi-badge-ad"></i> ตรวจสอบโฆษณา</a></li>
-            <li><a href="reporter-dashboard.html"><i class="bi bi-journal-text"></i> แดชบอร์ด Reporter</a></li>
-            <li><a href="index.html"><i class="bi bi-house"></i> หน้าหลัก</a></li>
-        </ul>
-    </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <h2 class="mb-4">ตรวจสอบโฆษณา</h2>
-        
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>รายการโฆษณาที่ต้องตรวจสอบ</span>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary active">รออนุมัติ</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">อนุมัติแล้ว</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">ปฏิเสธแล้ว</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="ad-preview">
-                            <img src="https://picsum.photos/seed/ad1/600/300.jpg" alt="โฆษณา A">
-                            <div class="mt-3">
-                                <h5>โฆษณา A</h5>
-                                <p class="mb-2">โฆษณาแบนเนอร์หลัก - บริษัท ABC</p>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ตำแหน่ง:</strong> แบนเนอร์หลักหน้าแรก
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ราคา:</strong> ฿45,000
-                                    </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:120px">รูป</th>
+                            <th>ข้อมูลโฆษณา</th>
+                            <th>ตำแหน่ง</th>
+                            <th>ราคา</th>
+                            <th>ระยะเวลา</th>
+                            <th class="text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    {% if adverts %}
+                        {% for ad in adverts %}
+                        <tr>
+                            <td>
+                                <img src="https://picsum.photos/seed/ad{{ ad.adv_id }}/600/300.jpg"
+                                    class="rounded border"
+                                    style="width:100px;height:56px;object-fit:cover">
+                            </td>
+
+                            <td>
+                                <div class="fw-bold text-danger">{{ ad.adv_name }}</div>
+                                <div class="small text-muted">
+                                    {{ ad.cus_fname }} {{ ad.cus_lname }}
                                 </div>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ระยะเวลา:</strong> 1 มกราคม - 31 มกราคม 2566
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ผู้ลงโฆษณา:</strong> บริษัท ABC
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <strong>รายละเอียด:</strong> โฆษณาแบนเนอร์ขนาดใหญ่แสดงที่หน้าแรกของเว็บไซต์
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal" data-ad-name="โฆษณา A">
-                                        <i class="bi bi-check-circle"></i> อนุมัติ
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal" data-ad-name="โฆษณา A">
-                                        <i class="bi bi-x-circle"></i> ปฏิเสธ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="ad-preview">
-                            <img src="https://picsum.photos/seed/ad2/600/300.jpg" alt="โฆษณา B">
-                            <div class="mt-3">
-                                <h5>โฆษณา B</h5>
-                                <p class="mb-2">โฆษณาแบนเนอร์ข้าง - ร้าน XYZ</p>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ตำแหน่ง:</strong> แบนเนอร์ข้างขวา
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ราคา:</strong> ฿32,500
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ระยะเวลา:</strong> 5 มกราคม - 5 กุมภาพันธ์ 2566
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ผู้ลงโฆษณา:</strong> ร้าน XYZ
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <strong>รายละเอียด:</strong> โฆษณาแบนเนอร์ขนาดกลางแสดงที่ด้านข้างของเว็บไซต์
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal" data-ad-name="โฆษณา B">
-                                        <i class="bi bi-check-circle"></i> อนุมัติ
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal" data-ad-name="โฆษณา B">
-                                        <i class="bi bi-x-circle"></i> ปฏิเสธ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="ad-preview">
-                            <img src="https://picsum.photos/seed/ad3/600/300.jpg" alt="โฆษณา C">
-                            <div class="mt-3">
-                                <h5>โฆษณา C</h5>
-                                <p class="mb-2">โฆษณาโพสต์โปรโมท - สินค้า DEF</p>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ตำแหน่ง:</strong> ในบทความข่าว
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ราคา:</strong> ฿28,000
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ระยะเวลา:</strong> 10 มกราคม - 10 กุมภาพันธ์ 2566
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ผู้ลงโฆษณา:</strong> บริษัท DEF
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <strong>รายละเอียด:</strong> โฆษณาแบบโพสต์โปรโมทสินค้า แสดงในบทความข่าวที่เกี่ยวข้อง
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal" data-ad-name="โฆษณา C">
-                                        <i class="bi bi-check-circle"></i> อนุมัติ
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal" data-ad-name="โฆษณา C">
-                                        <i class="bi bi-x-circle"></i> ปฏิเสธ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="ad-preview">
-                            <img src="https://picsum.photos/seed/ad4/600/300.jpg" alt="โฆษณา D">
-                            <div class="mt-3">
-                                <h5>โฆษณา D</h5>
-                                <p class="mb-2">โฆษณาวิดีโอ - บริการ GHI</p>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ตำแหน่ง:</strong> วิดีโอก่อนเนื้อหา
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ราคา:</strong> ฿19,930
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6">
-                                        <strong>ระยะเวลา:</strong> 15 มกราคม - 15 กุมภาพันธ์ 2566
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>ผู้ลงโฆษณา:</strong> บริการ GHI
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <strong>รายละเอียด:</strong> โฆษณาวิดีโอความยาว 30 วินาที แสดงก่อนเนื้อหาข่าว
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal" data-ad-name="โฆษณา D">
-                                        <i class="bi bi-check-circle"></i> อนุมัติ
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal" data-ad-name="โฆษณา D">
-                                        <i class="bi bi-x-circle"></i> ปฏิเสธ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ ad.advert_area_name or '-' }}
+                                </span>
+                            </td>
+
+                            <td class="fw-bold">
+                                ฿{{ "{:,.2f}".format(ad.total_amount or 0) }}
+                            </td>
+
+                            <td class="small">
+                                
+                                {{ ad.valid_from.strftime('%d/%m/%Y') }}
+                                -
+                                {{ ad.valid_to.strftime('%d/%m/%Y') }}
+                            </td>
+
+                            <td class="text-center">
+                                <button
+                                    class="btn btn-outline-primary btn-sm btn-view"
+                                    data-ad='{{ ad | tojson }}'>
+                                    <i class="bi bi-eye"></i> ดูรายละเอียด
+                                </button>
+                            </td>
+
+
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                ไม่มีโฆษณารอการตรวจสอบ
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                    </tbody>
+
+                </table>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Approve Modal -->
-    <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="approveModalLabel">อนุมัติโฆษณา</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>คุณต้องการอนุมัติโฆษณา "<span id="approveAdName"></span>" ใช่หรือไม่?</p>
-                    <div class="mb-3">
-                        <label for="approveNote" class="form-label">หมายเหตุ (ถ้ามี)</label>
-                        <textarea class="form-control" id="approveNote" rows="3" placeholder="กรอกหมายเหตุสำหรับการอนุมัติ"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="button" class="btn btn-success">อนุมัติ</button>
-                </div>
-            </div>
+
+<!-- Modal รายละเอียดโฆษณา -->
+<div class="modal fade" id="adDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">รายละเอียดโฆษณา</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <img id="modalImage" class="img-fluid rounded border">
+          </div>
+          <div class="col-md-6">
+            <p><b>ชื่อโฆษณา:</b> <span id="modalName"></span></p>
+            <p><b>ประเภทโฆษณา:</b> <span id="modalCategory" class="badge bg-info"></span></p>
+            <p><b>ลูกค้า:</b> <span id="modalCustomer"></span></p>
+            <p><b>ตำแหน่ง:</b> <span id="modalArea"></span></p>
+            <p><b>ราคา:</b> ฿<span id="modalPrice"></span></p>
+            <p><b>ระยะเวลา:</b> <span id="modalDate"></span></p>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectModalLabel">ปฏิเสธโฆษณา</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>คุณต้องการปฏิเสธโฆษณา "<span id="rejectAdName"></span>" ใช่หรือไม่?</p>
-                    <div class="mb-3">
-                        <label for="rejectReason" class="form-label">เหตุผลในการปฏิเสธ *</label>
-                        <textarea class="form-control" id="rejectReason" rows="3" placeholder="กรอกเหตุผลในการปฏิเสธโฆษณา" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="button" class="btn btn-danger">ปฏิเสธ</button>
-                </div>
-            </div>
-        </div>
-    </div>
+      <div class="modal-footer">
+        <button id="btnReject" class="btn btn-outline-danger">
+          <i class="bi bi-x-circle"></i> ปฏิเสธ
+        </button>
+        <button id="btnApprove" class="btn btn-success">
+          <i class="bi bi-check-circle"></i> อนุมัติ
+        </button>
+      </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle approve modal
-            const approveModal = document.getElementById('approveModal');
-            if (approveModal) {
-                approveModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const adName = button.getAttribute('data-ad-name');
-                    document.getElementById('approveAdName').textContent = adName;
-                });
-            }
-            
-            // Handle reject modal
-            const rejectModal = document.getElementById('rejectModal');
-            if (rejectModal) {
-                rejectModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const adName = button.getAttribute('data-ad-name');
-                    document.getElementById('rejectAdName').textContent = adName;
-                });
-            }
-            
-            // Handle tab switching
-            const tabButtons = document.querySelectorAll('.btn-group .btn');
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- JS ของคุณ -->
+<script src="{{ url_for('static', filename='js/advert-review.js') }}"></script>
+{% endblock %}

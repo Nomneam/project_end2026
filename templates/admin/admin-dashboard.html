@@ -12,32 +12,43 @@
 
     <h2 class="mb-4"> Dashboard Admin</h2>
 
-    <div class="row">
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value text-success">{{ online_count }}</div>
-          <div class="stat-label">ผู้ใช้งานออนไลน์</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value text-secondary">{{ offline_count }}</div>
-          <div class="stat-label">ผู้ใช้งานออฟไลน์</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value text-primary">{{ total_staff }}</div>
-          <div class="stat-label">จำนวนพนักงานทั้งหมด</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value text-danger">{{ pending_ads_count }}</div>
-          <div class="stat-label">โฆษณาที่รออนุมัติ</div>
-        </div>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-success">🟢 {{ online_count }}</div>
+        <div class="stat-label">ผู้ใช้งานออนไลน์</div>
       </div>
     </div>
+
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-secondary">⚪ {{ offline_count }}</div>
+        <div class="stat-label">ผู้ใช้งานออฟไลน์</div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-primary">👥 {{ total_staff }}</div>
+        <div class="stat-label">จำนวนพนักงานทั้งหมด</div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value text-info">📢 {{ published_ads_count }}</div>
+          <div class="stat-label">โฆษณาที่เผยแพร่แล้ว</div>
+        </div>
+      </div>
+    </div>   
+
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-danger">⏳ {{ pending_ads_count }}</div>
+        <div class="stat-label">โฆษณาที่รออนุมัติ</div>
+      </div>
+    </div>
+  </div>
 
     <div class="row mt-4">
       <div class="col-md-6">
@@ -87,7 +98,7 @@
     <div class="row mt-4 mb-5">
       <div class="col-md-12">
         <div class="card">
-          <div class="card-header bg-danger text-white">จัดการผู้ใช้งาน</div>
+          <div class="card-header bg-danger text-white">ผู้ใช้งาน online</div>
           <div class="card-body">
             <div class="table-responsive">
               <table class="table table-striped align-middle">
@@ -101,25 +112,32 @@
                 </thead>
                 <tbody>
                   {% for emp in employees %}
-                  <tr>
-                    <td>{{ emp.emp_fname }} {{ emp.emp_lname }}</td>
-                    <td>{{ emp.emp_email }}</td>
-                    <td>
-                        {% if emp.role_id == 1 %}
-                            <span class="badge bg-danger">Admin</span>
-                        {% elif emp.role_id == 2 %}
-                            <span class="badge bg-primary">Reporter</span>
-                        {% elif emp.role_id == 3 %}
-                            <span class="badge bg-warning">Owner</span>
-                        {% else %}
-                            <span class="badge bg-light text-dark">Staff</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                    </td>
-                  </tr>
+                    {# แสดงเฉพาะพนักงานตามจำนวนที่ระบุใน online_count #}
+                    {% if loop.index <= online_count %}
+                    <tr>
+                      <td>{{ emp.emp_fname }} {{ emp.emp_lname }}</td>
+                      <td>{{ emp.emp_email }}</td>
+                      <td>
+                          {% if emp.role_id == 1 %}
+                              <span class="badge bg-danger">Admin</span>
+                          {% elif emp.role_id == 2 %}
+                              <span class="badge bg-primary">Reporter</span>
+                          {% elif emp.role_id == 3 %}
+                              <span class="badge bg-warning">Owner</span>
+                          {% else %}
+                              <span class="badge bg-light text-dark">Staff</span>
+                          {% endif %}
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary shadow-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#empDetailModal{{ emp.emp_id }}"
+                                title="ดูรายละเอียด">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    {% endif %}
                   {% endfor %}
                 </tbody>
               </table>
@@ -128,9 +146,65 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>
+<!-- Modal for employee details -->
+{% for emp in employees %}
+  {% if loop.index <= online_count %}
+  <div class="modal fade" id="empDetailModal{{ emp.emp_id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+        
+        <div class="modal-header bg-danger text-white border-0" style="border-radius: 15px 15px 0 0;">
+          <h5 class="modal-title">
+            <i class="bi bi-person-vcard me-2"></i>ข้อมูลพนักงานออนไลน์
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <div class="avatar-placeholder mb-2 mx-auto d-flex align-items-center justify-content-center bg-light rounded-circle" style="width: 80px; height: 80px; border: 2px solid #dc3545;">
+              <i class="bi bi-person text-danger" style="font-size: 2.5rem;"></i>
+            </div>
+            <h4 class="mb-0">{{ emp.emp_fname }} {{ emp.emp_lname }}</h4>
+            
+            {% if emp.role_id == 1 %}
+              <span class="badge bg-danger"> Admin</span>
+            {% elif emp.role_id == 2 %}
+              <span class="badge bg-primary"> Reporter</span>
+            {% elif emp.role_id == 3 %}
+              <span class="badge bg-warning text-dark"> Owner</span>
+            {% endif %}
+          </div>
+
+          <hr class="text-muted opacity-25">
+
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="text-muted small d-block">อีเมลพนักงาน</label>
+              <span class="fw-bold">{{ emp.emp_email }}</span>
+            </div>
+            <div class="col-6">
+              <label class="text-muted small d-block">รหัสพนักงาน</label>
+              <span class="fw-bold text-danger">{{ emp.emp_code if emp.emp_code else '-' }}</span>
+            </div>
+            <div class="col-6">
+              <label class="text-muted small d-block">สถานะปัจจุบัน</label>
+              <span class="text-success"><i class="bi bi-circle-fill me-1 small"></i> กำลังออนไลน์</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 p-3">
+          <button type="button" class="btn btn-light w-100 py-2 shadow-sm" data-bs-dismiss="modal" style="border-radius: 10px;">ปิด</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
 {% endblock %}
 
 {% block scripts %}

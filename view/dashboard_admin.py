@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 import pymysql
 import pymysql.cursors
-import bcrypt
+
 
 # โหลด .env
 load_dotenv()
@@ -32,15 +32,15 @@ def admin_dashboard():
     connection = connect_db()
     try:
         with connection.cursor() as cursor:
-            # 1. ดึงพนักงานทั้งหมด (จากภาพของคุณมี 3 คน: Apisit, Punyawee, Prayut)
+            # 1. ดึงพนักงานทั้งหมด (อิงจากฐานข้อมูลจริงที่มี 3 คน)
             cursor.execute("""
-                SELECT emp_id, emp_fname, emp_lname, emp_email, role_id 
+                SELECT emp_id, emp_fname, emp_lname, emp_code, emp_email, role_id 
                 FROM employee 
                 WHERE del_flg = 0
             """)
             employees = cursor.fetchall()
 
-            # 2. ดึงข้อมูลโฆษณา
+            # 2. ดึงข้อมูลโฆษณาล่าสุด 5 รายการ
             cursor.execute("""
                 SELECT adv_name, status, created_at 
                 FROM advert 
@@ -50,17 +50,18 @@ def admin_dashboard():
             adverts = cursor.fetchall()
 
             # 3. คำนวณสถิติอิงจากฐานข้อมูลจริง
-            total_staff = len(employees)  # จะได้ค่าเป็น 3 ตามข้อมูลปัจจุบันของคุณ
+            total_staff = len(employees)
             
-            # จำนวนโฆษณาที่รอตรวจสอบ
+            # จำนวนโฆษณาที่รอตรวจสอบ (status = 'submitted')
             cursor.execute("SELECT COUNT(*) as count FROM advert WHERE status = 'submitted' AND del_flg = 0")
             pending_ads_count = cursor.fetchone()['count']
 
-            # ปรับปรุง: กำหนดค่าออนไลน์ให้สัมพันธ์กับจำนวนพนักงานที่มีจริง
-            # สมมติออนไลน์ไว้ไม่เกินพนักงานทั้งหมด (ในที่นี้คือไม่เกิน 3 คน)
-            online_count = min(1, total_staff) # ตัวอย่าง: สมมติออนไลน์ 1 คน
-            
-            # คำนวณออฟไลน์: พนักงานทั้งหมด (3) - ออนไลน์ (1) = 2 (จะไม่ติดลบ)
+            # เพิ่มเติม: ดึงจำนวนโฆษณาที่เผยแพร่แล้ว (status = 'approved')
+            cursor.execute("SELECT COUNT(*) as count FROM advert WHERE status = 'approved' AND del_flg = 0")
+            published_ads_count = cursor.fetchone()['count']
+
+            # กำหนดออนไลน์ไม่ให้เกินจำนวนพนักงานจริง (ป้องกันค่าติดลบ)
+            online_count = min(1, total_staff) 
             offline_count = total_staff - online_count
 
     finally:
@@ -73,6 +74,7 @@ def admin_dashboard():
         online_count=online_count,
         offline_count=offline_count,
         total_staff=total_staff,
-        pending_ads_count=pending_ads_count
+        pending_ads_count=pending_ads_count,
+        published_ads_count=published_ads_count 
     )
 
