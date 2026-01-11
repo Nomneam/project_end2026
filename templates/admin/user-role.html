@@ -1,0 +1,174 @@
+{% extends "layout/admin-layout.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/advert-review.css') }}" />
+{% endblock %}
+
+{% block content %}
+   <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="page-title">User & Role Permissions</h1>
+                    <p class="page-subtitle">จัดการผู้ใช้งานและสิทธิ์การเข้าถึง</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary">
+                        ➕ เพิ่มผู้ใช้งาน
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="role-card">
+                    <div class="role-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--color-danger);">
+                        👑
+                    </div>
+                    <div class="role-content">
+                        <div class="role-label">Admin</div>
+                        <div class="role-value">2 คน</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="role-card">
+                    <div class="role-icon" style="background-color: rgba(59, 130, 246, 0.1); color: var(--color-info);">
+                        🏭
+                    </div>
+                    <div class="role-content">
+                        <div class="role-label">Production</div>
+                        <div class="role-value">5 คน</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="role-card">
+                    <div class="role-icon" style="background-color: rgba(34, 197, 94, 0.1); color: var(--color-success);">
+                        📦
+                    </div>
+                    <div class="role-content">
+                        <div class="role-label">Warehouse</div>
+                        <div class="role-value">4 คน</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="role-card">
+                    <div class="role-icon" style="background-color: rgba(249, 115, 22, 0.1); color: var(--color-primary);">
+                        🛒
+                    </div>
+                    <div class="role-content">
+                        <div class="role-label">Sales</div>
+                        <div class="role-value">3 คน</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-title">รายชื่อผู้ใช้งาน</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ชื่อผู้ใช้</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>อีเมล</th>
+                                <th>บทบาท</th>
+                                <th>แผนก</th>
+                                <th>สถานะ</th>
+                                <th>ล่าสุด</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>admin</strong></td>
+                                <td>ผู้ดูแลระบบ</td>
+                                <td>admin@example.com</td>
+                                <td><span class="badge badge-danger">Admin</span></td>
+                                <td>IT</td>
+                                <td><span class="badge badge-success">ใช้งาน</span></td>
+                                <td>21 ม.ค. 2024</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>production01</strong></td>
+                                <td>สมชาย ผลิตดี</td>
+                                <td>production01@example.com</td>
+                                <td><span class="badge badge-info">Production</span></td>
+                                <td>การผลิต</td>
+                                <td><span class="badge badge-success">ใช้งาน</span></td>
+                                <td>21 ม.ค. 2024</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>warehouse01</strong></td>
+                                <td>สมหญิง คลังสินค้า</td>
+                                <td>warehouse01@example.com</td>
+                                <td><span class="badge badge-success">Warehouse</span></td>
+                                <td>คลังสินค้า</td>
+                                <td><span class="badge badge-success">ใช้งาน</span></td>
+                                <td>20 ม.ค. 2024</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>sales01</strong></td>
+                                <td>สมศักดิ์ ขายดี</td>
+                                <td>sales01@example.com</td>
+                                <td><span class="badge badge-warning">Sales</span></td>
+                                <td>งานขาย</td>
+                                <td><span class="badge badge-success">ใช้งาน</span></td>
+                                <td>21 ม.ค. 2024</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>purchase01</strong></td>
+                                <td>สมปอง ซื้อดี</td>
+                                <td>purchase01@example.com</td>
+                                <td><span class="badge badge-pending">Purchase</span></td>
+                                <td>จัดซื้อ</td>
+                                <td><span class="badge badge-success">ใช้งาน</span></td>
+                                <td>19 ม.ค. 2024</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>viewer01</strong></td>
+                                <td>สมหมาย ดูข้อมูล</td>
+                                <td>viewer01@example.com</td>
+                                <td><span class="badge badge-pending">Read-only</span></td>
+                                <td>บริหาร</td>
+                                <td><span class="badge badge-success">ใช้งาน</span></td>
+                                <td>18 ม.ค. 2024</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary">แก้ไข</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{{ url_for('static', filename='js/advert-review.js') }}"></script>
+{% endblock %}

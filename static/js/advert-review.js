@@ -1,44 +1,52 @@
 $(function () {
 
-    let currentAd = null;   // โฆษณาที่กำลังดู
-    let currentRow = null; // แถวในตารางที่กดมา
+    let currentAd = null;
+    let currentRow = null;
 
-    /* ==========================
-       เปิด Modal ดูรายละเอียด
-    ========================== */
+    // เปิด modal
     $(document).on('click', '.btn-view', function () {
         currentAd = $(this).data('ad');
         currentRow = $(this).closest('tr');
 
-        // รูปตัวอย่าง
-        $('#modalImage').attr(
-            'src',
-            `https://picsum.photos/seed/ad${currentAd.adv_id}/600/300`
-        );
+        if (currentAd.status === 'submitted') {
+            // modal สำหรับรอตรวจสอบ
+            $('#modalImage').attr(`src`, `https://picsum.photos/seed/ad${currentAd.adv_id}/600/300`);
+            $('#modalName').text(currentAd.adv_name);
+            $('#modalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
+            $('#modalCategory').text(currentAd.adc_cat_name || '-');
+            $('#modalArea').text(currentAd.advert_area_name || '-');
+            $('#modalPrice').text((currentAd.total_amount || 0).toLocaleString());
+            $('#modalDate').text(formatDate(currentAd.valid_from) + ' - ' + formatDate(currentAd.valid_to));
 
-        // ข้อมูลโฆษณา
-        $('#modalName').text(currentAd.adv_name);
-        $('#modalCustomer').text(
-            `${currentAd.cus_fname} ${currentAd.cus_lname}`
-        );
-        $('#modalCategory').text(currentAd.adc_cat_name || '-');
-        $('#modalArea').text(currentAd.advert_area_name || '-');
-        $('#modalPrice').text(
-            (currentAd.total_amount || 0).toLocaleString()
-        );
-        $('#modalDate').text(
-            formatDate(currentAd.valid_from) +
-            ' - ' +
-            formatDate(currentAd.valid_to)
-        );
+            new bootstrap.Modal('#adDetailModal').show();
 
-        new bootstrap.Modal('#adDetailModal').show();
+        } else {
+            // modal สำหรับอนุมัติ/ปฏิเสธแล้ว
+            $('#approvedModalImage').attr(`src`, `https://picsum.photos/seed/ad${currentAd.adv_id}/600/300`);
+            $('#approvedModalName').text(currentAd.adv_name);
+            $('#approvedModalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
+            $('#approvedModalCategory').text(currentAd.adc_cat_name || '-');
+            $('#approvedModalArea').text(currentAd.advert_area_name || '-');
+            $('#approvedModalPrice').text((currentAd.total_amount || 0).toLocaleString());
+            $('#approvedModalDate').text(formatDate(currentAd.valid_from) + ' - ' + formatDate(currentAd.valid_to));
+
+            // แสดง badge สถานะสีเหมือนตาราง
+            let statusBadge = '';
+            switch(currentAd.status) {
+                case 'approved': statusBadge = '<span class="badge bg-success">อนุมัติ</span>'; break;
+                case 'rejected': statusBadge = '<span class="badge bg-danger">ปฏิเสธ</span>'; break;
+                case 'running': statusBadge = '<span class="badge bg-info text-dark">กำลังแสดง</span>'; break;
+                case 'paused': statusBadge = '<span class="badge bg-dark">หยุดชั่วคราว</span>'; break;
+                case 'expired': statusBadge = '<span class="badge bg-secondary">หมดอายุ</span>'; break;
+                default: statusBadge = '<span class="badge bg-secondary">ร่าง</span>'; break;
+            }
+            $('#approvedModalStatus').html(statusBadge);
+
+            new bootstrap.Modal('#adApprovedModal').show();
+        }
     });
 
-
-    /* ==========================
-       อนุมัติโฆษณา
-    ========================== */
+    // Approve / Reject เหมือนเดิม สำหรับ modal รอตรวจสอบ
     $('#btnApprove').on('click', function () {
         if (!currentAd) return;
 
@@ -52,102 +60,51 @@ $(function () {
             confirmButtonColor: '#198754'
         }).then(result => {
             if (!result.isConfirmed) return;
-
-            $.ajax({
-                url: '/ad-review/approve',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    adv_id: currentAd.adv_id
-                }),
-                success: (res) => {
-                    if (res.status === 'success') {
-                        Swal.fire('สำเร็จ', 'อนุมัติโฆษณาเรียบร้อย', 'success');
-
-                        bootstrap.Modal
-                            .getInstance(document.getElementById('adDetailModal'))
-                            .hide();
-
-                        currentRow.fadeOut(300, function () {
-                            $(this).remove();
-                        });
-                    } else {
-                        Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
-                    }
-                },
-                error: () => {
-                    Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error');
+            $.post('/ad-review/approve', JSON.stringify({ adv_id: currentAd.adv_id }), function(res){
+                if(res.status === 'success') {
+                    Swal.fire('สำเร็จ','อนุมัติโฆษณาเรียบร้อย','success');
+                    bootstrap.Modal.getInstance(document.getElementById('adDetailModal')).hide();
+                    currentRow.fadeOut(300,function(){ $(this).remove(); });
+                } else {
+                    Swal.fire('ผิดพลาด',res.message||'เกิดข้อผิดพลาด','error');
                 }
-            });
+            }, 'json');
         });
     });
 
-
-    /* ==========================
-       ปฏิเสธโฆษณา
-    ========================== */
     $('#btnReject').on('click', function () {
         if (!currentAd) return;
 
         Swal.fire({
             title: 'ปฏิเสธโฆษณา',
-            html: `
-                <p>ปฏิเสธ <b>${currentAd.adv_name}</b></p>
-                <textarea id="rejectReason"
-                    class="swal2-textarea"
-                    placeholder="ระบุเหตุผล"></textarea>
-            `,
+            html: `<textarea id="rejectReason" class="swal2-textarea" placeholder="ระบุเหตุผล"></textarea>`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ยืนยันปฏิเสธ',
             confirmButtonColor: '#dc3545',
             preConfirm: () => {
                 const reason = $('#rejectReason').val().trim();
-                if (!reason) {
-                    Swal.showValidationMessage('กรุณาระบุเหตุผล');
-                }
+                if(!reason) Swal.showValidationMessage('กรุณาระบุเหตุผล');
                 return reason;
             }
         }).then(result => {
-            if (!result.isConfirmed) return;
-
-            $.ajax({
-                url: '/ad-review/reject',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    adv_id: currentAd.adv_id,
-                    reason: result.value
-                }),
-                success: (res) => {
-                    if (res.status === 'success') {
-                        Swal.fire('สำเร็จ', 'ปฏิเสธโฆษณาเรียบร้อย', 'success');
-
-                        bootstrap.Modal
-                            .getInstance(document.getElementById('adDetailModal'))
-                            .hide();
-
-                        currentRow.fadeOut(300, function () {
-                            $(this).remove();
-                        });
-                    } else {
-                        Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
-                    }
-                },
-                error: () => {
-                    Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error');
+            if(!result.isConfirmed) return;
+            $.post('/ad-review/reject', JSON.stringify({ adv_id: currentAd.adv_id, reason: result.value }), function(res){
+                if(res.status === 'success') {
+                    Swal.fire('สำเร็จ','ปฏิเสธโฆษณาเรียบร้อย','success');
+                    bootstrap.Modal.getInstance(document.getElementById('adDetailModal')).hide();
+                    currentRow.fadeOut(300,function(){ $(this).remove(); });
+                } else {
+                    Swal.fire('ผิดพลาด',res.message||'เกิดข้อผิดพลาด','error');
                 }
-            });
+            }, 'json');
         });
     });
 
-
-    /* ==========================
-       Helper: format date
-    ========================== */
-    function formatDate(dateStr) {
-        if (!dateStr) return '-';
-        const d = new Date(dateStr.replace(' ', 'T'));
+    // Helper format date
+    function formatDate(dateStr){
+        if(!dateStr) return '-';
+        const d = new Date(dateStr.replace(' ','T'));
         return d.toLocaleDateString('th-TH');
     }
 

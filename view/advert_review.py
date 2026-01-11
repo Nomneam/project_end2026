@@ -24,34 +24,69 @@ def advert_review():
     conn = connect_db()
     try:
         with conn.cursor() as cur:
+            # ----------------------------
+            # โฆษณาที่รอตรวจสอบ (submitted)
+            # ----------------------------
             cur.execute("""
                 SELECT 
                     a.adv_id,
                     a.adv_name,
                     a.valid_from,
                     a.valid_to,
+                    a.status,        -- ✅ ดึง status ด้วย
                     c.cus_fname,
                     c.cus_lname,
                     ar.advert_area_name,
                     ao.total_amount,
-                    ac.adc_cat_name      -- ✅ ประเภทโฆษณา
+                    ac.adc_cat_name
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
                 LEFT JOIN advert_order ao ON a.adv_id = ao.adv_id
                 LEFT JOIN advert_area ar ON ao.advert_area_id = ar.advert_area_id
                 LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
                 WHERE a.status = 'submitted'
-                AND a.del_flg = 0
+                  AND a.del_flg = 0
                 ORDER BY a.created_at DESC
+                LIMIT 5
             """)
             adverts = cur.fetchall()
 
+            # ----------------------------
+            # โฆษณาที่อนุมัติหรือปฏิเสธแล้ว
+            # ----------------------------
+            cur.execute("""
+                SELECT 
+                    a.adv_id,
+                    a.adv_name,
+                    a.valid_from,
+                    a.valid_to,
+                    a.status,
+                    c.cus_fname,
+                    c.cus_lname,
+                    ar.advert_area_name,
+                    ao.total_amount,
+                    ac.adc_cat_name
+                FROM advert a
+                JOIN customer c ON a.cus_id = c.cus_id
+                LEFT JOIN advert_order ao ON a.adv_id = ao.adv_id
+                LEFT JOIN advert_area ar ON ao.advert_area_id = ar.advert_area_id
+                LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
+                WHERE a.status IN ('approved','rejected')
+                  AND a.del_flg = 0
+                ORDER BY a.reviewed_at DESC
+                LIMIT 5
+            """)
+            approved_ads = cur.fetchall()
+
+        # ส่ง template พร้อมทั้งสองตัวแปร
         return render_template(
             'admin/ad-review.html',
-            adverts=adverts
+            adverts=adverts,
+            approved_ads=approved_ads
         )
     finally:
         conn.close()
+
 
 
 
