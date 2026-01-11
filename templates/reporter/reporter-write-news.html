@@ -1,142 +1,203 @@
 {% extends "layout/reporter-layout.html" %}
-
-{% block title %}Reporter Dashboard{% endblock %}
+{% block title %}เขียนข่าว{% endblock %}
 
 {% block head %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reporter-write-news.css') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 {% endblock %}
 
 {% block content %}
 <div class="main-content">
-  <h2 class="mb-4">เขียนข่าว</h2>
+  <!-- Title Bar -->
+  <div class="page-title">
+    <div>
+      <h2 class="fw-bold">Write News</h2>
+      <div class="text-muted">สร้างบทความข่าวใหม่ พร้อมจัดหมวดหมู่และรูปภาพ</div>
+    </div>
+  </div>
 
-  <div class="card">
-    <div class="card-header">เขียนบทความข่าวใหม่</div>
+  <div class="card soft-card shadow-sm mt-3">
+    <div class="card-header py-3">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="fw-semibold">
+          <i class="bi bi-file-earmark-text me-2"></i>เขียนบทความข่าวใหม่
+        </div>
+      </div>
+    </div>
 
-    <div class="card-body">
-      <form id="writeNewsForm" autocomplete="off">
-        <div class="mb-3">
-          <label for="newsTitle" class="form-label">หัวข้อ/ชื่อเรื่อง</label>
-          <input type="text" class="form-control" id="newsTitle" name="title" placeholder="กรอกหัวข้อข่าว" required />
+    <div class="card-body p-4">
+      <form
+        id="writeNewsForm"
+        action="{{ url_for('write_news_reporter.reporter_news_create_post') }}"
+        method="POST"
+        autocomplete="off"
+        enctype="multipart/form-data"
+        novalidate
+      >
+        <!-- ใช้กำหนด draft/publish -->
+        <input type="hidden" name="submit_action" id="submitAction" value="publish" />
+
+        <!-- SECTION: Basic info -->
+        <div class="mb-4">
+          <div class="row g-3">
+            <div class="col-lg-8">
+              <label for="newsTitle" class="form-label">
+                <b>หัวข้อ/ชื่อเรื่อง</b><span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="newsTitle"
+                name="title"
+                placeholder="เช่น: เปิดตัวโครงการใหม่ในกรุงเทพฯ"
+                required
+                maxlength="160"
+              />
+              <div class="d-flex justify-content-between mt-1">
+                <div class="counter"><span id="titleCount">0</span>/160</div>
+              </div>
+              <div class="invalid-feedback">กรุณากรอกหัวข้อข่าว</div>
+            </div>
+
+            <div class="col-lg-4">
+              <label class="form-label"><b>ประเภทข่าว</b> <span class="text-danger">*</span></label>
+              <div class="p-3 rounded-3 border bg-light">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="newsType" id="regularNews" value="regular" checked required />
+                  <label class="form-check-label" for="regularNews">
+                    ข่าวทั่วไป <span class="text-muted small">(ปกติ)</span>
+                  </label>
+                </div>
+
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="radio" name="newsType" id="featuredNews" value="featured" required />
+                  <label class="form-check-label" for="featuredNews">
+                    ข่าวยอดฮิต <span class="text-muted small">(แสดงเด่น/โปรโมท)</span>
+                  </label>
+                </div>
+              </div>
+              <div class="invalid-feedback">กรุณาเลือกประเภทข่าว</div>
+            </div>
+          </div>
         </div>
 
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="mainCategory" class="form-label">เลือกประเภทข่าวหลัก</label>
-            <select class="form-select" id="mainCategory" name="cat_id" required>
-              <option value="" selected disabled>เลือกประเภทข่าวหลัก</option>
-              {% for c in categories %}
+        <hr class="my-4" />
+
+        <!-- SECTION: Categories -->
+        <div class="mb-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="mainCategory" class="form-label">
+                <b>ประเภทข่าวหลัก</b> <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="mainCategory" name="cat_id" required>
+                <option value="" selected disabled>เลือกประเภทข่าวหลัก</option>
+                {% for c in categories %}
                 <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col-md-6">
-            <label for="subCategory" class="form-label">เลือกประเภทย่อย</label>
-            <select class="form-select" id="subCategory" name="subcat_id" required disabled>
-              <option value="" selected disabled>เลือกประเภทย่อย</option>
-            </select>
-            <div class="form-text" id="subcatHint">กรุณาเลือกประเภทข่าวหลักก่อน</div>
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label for="newsSummary" class="form-label">สรุปข่าว (บทนำ)</label>
-          <textarea class="form-control" id="newsSummary" name="summary" rows="3"
-            placeholder="กรอกสรุปข่าวสั้นๆ 2-3 ประโยค" required></textarea>
-        </div>
-
-        <div class="mb-3">
-          <label for="newsContent" class="form-label">เนื้อหาข่าว</label>
-
-          <div class="btn-toolbar mb-2" role="toolbar" aria-label="toolbar">
-            <div class="btn-group me-2" role="group">
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Bold">
-                <i class="bi bi-type-bold"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Italic">
-                <i class="bi bi-type-italic"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Underline">
-                <i class="bi bi-type-underline"></i>
-              </button>
-            </div>
-            <div class="btn-group me-2" role="group">
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Unordered list">
-                <i class="bi bi-list-ul"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Ordered list">
-                <i class="bi bi-list-ol"></i>
-              </button>
-            </div>
-            <div class="btn-group" role="group">
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Link">
-                <i class="bi bi-link-45deg"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" title="Image">
-                <i class="bi bi-image"></i>
-              </button>
-            </div>
-          </div>
-
-          <textarea class="form-control" id="newsContent" name="content" rows="15" placeholder="กรอกเนื้อหาข่าว" required></textarea>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">รูปภาพ</label>
-          <div class="row">
-            <div class="col-md-6">
-              <label for="mainImage" class="form-label">รูปหลัก</label>
-              <input type="file" class="form-control" id="mainImage" name="main_image" accept="image/*" />
-              <div class="mt-2">
-                <img src="https://picsum.photos/seed/news-main/600/400.jpg" class="news-image-preview" alt="รูปหลัก" id="mainImagePreview" />
-              </div>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">กรุณาเลือกประเภทข่าวหลัก</div>
             </div>
 
             <div class="col-md-6">
-              <label for="subImages" class="form-label">รูปรอง (สามารถเลือกได้หลายรูป)</label>
-              <input type="file" class="form-control" id="subImages" name="sub_images" multiple accept="image/*" />
-              <div class="mt-2" id="subImagesPreview">
-                <img src="https://picsum.photos/seed/news-sub1/300/200.jpg" class="news-image-preview me-2 mb-2" alt="รูปรอง 1" />
-                <img src="https://picsum.photos/seed/news-sub2/300/200.jpg" class="news-image-preview me-2 mb-2" alt="รูปรอง 2" />
+              <label for="subCategory" class="form-label">
+                <b>ประเภทย่อย</b> <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="subCategory" name="subcat_id" required disabled>
+                <option value="" selected disabled>เลือกประเภทย่อย</option>
+              </select>
+              <div class="form-text" id="subcatHint">กรุณาเลือกประเภทข่าวหลักก่อน</div>
+              <div class="invalid-feedback">กรุณาเลือกประเภทย่อย</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- SECTION: Content -->
+        <div class="mb-4">
+          <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <label for="newsContent" class="form-label mb-0">
+                <b>เนื้อหาข่าว</b> <span class="text-danger">*</span>
+              </label>
+            </div>
+
+            <textarea
+              class="form-control mt-2"
+              id="newsContent"
+              name="content"
+              rows="14"
+              placeholder="กรอกเนื้อหาข่าว..."
+              required
+            ></textarea>
+            <div class="invalid-feedback">กรุณากรอกเนื้อหาข่าว</div>
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- SECTION: Images -->
+        <div class="mb-4">
+          <div class="section-title my-1">
+            <b>รูปภาพ</b><span class="text-danger">*</span>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="dropzone">
+                <div class="d-flex align-items-center justify-content-between">
+                  <label for="mainImage" class="form-label mb-1">รูปหลัก <span class="text-danger">*</span></label>
+                </div>
+
+                <input type="file" class="form-control" id="mainImage" name="main_image" accept="image/*" required />
+                <div class="invalid-feedback">กรุณาเลือกรูปหลัก</div>
+
+                <div class="mt-3 d-flex align-items-start gap-3" id="mainImagePreviewWrap" style="display: none">
+                  <div class="preview-540x360">
+                    <img id="mainImagePreview" />
+                  </div>
+
+                  <div class="small text-muted">
+                    <div class="fw-semibold">พรีวิวรูปหลัก</div>
+                    <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="btnRemoveMainImage">
+                      <i class="bi bi-trash me-1"></i>ลบรูป
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <div class="dropzone">
+                <div class="d-flex align-items-center justify-content-between">
+                  <label for="subImages" class="form-label mb-1">รูปรอง (เลือกได้หลายรูป)</label>
+                  <span class="text-muted small"><i class="bi bi-images me-1"></i>ได้หลายไฟล์</span>
+                </div>
+
+                <input type="file" class="form-control" id="subImages" name="sub_images" multiple accept="image/*" />
+                <div class="mt-3" id="subImagesPreview"></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">ประเภทข่าว</label>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="newsType" id="featuredNews" value="featured" />
-            <label class="form-check-label" for="featuredNews">ข่าวยอดฮิต</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="newsType" id="regularNews" value="regular" checked />
-            <label class="form-check-label" for="regularNews">ข่าวทั่วไป</label>
-          </div>
-        </div>
+        <!-- Sticky Actions -->
+        <div class="sticky-actions mt-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="text-muted small">
+              <i class="bi bi-shield-check me-1"></i>ระบบจะตรวจสอบข้อมูลที่จำเป็นก่อนเผยแพร่
+            </div>
 
-        <div class="mb-3">
-          <label for="tags" class="form-label">แท็ก</label>
-          <input type="text" class="form-control" id="tags" name="tags" placeholder="กรอกแท็ก คั่นด้วยเครื่องหมายจุลภาค (,)" />
-          <small class="form-text text-muted">ตัวอย่าง: การเมือง, รัฐบาล, เศรษฐกิจ</small>
-        </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-secondary" id="btnSaveDraft">
+                <i class="bi bi-save2 me-1"></i>บันทึกฉบับร่าง
+              </button>
 
-        <div class="mb-3">
-          <label for="publishDate" class="form-label">วันที่เผยแพร่</label>
-          <input type="datetime-local" class="form-control" id="publishDate" name="publish_date" />
-        </div>
-
-        <div class="d-flex justify-content-between">
-          <div>
-            <button type="button" class="btn btn-secondary me-2">บันทึกฉบับร่าง</button>
-            <button type="button" class="btn btn-outline-primary">ดูตัวอย่าง</button>
-          </div>
-          <div>
-            <button type="button" class="btn btn-danger me-2">ยกเลิก</button>
-            <button type="button" class="btn btn-primary">เผยแพร่ข่าว</button>
+              <button type="submit" class="btn btn-primary" id="btnPublish">
+                <i class="bi bi-send me-1"></i>เผยแพร่ข่าว
+              </button>
+            </div>
           </div>
         </div>
       </form>

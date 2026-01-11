@@ -69,9 +69,9 @@ body {
     transition: transform 0.2s;
 }
 
-.card:hover {
+/* .card:hover {
     transform: translateY(-5px);
-}
+} */
 
 .card-header {
     background-color: var(--primary-red);
@@ -206,3 +206,10 @@ body {
     max-width: 100%;
     height: auto;
 }
+
+/* ให้ navbar และ dropdown อยู่บนสุดเสมอ */
+.app-navbar { position: sticky; top: 0; z-index: 2000; overflow: visible; }
+.user-menu .dropdown-menu { z-index: 3000; }
+
+/* กัน parent ตัด dropdown */
+.app-shell, #main, .main { overflow: visible !important; }

@@ -1,8 +1,124 @@
-/* ทำให้ตอนโหลดดูเนียนขึ้น */
+/* =========================
+   Write News - page only
+   ========================= */
+
+/* ทำให้ฟอร์มดู premium ขึ้น */
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.page-title h2 {
+  margin: 0;
+}
+
+/* ถ้าหน้านี้ใช้ .soft-card แต่ style.css ยังไม่มี ก็เก็บไว้ได้ */
+.soft-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  overflow: visible; /* กันพวก popup/tooltip ถูกตัด */
+}
+
+/* ทำให้หัว card ไม่โดนทับ (ถ้า style.css มีอยู่แล้ว ตรงนี้จะซ้ำได้ แต่ไม่อันตราย) */
+.soft-card .card-header {
+  background-color: var(--primary-red) !important;
+  color: #fff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.section-title {
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin-bottom: 12px;
+}
+
+.section-hint {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* sticky bar ปุ่มล่าง */
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* กล่องแนบรูป */
+.dropzone {
+  border: 1.5px dashed rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* รูปหลัก */
+.preview-540x360 {
+  width: 100% !important;
+  max-width: 480px !important; /* ปรับขนาดตามที่คุณต้องการ */
+  aspect-ratio: 3 / 2;
+  height: auto !important;
+
+  border: 1px solid #dee2e6 !important;
+  border-radius: 8px !important;
+  background: #f8f9fa !important;
+  overflow: hidden !important;
+}
+
+.preview-540x360 img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* รูปรอง thumbnail (ถ้าคุณจะใช้ class นี้ตอน render) */
+.preview-sub {
+  width: 240px !important;
+  aspect-ratio: 3 / 2;
+  height: auto !important;
+  flex: 0 0 auto !important;
+
+  border: 1px solid #dee2e6 !important;
+  border-radius: 8px !important;
+  background: #f8f9fa !important;
+  overflow: hidden !important;
+}
+
+.preview-sub img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* container ของรูปรอง: เลื่อนแนวนอน */
+#subImagesPreview {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  padding-bottom: 6px !important;
+  align-items: flex-start !important;
+}
+
+/* ทำให้ตอนโหลด subcategory ดูเนียนขึ้น */
 #subCategory.is-loading {
   opacity: 0.75;
   pointer-events: none;
-  background-image: linear-gradient(90deg, rgba(0,0,0,0.03) 25%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.03) 75%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.03) 25%,
+    rgba(0, 0, 0, 0.06) 50%,
+    rgba(0, 0, 0, 0.03) 75%
+  );
   background-size: 200% 100%;
   animation: subcatShimmer 0.9s linear infinite;
 }
