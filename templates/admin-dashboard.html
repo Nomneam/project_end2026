@@ -2,157 +2,136 @@
 
 {% block title %}Admin Dashboard{% endblock %}
 
-
 {% block head %}
-
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-
-
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="main-content">
+  <div class="container-fluid">
 
-  <h2 class="mb-4">แดชบอร์ด Admin</h2>
+    <h2 class="mb-4">แดชบอร์ด Admin</h2>
 
-  <!-- ======= Stat Cards ======= -->
-  <div class="row">
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">18</div>
-        <div class="stat-label">ผู้ใช้งานออนไลน์</div>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value text-danger">18</div>
+          <div class="stat-label">ผู้ใช้งานออนไลน์</div>
+        </div>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">10</div>
-        <div class="stat-label">ผู้ใช้งานออฟไลน์</div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value">10</div>
+          <div class="stat-label">ผู้ใช้งานออฟไลน์</div>
+        </div>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">28</div>
-        <div class="stat-label">จำนวนพนักงานทั้งหมด</div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value">28</div>
+          <div class="stat-label">จำนวนพนักงานทั้งหมด</div>
+        </div>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">15</div>
-        <div class="stat-label">โฆษณาที่รออนุมัติ</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======= Charts + Ads ======= -->
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">การเข้าใช้งานของผู้ใช้</div>
-        <div class="card-body">
-          <canvas id="userActivityChart"></canvas>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value">15</div>
+          <div class="stat-label">โฆษณาที่รออนุมัติ</div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">โฆษณาทั้งหมดในเว็บ</div>
-        <div class="card-body">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>โฆษณา</th>
-                <th>ตำแหน่ง</th>
-                <th>สถานะ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>โฆษณา A</td>
-                <td>แบนเนอร์หลัก</td>
-                <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
-              </tr>
-              <tr>
-                <td>โฆษณา B</td>
-                <td>แบนเนอร์ข้าง</td>
-                <td><span class="badge bg-warning">รออนุมัติ</span></td>
-              </tr>
-              <tr>
-                <td>โฆษณา C</td>
-                <td>โพสต์โปรโมท</td>
-                <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
-              </tr>
-            </tbody>
-          </table>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-danger text-white">การเข้าใช้งานของผู้ใช้</div>
+          <div class="card-body">
+            <div class="chart-container" style="position: relative; height:300px;">
+              <canvas id="userActivityChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-danger text-white">โฆษณาทั้งหมดในเว็บ</div>
+          <div class="card-body">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>โฆษณา</th>
+                  <th>ตำแหน่ง</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>โฆษณา A</td>
+                  <td>แบนเนอร์หลัก</td>
+                  <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
+                </tr>
+                <tr>
+                  <td>โฆษณา B</td>
+                  <td>แบนเนอร์ข้าง</td>
+                  <td><span class="badge bg-warning text-dark">รออนุมัติ</span></td>
+                </tr>
+                <tr>
+                  <td>โฆษณา C</td>
+                  <td>โพสต์โปรโมท</td>
+                  <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ======= User Management ======= -->
-  <div class="row mt-4">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-header">จัดการผู้ใช้งาน</div>
-        <div class="card-body">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>ชื่อ</th>
-                <th>อีเมล</th>
-                <th>ตำแหน่ง</th>
-                <th>สถานะ</th>
-                <th>จัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>สมชาย ใจดี</td>
-                <td>somchai@example.com</td>
-                <td>ผู้ดูแลระบบ</td>
-                <td><span class="badge bg-success">ออนไลน์</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                  <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                </td>
-              </tr>
-              <tr>
-                <td>สมหญิง รักงาน</td>
-                <td>somying@example.com</td>
-                <td>นักเขียนข่าว</td>
-                <td><span class="badge bg-success">ออนไลน์</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                  <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                </td>
-              </tr>
-              <tr>
-                <td>สมศรี ขยันหมด</td>
-                <td>somsri@example.com</td>
-                <td>บรรณาธิการ</td>
-                <td><span class="badge bg-secondary">ออฟไลน์</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                  <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                </td>
-              </tr>
-              <tr>
-                <td>สมใจ รักศิลป์</td>
-                <td>somjai@example.com</td>
-                <td>นักเขียนข่าว</td>
-                <td><span class="badge bg-secondary">ออฟไลน์</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                  <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    <div class="row mt-4 mb-5">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-danger text-white">จัดการผู้ใช้งาน</div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped align-middle">
+                <thead>
+                  <tr>
+                    <th>ชื่อ</th>
+                    <th>อีเมล</th>
+                    <th>ตำแหน่ง</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>สมชาย ใจดี</td>
+                    <td>somchai@example.com</td>
+                    <td>ผู้ดูแลระบบ</td>
+                    <td><span class="badge bg-success">ออนไลน์</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>สมหญิง รักงาน</td>
+                    <td>somying@example.com</td>
+                    <td>นักเขียนข่าว</td>
+                    <td><span class="badge bg-success">ออนไลน์</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
+  </div>
 </div>
 {% endblock %}
 
@@ -166,8 +145,17 @@
         labels: ['ออนไลน์', 'ออฟไลน์'],
         datasets: [{
           data: [18, 10],
-          backgroundColor: ['#198754', '#6c757d']
+          backgroundColor: ['#198754', '#6c757d'],
+          borderWidth: 0
         }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
       }
     });
   });
