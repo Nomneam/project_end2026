@@ -23,6 +23,7 @@ body {
     transition: all 0.3s;
 }
 
+
 .sidebar-header {
     background-color: var(--primary-red);
     color: white;
