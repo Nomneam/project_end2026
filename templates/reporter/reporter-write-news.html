@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เขียนข่าว - ระบบจัดการข่าวออนไลน์</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="bi bi-newspaper"></i> ระบบข่าวออนไลน์
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="owner-dashboard.html"><i class="bi bi-speedometer2"></i> แดชบอร์ด Owner</a></li>
+            <li><a href="admin-dashboard.html"><i class="bi bi-gear"></i> แดชบอร์ด Admin</a></li>
+            <li><a href="news-management.html"><i class="bi bi-file-text"></i> รวมข่าว</a></li>
+            <li><a href="category-management.html"><i class="bi bi-tags"></i> ประเภทข่าว</a></li>
+            <li><a href="news-editor.html" class="active"><i class="bi bi-pencil-square"></i> เขียนข่าว</a></li>
+            <li><a href="ad-review.html"><i class="bi bi-badge-ad"></i> ตรวจสอบโฆษณา</a></li>
+            <li><a href="reporter-dashboard.html"><i class="bi bi-journal-text"></i> แดชบอร์ด Reporter</a></li>
+            <li><a href="index.html"><i class="bi bi-house"></i> หน้าหลัก</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2 class="mb-4">เขียนข่าว</h2>
+        
+        <div class="card">
+            <div class="card-header">เขียนบทความข่าวใหม่</div>
+            <div class="card-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="newsTitle" class="form-label">หัวข้อ/ชื่อเรื่อง</label>
+                        <input type="text" class="form-control" id="newsTitle" placeholder="กรอกหัวข้อข่าว">
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="mainCategory" class="form-label">เลือกประเภทข่าวหลัก</label>
+                            <select class="form-select" id="mainCategory">
+                                <option selected>เลือกประเภทข่าวหลัก</option>
+                                <option value="1">ข่าวการเมือง</option>
+                                <option value="2">ข่าวเศรษฐกิจ</option>
+                                <option value="3">ข่าวกีฬา</option>
+                                <option value="4">ข่าวบันเทิง</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="subCategory" class="form-label">เลือกประเภทย่อย</label>
+                            <select class="form-select" id="subCategory">
+                                <option selected>เลือกประเภทย่อย</option>
+                                <option value="1">ประเภทย่อย 1</option>
+                                <option value="2">ประเภทย่อย 2</option>
+                                <option value="3">ประเภทย่อย 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="newsSummary" class="form-label">สรุปข่าว (บทนำ)</label>
+                        <textarea class="form-control" id="newsSummary" rows="3" placeholder="กรอกสรุปข่าวสั้นๆ 2-3 ประโยค"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="newsContent" class="form-label">เนื้อหาข่าว</label>
+                        <div class="btn-toolbar mb-2" role="toolbar">
+                            <div class="btn-group me-2" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-type-bold"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-type-italic"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-type-underline"></i></button>
+                            </div>
+                            <div class="btn-group me-2" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-list-ul"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-list-ol"></i></button>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-link-45deg"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-image"></i></button>
+                            </div>
+                        </div>
+                        <textarea class="form-control" id="newsContent" rows="15" placeholder="กรอกเนื้อหาข่าว"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">รูปภาพ</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="mainImage" class="form-label">รูปหลัก</label>
+                                <input type="file" class="form-control" id="mainImage" accept="image/*">
+                                <div class="mt-2">
+                                    <img src="https://picsum.photos/seed/news-main/600/400.jpg" class="news-image-preview" alt="รูปหลัก" id="mainImagePreview">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="subImages" class="form-label">รูปรอง (สามารถเลือกได้หลายรูป)</label>
+                                <input type="file" class="form-control" id="subImages" multiple accept="image/*">
+                                <div class="mt-2" id="subImagesPreview">
+                                    <img src="https://picsum.photos/seed/news-sub1/300/200.jpg" class="news-image-preview me-2 mb-2" alt="รูปรอง 1">
+                                    <img src="https://picsum.photos/seed/news-sub2/300/200.jpg" class="news-image-preview me-2 mb-2" alt="รูปรอง 2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">ประเภทข่าว</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="newsType" id="featuredNews" value="featured">
+                            <label class="form-check-label" for="featuredNews">
+                                ข่าวยอดฮิต
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="newsType" id="regularNews" value="regular" checked>
+                            <label class="form-check-label" for="regularNews">
+                                ข่าวทั่วไป
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">แท็ก</label>
+                        <input type="text" class="form-control" id="tags" placeholder="กรอกแท็ก คั่นด้วยเครื่องหมายจุลภาค (,)">
+                        <small class="form-text text-muted">ตัวอย่าง: การเมือง, รัฐบาล, เศรษฐกิจ</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="publishDate" class="form-label">วันที่เผยแพร่</label>
+                        <input type="datetime-local" class="form-control" id="publishDate">
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="button" class="btn btn-secondary me-2">บันทึกฉบับร่าง</button>
+                            <button type="button" class="btn btn-outline-primary">ดูตัวอย่าง</button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-danger me-2">ยกเลิก</button>
+                            <button type="button" class="btn btn-primary">เผยแพร่ข่าว</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preview main image
+            const mainImageInput = document.getElementById('mainImage');
+            const mainImagePreview = document.getElementById('mainImagePreview');
+            
+            if (mainImageInput && mainImagePreview) {
+                mainImageInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            mainImagePreview.src = e.target.result;
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // Preview sub images
+            const subImagesInput = document.getElementById('subImages');
+            const subImagesPreview = document.getElementById('subImagesPreview');
+            
+            if (subImagesInput && subImagesPreview) {
+                subImagesInput.addEventListener('change', function() {
+                    subImagesPreview.innerHTML = '';
+                    const files = this.files;
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'news-image-preview me-2 mb-2';
+                            img.alt = `รูปรอง ${i+1}`;
+                            subImagesPreview.appendChild(img);
+                        }
+                        
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // Set default publish date to current date and time
+            const publishDateInput = document.getElementById('publishDate');
+            if (publishDateInput) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                
+                publishDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        });
+    </script>
+</body>
+</html>

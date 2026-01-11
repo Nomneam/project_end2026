@@ -13,7 +13,11 @@
     {% block head %}{% endblock %}
   </head>
 
-  <body data-role-label="เจ้าของ">
+  <body
+    data-role-label="{{ session.get('user', {}).get('role_name', '-') }}"
+    data-user-name="{{ session.get('user', {}).get('fname', '-') }}"
+    data-avatar-url="{{ session.get('user', {}).get('avatar_url') or url_for('static', filename='img/default-avatar.png') }}"
+  >
     <nav class="navbar app-navbar sticky-top">
       <div class="container-fluid px-3">
         <button
@@ -31,7 +35,10 @@
         </a>
 
         <div class="ms-auto d-flex align-items-center gap-2">
-          <span class="role-pill" id="rolePill">เจ้าของ</span>
+          <!-- ✅ role จาก session -->
+          <span class="role-pill" id="rolePill">
+            {{ session.get('user', {}).get('role_name', '-') }}
+          </span>
 
           <div class="dropdown user-menu">
             <button
@@ -41,8 +48,19 @@
               aria-expanded="false"
               aria-label="User menu"
             >
-              <img class="avatar" id="navAvatar" alt="avatar" />
-              <strong class="small" id="navUserName">—</strong>
+              <!-- ✅ avatar จาก session -->
+              <img
+                class="avatar"
+                id="navAvatar"
+                alt="avatar"
+                src="{{ session.get('user', {}).get('avatar_url') or url_for('static', filename='img/default-avatar.png') }}"
+              />
+
+              <!-- ✅ ชื่อจาก emp_fname -->
+              <strong class="small" id="navUserName">
+                {{ session.get('user', {}).get('fname', '-') }}
+              </strong>
+
               <span class="ms-1 text-muted" aria-hidden="true">▾</span>
             </button>
 
@@ -71,10 +89,22 @@
       <aside class="sidebar" id="sidebar">
         <div class="profile-card">
           <div class="d-flex align-items-center gap-3">
-            <img class="avatar" id="sideAvatar" alt="avatar" />
+            <!-- ✅ avatar -->
+            <img
+              class="avatar"
+              id="sideAvatar"
+              alt="avatar"
+              src="{{ session.get('user', {}).get('avatar_url') or url_for('static', filename='img/default-avatar.png') }}"
+            />
             <div>
-              <div class="profile-name" id="sideUserName">—</div>
-              <div class="profile-meta" id="sideUserRole">สิทธิ์: เจ้าของ</div>
+              <!-- ✅ fname -->
+              <div class="profile-name" id="sideUserName">
+                {{ session.get('user', {}).get('fname', '-') }}
+              </div>
+              <!-- ✅ role -->
+              <div class="profile-meta" id="sideUserRole">
+                ตำแหน่ง: {{ session.get('user', {}).get('role_name', '-') }}
+              </div>
             </div>
           </div>
         </div>
@@ -91,14 +121,16 @@
         </div>
       </aside>
 
-      <!-- ✅ MAIN ย้ายเข้ามาใน app-shell -->
+      <!-- ✅ MAIN -->
       <main id="main" class="main">
         {% block content %}{% endblock %}
       </main>
     </div>
 
-    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+    <!-- ✅ แนะนำ: bootstrap มาก่อน layout.js เพื่อให้ dropdown ชัวร์ -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

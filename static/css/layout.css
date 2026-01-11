@@ -1,6 +1,6 @@
 :root{
-  --brand: #d61f26;           /* แดงหลัก */
-  --brand-dark: #b3161c;      /* แดงเข้ม */
+  --brand: #d61f26;
+  --brand-dark: #b3161c;
   --bg: #f6f7fb;
   --text: #111827;
   --muted: #6b7280;
@@ -16,12 +16,26 @@ body{
   color: var(--text);
 }
 
+/* ✅ กัน dropdown ถูกตัดโดย container */
+.navbar,
+.app-navbar,
+.navbar .container-fluid,
+.app-shell{
+  overflow: visible !important;
+}
+
 /* ---------- Navbar ---------- */
 .app-navbar{
   background: rgba(255,255,255,.92);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
+
+  /* ✅ ยก navbar ให้อยู่เหนือทุกอย่าง */
+  position: sticky;
+  top: 0;
+  z-index: 3000;
 }
+
 .brand{
   font-weight: 900;
   letter-spacing: .2px;
@@ -36,15 +50,6 @@ body{
   box-shadow: 0 10px 24px rgba(214,31,38,.25);
 }
 
-.user-chip{
-  display:flex;
-  align-items:center;
-  gap:.65rem;
-  padding:.35rem .6rem;
-  border:1px solid var(--border);
-  border-radius: 999px;
-  background:#fff;
-}
 .avatar{
   width: 36px;
   height: 36px;
@@ -53,6 +58,7 @@ body{
   border: 1px solid var(--border);
   background: #e5e7eb;
 }
+
 .role-pill{
   font-size: .75rem;
   color: var(--brand-dark);
@@ -75,6 +81,7 @@ body{
   background: #fff;
   border-right: 1px solid var(--border);
   padding: 16px;
+
   position: sticky;
   top: 56px;
   height: calc(100vh - 56px);
@@ -120,65 +127,23 @@ body{
   color: var(--brand-dark);
 }
 
-.logout{
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
-}
-
 /* ---------- Main Content ---------- */
 .main{
   flex: 1 1 auto;
   padding: 18px;
 }
-.page-hero{
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: 0 12px 28px rgba(17,24,39,.06);
-}
-.page-hero h4{ font-weight: 900; }
-.muted{ color: var(--muted); }
 
-.cardx{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  box-shadow: 0 10px 22px rgba(17,24,39,.05);
-}
-.cardx h6{ font-weight: 900; margin:0; }
-
-/* ---------- Mobile Sidebar ---------- */
-@media (max-width: 992px){
-  .sidebar{
-    position: fixed;
-    top: 56px;
-    left: 0;
-    height: calc(100vh - 56px);
-    transform: translateX(-105%);
-    transition: .2s ease;
-    z-index: 1040;
-    box-shadow: 0 24px 60px rgba(17,24,39,.22);
-  }
-  .sidebar.show{ transform: translateX(0); }
-  .sidebar-backdrop{
-    position: fixed;
-    inset: 56px 0 0 0;
-    background: rgba(17,24,39,.35);
-    display:none;
-    z-index: 1039;
-  }
-  .sidebar-backdrop.show{ display:block; }
-  .main{ padding: 14px; }
+/* =========================
+   ✅ Dropdown Fix (สำคัญ)
+   ========================= */
+.user-menu{
+  position: relative; /* กันบางธีมไป override */
 }
 
-
-/* Dropdown user menu */
 .user-menu .dropdown-toggle::after{
   display:none;
 }
+
 .user-menu .dropdown-toggle{
   border: 1px solid var(--border);
   background: #fff;
@@ -192,16 +157,55 @@ body{
   border-color: rgba(214,31,38,.25);
   background: rgba(214,31,38,.04);
 }
+
+/* เมนู */
 .user-menu .dropdown-menu{
   border-radius: 14px;
   border: 1px solid var(--border);
   box-shadow: 0 18px 40px rgba(17,24,39,.14);
   min-width: 220px;
+
+  /* ✅ ยกให้สูงกว่า sidebar/backdrop */
+  z-index: 4000 !important;
 }
-.user-menu .dropdown-item:active{
-  background: var(--brand);
+
+/* ✅ บังคับให้ show แล้วต้อง “แสดงจริง” */
+.dropdown-menu.show{
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
-.user-menu .dropdown-header{
-  font-weight: 800;
-  color: var(--text);
+
+/* ---------- Mobile Sidebar ---------- */
+@media (max-width: 992px){
+  .sidebar{
+    position: fixed;
+    top: 56px;
+    left: 0;
+    height: calc(100vh - 56px);
+    transform: translateX(-105%);
+    transition: .2s ease;
+    z-index: 2500;
+    box-shadow: 0 24px 60px rgba(17,24,39,.22);
+  }
+  .sidebar.show{ transform: translateX(0); }
+
+  /* ✅ backdrop ไม่ให้บังคลิกตอนปกติ */
+  .sidebar-backdrop{
+    position: fixed;
+    inset: 56px 0 0 0;
+    background: rgba(17,24,39,.35);
+
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: .2s ease;
+    z-index: 2400;
+  }
+  .sidebar-backdrop.show{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .main{ padding: 14px; }
 }

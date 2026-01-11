@@ -1,79 +1,65 @@
-(function(){
-  const sidebar = document.getElementById("sidebar");
-  const backdrop = document.getElementById("sidebarBackdrop");
-  const btnToggle = document.getElementById("btnToggleSidebar");
+$(function () {
+  const $sidebar = $("#sidebar");
+  const $backdrop = $("#sidebarBackdrop");
+  const $btnToggle = $("#btnToggleSidebar");
 
-  const routeEcho = document.getElementById("routeEcho");
-  const pageTitle = document.getElementById("pageTitle");
-  const pageSubtitle = document.getElementById("pageSubtitle");
-
-  const user = window.__USER__ || {
-    name: "Sajud Air",
-    avatarUrl: "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces",
-    roleLabel: document.body.dataset.roleLabel || "—"
-  };
-
-  // เติมข้อมูล user
-  const navAvatar = document.getElementById("navAvatar");
-  const sideAvatar = document.getElementById("sideAvatar");
-  const navUserName = document.getElementById("navUserName");
-  const sideUserName = document.getElementById("sideUserName");
-  const rolePill = document.getElementById("rolePill");
-  const sideUserRole = document.getElementById("sideUserRole");
-
-  if(navAvatar) navAvatar.src = user.avatarUrl;
-  if(sideAvatar) sideAvatar.src = user.avatarUrl;
-  if(navUserName) navUserName.textContent = user.name;
-  if(sideUserName) sideUserName.textContent = user.name;
-  if(rolePill) rolePill.textContent = user.roleLabel;
-  if(sideUserRole) sideUserRole.textContent = `สิทธิ์: ${user.roleLabel}`;
-
-  // Mobile Sidebar
-  function openSidebar(){
-    sidebar?.classList.add("show");
-    backdrop?.classList.add("show");
+  function openSidebar() {
+    $sidebar.addClass("show");
+    $backdrop.addClass("show");
   }
-  function closeSidebar(){
-    sidebar?.classList.remove("show");
-    backdrop?.classList.remove("show");
+
+  function closeSidebar() {
+    $sidebar.removeClass("show");
+    $backdrop.removeClass("show");
   }
-  btnToggle?.addEventListener("click", () => {
-    if(sidebar?.classList.contains("show")) closeSidebar();
-    else openSidebar();
+
+  // Sidebar toggle (mobile)
+  $btnToggle.on("click", function () {
+    $sidebar.hasClass("show") ? closeSidebar() : openSidebar();
   });
-  backdrop?.addEventListener("click", closeSidebar);
 
-  function setActive(){
-    const hash = window.location.hash || "#/dashboard";
-    if(routeEcho) routeEcho.textContent = hash;
+  $backdrop.on("click", closeSidebar);
 
-    const m = meta[hash] || meta["#/dashboard"];
-    if(pageTitle) pageTitle.textContent = m.t;
-    if(pageSubtitle) pageSubtitle.textContent = m.s;
+  $(".side-link").on("click", function () {
+    closeSidebar();
+  });
 
-    document.querySelectorAll(".side-link").forEach(a => a.classList.remove("active"));
-    const active = document.querySelector(`.side-link[href="${hash}"]`);
-    if(active) active.classList.add("active");
+  // ✅ Dropdown: บังคับให้กดแล้ว toggle แน่นอน
+  const ddBtn = document.querySelector('.user-menu [data-bs-toggle="dropdown"]');
+  if (ddBtn && typeof bootstrap !== "undefined" && bootstrap.Dropdown) {
+    const inst = bootstrap.Dropdown.getOrCreateInstance(ddBtn);
+
+    // กันบางเคส click ไม่ถึงเพราะมี handler อื่น
+    ddBtn.addEventListener("click", function (e) {
+      e.preventDefault();   // กัน anchor/submit
+      e.stopPropagation();  // กัน event อื่นปิดทับ
+      inst.toggle();
+    });
   }
 
-  window.addEventListener("hashchange", () => {
+  // เมนูใน dropdown
+  $("#ddProfile").on("click", function (e) {
+    e.preventDefault();
+    // ถ้ามีหน้าโปรไฟล์จริง เปลี่ยนเป็น route ของคุณ
+    window.location.href = "/profile";
+  });
+
+  $("#ddLogout").on("click", function (e) {
+    e.preventDefault();
+    window.location.href = "/logout_emp";
+  });
+
+  // Active menu (hash)
+  function setActive() {
+    const hash = window.location.hash || "#/dashboard";
+    $(".side-link").removeClass("active");
+    $(`.side-link[href="${hash}"]`).addClass("active");
+  }
+
+  $(window).on("hashchange", function () {
     setActive();
     closeSidebar();
   });
 
-  // Dropdown actions (ขวาบน)
-  document.getElementById("ddProfile")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.location.hash = "/profile";
-  });
-
-  document.getElementById("ddLogout")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    // ของจริง: เปลี่ยนเป็น window.location.href = "/logout"
-    window.location.hash = "/logout";
-  });
-
-  // init
-  if(!window.location.hash) window.location.hash = "/dashboard";
   setActive();
-})();
+});
