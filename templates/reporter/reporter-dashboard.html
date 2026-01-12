@@ -4,18 +4,13 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reporter-dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
-
-<!-- Mobile Menu Toggle -->
-<button class="mobile-toggle" id="mobileToggle">
-  <i class="bi bi-list"></i>
-</button>
-
 <!-- Main Content -->
 <div class="main-content">
-  <h2 class="mb-4">Dashboard Reporter</h2>
+  <h2 class="mb-3">Dashboard Reporter</h2>
 
   <div class="row">
     <div class="col-md-12">
@@ -26,7 +21,7 @@
     </div>
   </div>
 
-  <div class="row mt-3">
+  <div class="row ">
     <div class="col-md-12">
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -34,25 +29,69 @@
         </div>
 
         <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-              <thead>
+          <div class="table-wrap">
+
+            <form method="GET" class="row g-2 align-items-end mb-3">
+              <div class="col-md-4">
+                <label class="form-label">ประเภทข่าว</label>
+                <select name="cat_id" class="form-select">
+                  <option value="">ทั้งหมด</option>
+                  {% for c in categories %}
+                    <option value="{{ c.cat_id }}" {% if (f_cat_id|string) == (c.cat_id|string) %}selected{% endif %}>
+                      {{ c.cat_name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">ชนิดข่าว</label>
+                <select name="kind" class="form-select">
+                  <option value="all" {% if f_kind == "all" %}selected{% endif %}>ทั้งหมด</option>
+                  <option value="featured" {% if f_kind == "featured" %}selected{% endif %}>ข่าวยอดฮิต</option>
+                  <option value="normal" {% if f_kind == "normal" %}selected{% endif %}>ข่าวทั่วไป</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">สถานะ</label>
+                <select name="status" class="form-select">
+                  <option value="all" {% if f_status == "all" %}selected{% endif %}>ทั้งหมด</option>
+                  <option value="publish" {% if f_status == "publish" %}selected{% endif %}>เผยแพร่แล้ว</option>
+                  <option value="draft" {% if f_status == "draft" %}selected{% endif %}>ฉบับร่าง</option>
+                </select>
+              </div>
+
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-danger" type="submit">
+                  <i class="bi bi-search"></i> ค้นหา
+                </button>
+
+                <a class="btn btn-outline-secondary"
+                  href="{{ url_for('dashboard_reporter.reporter_dashboard') }}">
+                  ล้างค่า
+                </a>
+              </div>
+            </form>
+
+            <table class="table news-table align-middle">
+              <thead class="news-thead">
                 <tr>
-                  <th>หัวข้อข่าว</th>
-                  <th>ชนิดข่าว</th>
-                  <th>ประเภท</th>
-                  <th>วันที่เผยแพร่</th>
-                  <th>สถานะ</th>
-                  <th>จัดการ</th>
+                  <th class="text-center">หัวข้อข่าว</th>
+                  <th class="text-center">ชนิดข่าว</th>
+                  <th class="text-center">ประเภท</th>
+                  <th class="text-center">วันที่เผยแพร่</th>
+                  <th class="text-center">สถานะ</th>
+                  <th class="text-center">จัดการ</th>
                 </tr>
               </thead>
 
               <tbody>
                 {% for n in latest_news %}
                 <tr>
-                  <td class="fw-semibold">{{ n.news_title }}</td>
+                  <td class="fw-semibold text-center">{{ n.news_title }}</td>
 
-                  <td>
+                  <td class="text-center">
                     {% if (n.is_featured or 0) == 1 %}
                       <span class="badge bg-danger">ข่าวยอดฮิต</span>
                     {% else %}
@@ -60,9 +99,9 @@
                     {% endif %}
                   </td>
 
-                  <td>{{ n.category_name or "-" }}</td>
+                  <td class="text-center">{{ n.category_name or "-" }}</td>
 
-                  <td>
+                  <td class="text-center">
                     {% if n.published_at %}
                       {{ n.published_at.strftime("%d/%m/%Y") }}
                     {% else %}
@@ -70,7 +109,7 @@
                     {% endif %}
                   </td>
 
-                  <td>
+                  <td class="text-center">
                     {% if n.status == "publish" %}
                       <span class="status-badge status-published">เผยแพร่แล้ว</span>
                     {% else %}
@@ -78,7 +117,7 @@
                     {% endif %}
                   </td>
 
-                  <td>
+                  <td class="text-center">
                     <a href="/reporter/news/edit/{{ n.news_id }}" class="btn btn-sm btn-primary" title="แก้ไข">
                       <i class="bi bi-pencil"></i>
                     </a>
@@ -96,6 +135,50 @@
                 {% endfor %}
               </tbody>
             </table>
+
+           {# --- Pagination --- #}
+{% if total_pages > 1 %}
+  <div class="pagination-wrap mt-3">
+    <nav aria-label="Pagination">
+      <ul class="pagination mb-0">
+
+        <!-- Prev -->
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <a class="page-link"
+             href="{{ url_for('dashboard_reporter.reporter_dashboard',
+                              page=page-1, cat_id=f_cat_id, kind=f_kind, status=f_status) }}"
+             aria-label="Previous">
+            &laquo;
+          </a>
+        </li>
+
+        <!-- Pages -->
+        {% for p in range(1, total_pages + 1) %}
+          <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link"
+               href="{{ url_for('dashboard_reporter.reporter_dashboard',
+                                page=p, cat_id=f_cat_id, kind=f_kind, status=f_status) }}">
+              {{ p }}
+            </a>
+          </li>
+        {% endfor %}
+
+        <!-- Next -->
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <a class="page-link"
+             href="{{ url_for('dashboard_reporter.reporter_dashboard',
+                              page=page+1, cat_id=f_cat_id, kind=f_kind, status=f_status) }}"
+             aria-label="Next">
+            &raquo;
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+  </div>
+{% endif %}
+
+
           </div>
 
         </div>
@@ -108,4 +191,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reporter-dashboard.js') }}"></script>
 {% endblock %}

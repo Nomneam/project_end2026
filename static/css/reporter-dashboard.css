@@ -1,0 +1,113 @@
+/* ===== Pagination Position ===== */
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;   /* 👉 ชิดขวา */
+  margin-top: 16px;
+}
+
+/* ===== Red-White Theme ===== */
+.pagination .page-link {
+  color: #dc3545;
+  border-color: #dee2e6;
+  background: #fff;
+}
+
+.pagination .page-link:hover {
+  background: #f8d7da;   /* ชมพูอ่อน */
+  color: #842029;
+}
+
+.pagination .page-item.active .page-link {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #ccc;
+  border-color: #eee;
+  background-color: #f8f9fa;
+}
+
+/* ให้ดูโค้งสวยขึ้น */
+.pagination .page-link {
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+/* ===== News Table: Clean / Soft / Pro ===== */
+.news-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+}
+
+/* header */
+.news-thead th {
+  background: #fff5f6;           /* ชมพูอ่อนมากๆ */
+  color: #842029;
+  font-weight: 700;
+  border-bottom: 1px solid #f1c6cc;
+  padding: 12px 14px;
+  white-space: nowrap;
+}
+
+/* body cells */
+.news-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f3f5;  /* เส้นบางๆ */
+  vertical-align: middle;
+}
+
+/* ไม่ใช้ striped แบบเดิม แต่ทำ zebra แบบนุ่ม */
+.news-table tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+/* hover นุ่มๆ */
+.news-table tbody tr:hover {
+  background: #fff0f2;  /* ชมพูอ่อน */
+  transition: background 0.15s ease;
+}
+
+/* ทำให้หัวข้อข่าวเด่นแบบอ่านง่าย */
+.news-table td:first-child {
+  color: #212529;
+}
+
+/* ปรับ badge ให้ดูเนียนขึ้น */
+.news-table .badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 600;
+}
+
+/* ปรับ status badge ให้ดูเป็น pill */
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.status-published {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-draft {
+  background: #fff3cd;
+  color: #664d03;
+}
+
+/* ปรับปุ่ม action ให้เท่ากัน + ดูพรีเมียม */
+.news-table .btn.btn-sm {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}

@@ -4,14 +4,11 @@ from dotenv import load_dotenv
 import pymysql
 import os
 import pymysql.cursors
+import math
 
 load_dotenv()
-
 dashboard_reporter_bp = Blueprint("dashboard_reporter", __name__)
 
-# -------------------------------
-# DB helper
-# -------------------------------
 def connect_db():
     return pymysql.connect(
         host=os.environ.get("HOST"),
@@ -20,12 +17,10 @@ def connect_db():
         database=os.environ.get("DB"),
         port=int(os.environ.get("PORT") or 3306),
         cursorclass=pymysql.cursors.DictCursor,
-        autocommit=True,   # dashboard เป็น read-only เปิด autocommit ได้เลย
+        autocommit=True,
     )
 
-
 def require_reporter():
-    """คืน dict user ถ้าเป็น reporter ไม่งั้นคืน None"""
     user = session.get("user")
     if not user:
         return None
@@ -36,9 +31,6 @@ def require_reporter():
     return user
 
 
-# -------------------------------
-# Page: Reporter Dashboard
-# -------------------------------
 @dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
 def reporter_dashboard():
     user = require_reporter()
@@ -47,10 +39,54 @@ def reporter_dashboard():
 
     user_id = int(user["id"])
 
+    # ---------------- pagination ----------------
+    per_page = 5
+    page = request.args.get("page", default=1, type=int)
+    if page < 1:
+        page = 1
+    offset = (page - 1) * per_page
+
+    # ---------------- filters ----------------
+    # cat_id: ประเภทข่าว (จากตาราง news_category)
+    cat_id = request.args.get("cat_id", default="", type=str).strip()
+
+    # kind: ชนิดข่าว -> all | featured | normal
+    kind = (request.args.get("kind") or "all").strip()  # all/featured/normal
+
+    # status: all | publish | draft (คุณใช้ publish อยู่ใน DB)
+    status = (request.args.get("status") or "all").strip()  # all/publish/draft
+
+    # สร้าง WHERE แบบยืดหยุ่น
+    where = ["n.created_by = %s", "n.del_flg = 0"]
+    params = [user_id]
+
+    if cat_id:
+        # cat_id ใน DB เป็น int -> validate
+        try:
+            cat_id_int = int(cat_id)
+            where.append("n.cat_id = %s")
+            params.append(cat_id_int)
+        except ValueError:
+            cat_id = ""  # ถ้าแปลกๆ ให้ ignore
+
+    if kind == "featured":
+        where.append("COALESCE(n.is_featured,0) = 1")
+    elif kind == "normal":
+        where.append("COALESCE(n.is_featured,0) = 0")
+
+    if status == "publish":
+        where.append("n.status = 'publish'")
+    elif status == "draft":
+        # ถ้าของคุณเก็บเป็น 'draft' ก็ใช้แบบนี้ได้เลย
+        # แต่ถ้าเป็นค่าอื่น เช่น 'pending' ให้ปรับตรงนี้
+        where.append("n.status <> 'publish'")
+
+    where_sql = " AND ".join(where)
+
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
-            # 1) total news written by this reporter
+            # 1) total news ทั้งหมดของ reporter (ไม่ต้อง filter ก็ได้)
             cursor.execute(
                 """
                 SELECT COUNT(*) AS total
@@ -61,9 +97,36 @@ def reporter_dashboard():
             )
             total_news = int((cursor.fetchone() or {}).get("total") or 0)
 
-            # 2) latest news list
+            # 2) ดึง category list ไปทำ dropdown filter
             cursor.execute(
                 """
+                SELECT cat_id, cat_name
+                FROM news_category
+                WHERE del_flg = 0
+                ORDER BY cat_name
+                """
+            )
+            categories = cursor.fetchall() or []
+
+            # 3) COUNT ตาม filter (เพื่อคำนวณจำนวนหน้า)
+            cursor.execute(
+                f"""
+                SELECT COUNT(*) AS total
+                FROM news n
+                WHERE {where_sql}
+                """,
+                tuple(params),
+            )
+            total_rows = int((cursor.fetchone() or {}).get("total") or 0)
+
+            total_pages = max(1, math.ceil(total_rows / per_page))
+            if page > total_pages:
+                page = total_pages
+                offset = (page - 1) * per_page
+
+            # 4) SELECT ตาม filter + pagination
+            cursor.execute(
+                f"""
                 SELECT
                     n.news_id,
                     n.news_title,
@@ -74,12 +137,11 @@ def reporter_dashboard():
                     c.cat_name AS category_name
                 FROM news n
                 LEFT JOIN news_category c ON n.cat_id = c.cat_id
-                WHERE n.created_by = %s
-                  AND n.del_flg = 0
+                WHERE {where_sql}
                 ORDER BY n.created_at DESC
-                LIMIT 10
+                LIMIT %s OFFSET %s
                 """,
-                (user_id,),
+                tuple(params + [per_page, offset]),
             )
             latest_news = cursor.fetchall() or []
     finally:
@@ -87,40 +149,21 @@ def reporter_dashboard():
 
     return render_template(
         "reporter/reporter-dashboard.html",
+        user=user,
         total_news=total_news,
         latest_news=latest_news,
-        user=user,
+
+        # pagination
+        page=page,
+        per_page=per_page,
+        total_rows=total_rows,
+        total_pages=total_pages,
+
+        # filter data
+        categories=categories,
+
+        # selected filters (เอาไว้ set ค่าใน dropdown)
+        f_cat_id=cat_id,
+        f_kind=kind,
+        f_status=status,
     )
-
-
-# -------------------------------
-# API: Subcategories by cat_id
-# GET /api/news/subcategories?cat_id=1
-# -------------------------------
-@dashboard_reporter_bp.route("/api/news/subcategories", methods=["GET"])
-def api_news_subcategories():
-    user = require_reporter()
-    if not user:
-        return jsonify({"ok": False, "message": "Forbidden"}), 403
-
-    cat_id = request.args.get("cat_id", type=int)
-    if not cat_id:
-        return jsonify({"ok": False, "message": "missing cat_id"}), 400
-
-    conn = connect_db()
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT subcat_id, subcat_name
-                FROM news_subcategory
-                WHERE cat_id = %s AND del_flg = 0
-                ORDER BY subcat_name
-                """,
-                (cat_id,),
-            )
-            rows = cursor.fetchall() or []
-    finally:
-        conn.close()
-
-    return jsonify({"ok": True, "data": rows})
