@@ -111,3 +111,15 @@
   justify-content: center;
   border-radius: 10px;
 }
+
+
+/* ✅ แก้ปัญหา modal header โดน navbar fixed บัง */
+.modal {
+  padding-top: 80px; /* ปรับตามความสูง navbar ของคุณ */
+}
+
+@media (max-width: 576px) {
+  .modal {
+    padding-top: 90px;
+  }
+}

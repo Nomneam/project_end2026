@@ -31,7 +31,7 @@ def require_reporter():
         return None
     return user
 
-
+# เรียกข้อมูลในตาราง ดึงCategories  และทำแบ่งหน้า
 @dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
 def reporter_dashboard():
     user = require_reporter()
@@ -169,6 +169,7 @@ def reporter_dashboard():
         f_status=status,
     )
 
+# Soft Delete
 @dashboard_reporter_bp.route("/reporter/news/delete/<int:news_id>", methods=["POST"])
 def reporter_soft_delete(news_id):
     user = require_reporter()
@@ -206,5 +207,50 @@ def reporter_soft_delete(news_id):
             )
 
         return jsonify({"ok": True, "message": "ลบข่าวเรียบร้อย"}), 200
+    finally:
+        conn.close()
+        
+        
+@dashboard_reporter_bp.route("/reporter/news/detail/<int:news_id>", methods=["GET"])
+def reporter_news_detail(news_id):
+    user = require_reporter()
+    if not user:
+        return jsonify({"ok": False, "message": "Forbidden"}), 403
+
+    user_id = int(user["id"])
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    n.news_id,
+                    n.news_title,
+                    n.news_content,
+                    n.is_featured,
+                    n.status,
+                    n.published_at,
+                    n.updated_at,
+                    n.cover_image,
+                    n.sub_images,
+                    n.video_url,
+                    c.cat_name AS category_name,
+                    s.subcat_name AS subcategory_name
+                FROM news n
+                LEFT JOIN news_category c ON n.cat_id = c.cat_id
+                LEFT JOIN news_subcategory s ON n.subcat_id = s.subcat_id
+                WHERE n.news_id = %s
+                  AND n.created_by = %s
+                  AND n.del_flg = 0
+                LIMIT 1
+                """,
+                (news_id, user_id),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์ดู"}), 404
+
+            return jsonify({"ok": True, "data": row}), 200
     finally:
         conn.close()
