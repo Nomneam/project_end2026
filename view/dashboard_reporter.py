@@ -1,14 +1,42 @@
-# dashboard_reporter.py
 from flask import Blueprint, render_template, session, jsonify, request
 from dotenv import load_dotenv
 import pymysql
 import os
 import pymysql.cursors
 import math
-from datetime import datetime
+import json
+import uuid
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 dashboard_reporter_bp = Blueprint("dashboard_reporter", __name__)
+
+# ---------------- Upload config ----------------
+UPLOAD_DIR = os.path.join("static", "uploads", "news")
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
+
+def allowed_file(filename: str) -> bool:
+    if not filename or "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    return ext in ALLOWED_EXT
+
+def save_image(file_storage):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    filename = secure_filename(file_storage.filename)
+    ext = filename.rsplit(".", 1)[1].lower()
+    new_name = f"{uuid.uuid4().hex}.{ext}"
+    full_path = os.path.join(UPLOAD_DIR, new_name)
+    file_storage.save(full_path)
+    return f"/static/uploads/news/{new_name}"
+
+def safe_int(v, default=None):
+    try:
+        if v is None or str(v).strip() == "":
+            return default
+        return int(v)
+    except Exception:
+        return default
 
 def connect_db():
     return pymysql.connect(
@@ -31,7 +59,8 @@ def require_reporter():
         return None
     return user
 
-# เรียกข้อมูลในตาราง ดึงCategories  และทำแบ่งหน้า
+
+# ---------------- Dashboard ----------------
 @dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
 def reporter_dashboard():
     user = require_reporter()
@@ -40,35 +69,26 @@ def reporter_dashboard():
 
     user_id = int(user["id"])
 
-    # ---------------- pagination ----------------
     per_page = 5
     page = request.args.get("page", default=1, type=int)
     if page < 1:
         page = 1
     offset = (page - 1) * per_page
 
-    # ---------------- filters ----------------
-    # cat_id: ประเภทข่าว (จากตาราง news_category)
-    cat_id = request.args.get("cat_id", default="", type=str).strip()
+    cat_id = (request.args.get("cat_id") or "").strip()
+    kind = (request.args.get("kind") or "all").strip()
+    status = (request.args.get("status") or "all").strip()
 
-    # kind: ชนิดข่าว -> all | featured | normal
-    kind = (request.args.get("kind") or "all").strip()  # all/featured/normal
-
-    # status: all | publish | draft (คุณใช้ publish อยู่ใน DB)
-    status = (request.args.get("status") or "all").strip()  # all/publish/draft
-
-    # สร้าง WHERE แบบยืดหยุ่น
     where = ["n.created_by = %s", "n.del_flg = 0"]
     params = [user_id]
 
     if cat_id:
-        # cat_id ใน DB เป็น int -> validate
-        try:
-            cat_id_int = int(cat_id)
+        cat_id_int = safe_int(cat_id)
+        if cat_id_int is not None:
             where.append("n.cat_id = %s")
             params.append(cat_id_int)
-        except ValueError:
-            cat_id = ""  # ถ้าแปลกๆ ให้ ignore
+        else:
+            cat_id = ""
 
     if kind == "featured":
         where.append("COALESCE(n.is_featured,0) = 1")
@@ -78,8 +98,6 @@ def reporter_dashboard():
     if status == "publish":
         where.append("n.status = 'publish'")
     elif status == "draft":
-        # ถ้าของคุณเก็บเป็น 'draft' ก็ใช้แบบนี้ได้เลย
-        # แต่ถ้าเป็นค่าอื่น เช่น 'pending' ให้ปรับตรงนี้
         where.append("n.status <> 'publish'")
 
     where_sql = " AND ".join(where)
@@ -87,7 +105,6 @@ def reporter_dashboard():
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
-            # 1) total news ทั้งหมดของ reporter (ไม่ต้อง filter ก็ได้)
             cursor.execute(
                 """
                 SELECT COUNT(*) AS total
@@ -98,7 +115,6 @@ def reporter_dashboard():
             )
             total_news = int((cursor.fetchone() or {}).get("total") or 0)
 
-            # 2) ดึง category list ไปทำ dropdown filter
             cursor.execute(
                 """
                 SELECT cat_id, cat_name
@@ -109,7 +125,6 @@ def reporter_dashboard():
             )
             categories = cursor.fetchall() or []
 
-            # 3) COUNT ตาม filter (เพื่อคำนวณจำนวนหน้า)
             cursor.execute(
                 f"""
                 SELECT COUNT(*) AS total
@@ -125,7 +140,6 @@ def reporter_dashboard():
                 page = total_pages
                 offset = (page - 1) * per_page
 
-            # 4) SELECT ตาม filter + pagination
             cursor.execute(
                 f"""
                 SELECT
@@ -153,23 +167,18 @@ def reporter_dashboard():
         user=user,
         total_news=total_news,
         latest_news=latest_news,
-
-        # pagination
         page=page,
         per_page=per_page,
         total_rows=total_rows,
         total_pages=total_pages,
-
-        # filter data
         categories=categories,
-
-        # selected filters (เอาไว้ set ค่าใน dropdown)
         f_cat_id=cat_id,
         f_kind=kind,
         f_status=status,
     )
 
-# Soft Delete
+
+# ---------------- Soft Delete ----------------
 @dashboard_reporter_bp.route("/reporter/news/delete/<int:news_id>", methods=["POST"])
 def reporter_soft_delete(news_id):
     user = require_reporter()
@@ -181,7 +190,6 @@ def reporter_soft_delete(news_id):
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
-            # ✅ เช็คว่าเป็นข่าวของ reporter คนนี้จริง และยังไม่ถูกลบ
             cursor.execute(
                 """
                 SELECT news_id
@@ -190,11 +198,9 @@ def reporter_soft_delete(news_id):
                 """,
                 (news_id, user_id),
             )
-            row = cursor.fetchone()
-            if not row:
+            if not cursor.fetchone():
                 return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์ลบ"}), 404
 
-            # ✅ soft delete
             cursor.execute(
                 """
                 UPDATE news
@@ -209,8 +215,9 @@ def reporter_soft_delete(news_id):
         return jsonify({"ok": True, "message": "ลบข่าวเรียบร้อย"}), 200
     finally:
         conn.close()
-        
-        
+
+
+# ---------------- Detail (สำคัญ: ต้องมี cat_id/subcat_id) ----------------
 @dashboard_reporter_bp.route("/reporter/news/detail/<int:news_id>", methods=["GET"])
 def reporter_news_detail(news_id):
     user = require_reporter()
@@ -232,9 +239,14 @@ def reporter_news_detail(news_id):
                     n.status,
                     n.published_at,
                     n.updated_at,
+
+                    n.cat_id,       -- ✅ เพิ่ม
+                    n.subcat_id,    -- ✅ เพิ่ม
+
                     n.cover_image,
                     n.sub_images,
                     n.video_url,
+
                     c.cat_name AS category_name,
                     s.subcat_name AS subcategory_name
                 FROM news n
@@ -252,5 +264,149 @@ def reporter_news_detail(news_id):
                 return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์ดู"}), 404
 
             return jsonify({"ok": True, "data": row}), 200
+    finally:
+        conn.close()
+
+
+# ---------------- Subcategories ----------------
+@dashboard_reporter_bp.route("/reporter/subcategories", methods=["GET"])
+def reporter_subcategories():
+    user = require_reporter()
+    if not user:
+        return jsonify({"ok": False, "message": "Forbidden"}), 403
+
+    cat_id = safe_int(request.args.get("cat_id"))
+    if not cat_id:
+        return jsonify({"ok": True, "data": []}), 200
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT subcat_id, subcat_name
+                FROM news_subcategory
+                WHERE del_flg = 0 AND cat_id = %s
+                ORDER BY subcat_name
+                """,
+                (cat_id,),
+            )
+            rows = cursor.fetchall() or []
+        return jsonify({"ok": True, "data": rows}), 200
+    finally:
+        conn.close()
+
+
+# ---------------- Update (รองรับรูป) ----------------
+@dashboard_reporter_bp.route("/reporter/news/update/<int:news_id>", methods=["POST"])
+def reporter_news_update(news_id):
+    user = require_reporter()
+    if not user:
+        return jsonify({"ok": False, "message": "Forbidden"}), 403
+
+    user_id = int(user["id"])
+
+    news_title = (request.form.get("news_title") or "").strip()
+    news_content = (request.form.get("news_content") or "").strip()
+
+    cat_id = safe_int(request.form.get("cat_id"))
+    subcat_id = safe_int(request.form.get("subcat_id"), default=None)
+    is_featured = safe_int(request.form.get("is_featured"), default=0)
+    status = (request.form.get("status") or "draft").strip()
+    video_url = (request.form.get("video_url") or "").strip()
+
+    if not news_title or not news_content or not cat_id:
+        return jsonify({"ok": False, "message": "กรุณากรอกข้อมูลที่จำเป็นให้ครบ"}), 400
+
+    if status not in ("draft", "publish"):
+        status = "draft"
+    if is_featured not in (0, 1):
+        is_featured = 0
+
+    # files + remove flags
+    cover_file = request.files.get("cover_image")          # single
+    sub_files = request.files.getlist("sub_images")        # multiple
+    remove_cover = (request.form.get("remove_cover") or "0").strip() == "1"
+    remove_subs = (request.form.get("remove_subs") or "0").strip() == "1"
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            # load old
+            cursor.execute(
+                """
+                SELECT cover_image, sub_images, published_at
+                FROM news
+                WHERE news_id=%s AND created_by=%s AND del_flg=0
+                """,
+                (news_id, user_id),
+            )
+            old = cursor.fetchone()
+            if not old:
+                return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์แก้ไข"}), 404
+
+            new_cover = old.get("cover_image")
+            old_sub_raw = old.get("sub_images")
+
+            # cover
+            if remove_cover:
+                new_cover = None
+            elif cover_file and cover_file.filename:
+                if not allowed_file(cover_file.filename):
+                    return jsonify({"ok": False, "message": "ไฟล์รูปปกไม่รองรับ"}), 400
+                new_cover = save_image(cover_file)
+
+            # subs
+            if remove_subs:
+                new_subs = []
+            elif sub_files and any(f and f.filename for f in sub_files):
+                new_subs = []
+                for f in sub_files:
+                    if not f or not f.filename:
+                        continue
+                    if not allowed_file(f.filename):
+                        return jsonify({"ok": False, "message": "มีไฟล์รูปรองที่ไม่รองรับ"}), 400
+                    new_subs.append(save_image(f))
+            else:
+                try:
+                    new_subs = json.loads(old_sub_raw) if old_sub_raw else []
+                    if not isinstance(new_subs, list):
+                        new_subs = []
+                except Exception:
+                    new_subs = []
+
+            cursor.execute(
+                """
+                UPDATE news
+                SET
+                  news_title=%s,
+                  news_content=%s,
+                  cat_id=%s,
+                  subcat_id=%s,
+                  is_featured=%s,
+                  status=%s,
+                  cover_image=%s,
+                  sub_images=%s,
+                  updated_by=%s,
+                  updated_at=NOW(),
+                  published_at = CASE
+                    WHEN %s = 'publish' AND published_at IS NULL THEN NOW()
+                    WHEN %s <> 'publish' THEN NULL
+                    ELSE published_at
+                  END
+                WHERE news_id=%s
+                """,
+                (
+                    news_title, news_content, cat_id, subcat_id,
+                    is_featured, status,
+                    new_cover,
+                    json.dumps(new_subs, ensure_ascii=False),
+                    user_id,
+                    status, status,
+                    news_id,
+                ),
+            )
+
+        return jsonify({"ok": True, "message": "บันทึกการแก้ไขเรียบร้อย"}), 200
     finally:
         conn.close()

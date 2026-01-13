@@ -123,3 +123,29 @@
     padding-top: 90px;
   }
 }
+
+/* ✅ บังคับให้ Modal เลื่อนได้ (กันโดน CSS อื่นทับ) */
+#editNewsModal .modal-dialog,
+#viewNewsModal .modal-dialog {
+  height: calc(100vh - 2rem);
+  margin: 1rem auto;
+}
+
+#editNewsModal .modal-content,
+#viewNewsModal .modal-content {
+  height: 100%;
+  max-height: 100%;
+}
+
+/* ✅ จุดสำคัญ: ให้ body ของ modal scroll */
+#editNewsModal .modal-body,
+#viewNewsModal .modal-body {
+  overflow-y: auto !important;
+  max-height: calc(100vh - 210px); /* ปรับเลขได้ตาม header+footer ของคุณ */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ✅ เผื่อมี container ครอบที่ overflow hidden */
+.modal {
+  overflow-y: auto !important;
+}
