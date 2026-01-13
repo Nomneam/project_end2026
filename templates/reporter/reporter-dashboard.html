@@ -124,6 +124,14 @@
                     <a href="/news/{{ n.news_id }}" class="btn btn-sm btn-info" title="ดู">
                       <i class="bi bi-eye"></i>
                     </a>
+
+                    <button type="button"
+                            class="btn btn-sm btn-danger btn-soft-delete"
+                            data-id="{{ n.news_id }}"
+                            data-title="{{ n.news_title|e }}"
+                            title="ลบ (Soft delete)">
+                      <i class="bi bi-trash"></i>
+                    </button>
                   </td>
                 </tr>
                 {% else %}

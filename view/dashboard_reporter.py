@@ -5,6 +5,7 @@ import pymysql
 import os
 import pymysql.cursors
 import math
+from datetime import datetime
 
 load_dotenv()
 dashboard_reporter_bp = Blueprint("dashboard_reporter", __name__)
@@ -167,3 +168,43 @@ def reporter_dashboard():
         f_kind=kind,
         f_status=status,
     )
+
+@dashboard_reporter_bp.route("/reporter/news/delete/<int:news_id>", methods=["POST"])
+def reporter_soft_delete(news_id):
+    user = require_reporter()
+    if not user:
+        return jsonify({"ok": False, "message": "Forbidden"}), 403
+
+    user_id = int(user["id"])
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            # ✅ เช็คว่าเป็นข่าวของ reporter คนนี้จริง และยังไม่ถูกลบ
+            cursor.execute(
+                """
+                SELECT news_id
+                FROM news
+                WHERE news_id = %s AND created_by = %s AND del_flg = 0
+                """,
+                (news_id, user_id),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์ลบ"}), 404
+
+            # ✅ soft delete
+            cursor.execute(
+                """
+                UPDATE news
+                SET del_flg = 1,
+                    updated_by = %s,
+                    updated_at = NOW()
+                WHERE news_id = %s
+                """,
+                (user_id, news_id),
+            )
+
+        return jsonify({"ok": True, "message": "ลบข่าวเรียบร้อย"}), 200
+    finally:
+        conn.close()
