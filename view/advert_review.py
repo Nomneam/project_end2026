@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session ,redirect, url_for
 from dotenv import load_dotenv
 import os
 import pymysql
@@ -21,6 +21,9 @@ def connect_db():
 
 @advert_review_bp.route('/ad-review')
 def advert_review():
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
     conn = connect_db()
     try:
         with conn.cursor() as cur:
@@ -93,6 +96,9 @@ def advert_review():
 # ✅ Approve
 @advert_review_bp.route('/ad-review/approve', methods=['POST'])
 def approve_advert():
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
     data = request.get_json()
     adv_id = data.get('adv_id')
     emp_id = session.get('emp_id', 1)
@@ -116,6 +122,9 @@ def approve_advert():
 # ❌ Reject
 @advert_review_bp.route('/ad-review/reject', methods=['POST'])
 def reject_advert():
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
     data = request.get_json()
     adv_id = data.get('adv_id')
     reason = data.get('reason')

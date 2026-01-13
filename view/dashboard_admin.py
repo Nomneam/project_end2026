@@ -1,5 +1,5 @@
 # dashboard_admin.py
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session ,redirect, url_for
 from dotenv import load_dotenv
 import os
 import pymysql
@@ -26,6 +26,9 @@ dashboard_admin_bp = Blueprint('dashboard_admin', __name__)
 @dashboard_admin_bp.route('/dashboard/admin')
 def admin_dashboard():
     # ตรวจสอบสิทธิ์ Admin (role_id 1)
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
     if 'user' not in session or session['user']['role_id'] != 1:
         return "Forbidden", 403
 

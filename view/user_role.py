@@ -45,6 +45,10 @@ def generate_emp_code(role_id):
 
 @user_role_bp.route("/user-role")
 def user_role():
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
+    
     conn = connect_db()
     try:
         with conn.cursor() as cur:
@@ -82,6 +86,9 @@ def user_role():
 @user_role_bp.route("/user-role/add", methods=["POST"])
 def add_user():
     data = request.form
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))   
     
     # --- ส่วนที่เพิ่ม/แก้ไข ---
     role_id = data.get("role_id")
@@ -141,6 +148,9 @@ def add_user():
 @user_role_bp.route("/user-role/edit/<int:emp_id>", methods=["POST"])
 def edit_user(emp_id):
     data = request.form
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
 
     conn = connect_db()
     try:
@@ -183,6 +193,9 @@ def edit_user(emp_id):
 
 @user_role_bp.route("/user-role/delete/<int:emp_id>", methods=["POST"])
 def delete_user(emp_id):
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
     conn = connect_db()
     try:
         with conn.cursor() as cur:
