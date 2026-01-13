@@ -33,7 +33,7 @@ def advert_review():
                     a.adv_name,
                     a.valid_from,
                     a.valid_to,
-                    a.status,        -- ✅ ดึง status ด้วย
+                    a.status,        
                     c.cus_fname,
                     c.cus_lname,
                     ar.advert_area_name,

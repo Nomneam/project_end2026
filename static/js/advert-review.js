@@ -30,7 +30,6 @@ $(function () {
             $('#approvedModalPrice').text((currentAd.total_amount || 0).toLocaleString());
             $('#approvedModalDate').text(formatDate(currentAd.valid_from) + ' - ' + formatDate(currentAd.valid_to));
 
-            // แสดง badge สถานะสีเหมือนตาราง
             let statusBadge = '';
             switch(currentAd.status) {
                 case 'approved': statusBadge = '<span class="badge bg-success">อนุมัติ</span>'; break;
@@ -46,7 +45,7 @@ $(function () {
         }
     });
 
-    // Approve / Reject เหมือนเดิม สำหรับ modal รอตรวจสอบ
+    // Approve
     $('#btnApprove').on('click', function () {
         if (!currentAd) return;
 
@@ -60,18 +59,30 @@ $(function () {
             confirmButtonColor: '#198754'
         }).then(result => {
             if (!result.isConfirmed) return;
-            $.post('/ad-review/approve', JSON.stringify({ adv_id: currentAd.adv_id }), function(res){
-                if(res.status === 'success') {
-                    Swal.fire('สำเร็จ','อนุมัติโฆษณาเรียบร้อย','success');
-                    bootstrap.Modal.getInstance(document.getElementById('adDetailModal')).hide();
-                    currentRow.fadeOut(300,function(){ $(this).remove(); });
-                } else {
-                    Swal.fire('ผิดพลาด',res.message||'เกิดข้อผิดพลาด','error');
+
+            $.ajax({
+                url: '/ad-review/approve',
+                method: 'POST',
+                data: JSON.stringify({ adv_id: currentAd.adv_id }),
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function(res){
+                    if(res.status === 'success'){
+                        Swal.fire('สำเร็จ','อนุมัติโฆษณาเรียบร้อย','success')
+                        .then(() => {
+                            // reload หน้าอัตโนมัติ
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('ผิดพลาด',res.message||'เกิดข้อผิดพลาด','error');
+                    }
                 }
-            }, 'json');
+            });
+
         });
     });
 
+    // Reject
     $('#btnReject').on('click', function () {
         if (!currentAd) return;
 
@@ -89,15 +100,26 @@ $(function () {
             }
         }).then(result => {
             if(!result.isConfirmed) return;
-            $.post('/ad-review/reject', JSON.stringify({ adv_id: currentAd.adv_id, reason: result.value }), function(res){
-                if(res.status === 'success') {
-                    Swal.fire('สำเร็จ','ปฏิเสธโฆษณาเรียบร้อย','success');
-                    bootstrap.Modal.getInstance(document.getElementById('adDetailModal')).hide();
-                    currentRow.fadeOut(300,function(){ $(this).remove(); });
-                } else {
-                    Swal.fire('ผิดพลาด',res.message||'เกิดข้อผิดพลาด','error');
+
+            $.ajax({
+                url: '/ad-review/reject',
+                method: 'POST',
+                data: JSON.stringify({ adv_id: currentAd.adv_id, reason: result.value }),
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function(res){
+                    if(res.status === 'success'){
+                        Swal.fire('สำเร็จ','ปฏิเสธโฆษณาเรียบร้อย','success')
+                        .then(() => {
+                            // reload หน้าอัตโนมัติ
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('ผิดพลาด',res.message||'เกิดข้อผิดพลาด','error');
+                    }
                 }
-            }, 'json');
+            });
+
         });
     });
 

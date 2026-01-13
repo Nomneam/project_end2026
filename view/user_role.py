@@ -84,7 +84,6 @@ def add_user():
     data = request.form
     
     # --- ส่วนที่เพิ่ม/แก้ไข ---
-    # รับ role_id มาเพื่อตัดสินใจเลือก prefix
     role_id = data.get("role_id")
     auto_emp_code = generate_emp_code(role_id)
     # -----------------------
@@ -97,6 +96,17 @@ def add_user():
     conn = connect_db()
     try:
         with conn.cursor() as cur:
+            # --- เช็ค email ซ้ำเฉพาะ user ที่ยัง active ---
+            cur.execute("""
+                SELECT emp_id FROM employee
+                WHERE emp_email = %s AND del_flg = 0
+            """, (data["emp_email"],))
+            existing = cur.fetchone()
+            if existing:
+                # มี email ซ้ำ -> คืน error หรือ flash แล้ว redirect
+                return "Email นี้ถูกใช้งานแล้ว", 400
+
+            # ถ้าไม่มีซ้ำ ค่อย insert
             cur.execute("""
                 INSERT INTO employee (
                     role_id,
@@ -113,7 +123,7 @@ def add_user():
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,NOW(),%s,0)
             """, (
                 role_id,
-                auto_emp_code, # ใช้รหัสที่ Gen อัตโนมัติ
+                auto_emp_code,
                 data["emp_fname"],
                 data["emp_lname"],
                 data["emp_username"],
@@ -127,6 +137,7 @@ def add_user():
     finally:
         conn.close()
 
+
 @user_role_bp.route("/user-role/edit/<int:emp_id>", methods=["POST"])
 def edit_user(emp_id):
     data = request.form
@@ -134,6 +145,16 @@ def edit_user(emp_id):
     conn = connect_db()
     try:
         with conn.cursor() as cur:
+            # --- เช็ค email ซ้ำสำหรับ edit (ยกเว้นตัวเอง) ---
+            cur.execute("""
+                SELECT emp_id FROM employee
+                WHERE emp_email = %s AND emp_id != %s AND del_flg = 0
+            """, (data["emp_email"], emp_id))
+            existing = cur.fetchone()
+            if existing:
+                return "Email นี้ถูกใช้งานแล้ว", 400
+
+            # ถ้าไม่มีซ้ำ ค่อย update
             cur.execute("""
                 UPDATE employee SET
                     role_id = %s,
@@ -157,6 +178,7 @@ def edit_user(emp_id):
         return redirect(url_for("user_role.user_role"))
     finally:
         conn.close()
+
 
 
 @user_role_bp.route("/user-role/delete/<int:emp_id>", methods=["POST"])

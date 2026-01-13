@@ -55,7 +55,6 @@
                         <th class="ps-4">User Identity</th>
                         <th>Email Address</th>
                         <th class="text-center">Role</th>
-                        <th class="text-center">System Status</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
@@ -81,11 +80,6 @@
                                 {% else %}badge-owner{% endif %}">
                                 {{ u.role_name|upper }}
                             </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <span class="status-indicator active">ใช้งาน</span>
-                            </div>
                         </td>
                         <td class="text-end pe-4">
                             <button class="btn-action-minimal me-1 shadow-sm" 
