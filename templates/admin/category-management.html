@@ -79,14 +79,6 @@
                         <label class="form-label">CATEGORY NAME</label>
                         <input type="text" class="form-control" name="cat_name" placeholder="ระบุชื่อประเภทหลัก (เช่น ข่าวสารบันเทิง)">
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label">SUB-CATEGORY LIST</label>
-                        <div class="input-group mb-3 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-                            <input type="text" class="form-control sub-input border-0" placeholder="เพิ่มประเภทย่อย (เช่น ข่าวดารา)">
-                            <button class="btn btn-danger px-4 add-sub-list-btn" type="button">เพิ่ม</button>
-                        </div>
-                        <div class="sub-list-group list-group"></div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -112,14 +104,41 @@
                     
                     <div class="row g-4 mb-4 pb-4 border-bottom" style="border-color: #f1f2f4 !important;"> 
                         <div class="col-6">
-                            <label class="form-label">Category Name (Read Only)</label>
-                            <input type="text" class="form-control fw-bold shadow-none" id="editCategoryName" readonly>
+                            <label class="form-label fw-bold" style="color: #232d42;">CATEGORY NAME</label>
                             
-                            <div class="mt-4 p-4" style="background: #fff5f5; border-radius: 20px; border: 1px dashed #feb2b2;">
+                            <div class="input-group mb-3 shadow-sm" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+                                <input type="text" class="form-control fw-bold border-0 bg-light" id="editCategoryName" 
+                                    readonly style="padding: 12px 20px; color: #4a5568;" placeholder="ระบุชื่อหมวดหมู่หลัก">
+                                
+                                <button class="btn btn-white border-0 text-primary px-3" type="button" id="unlockEditName" title="คลิกเพื่อแก้ไขชื่อ">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="mt-3 p-3" style="background: #fff5f5; border-radius: 15px; border: 1px dashed #feb2b2;">
                                 <small class="text-danger fw-bold d-block mb-1">
-                                    <i class="bi bi-info-circle-fill me-1"></i> คำแนะนำ
+                                    <i class="bi bi-info-circle-fill me-1"></i> คำแนะนำการใช้งาน
                                 </small>
-                                <p class="text-muted small mb-0">ท่านสามารถลบรายการประเภทย่อยเดิมได้ที่ฝั่งขวา และเริ่มเพิ่มรายการใหม่ได้ที่ส่วนด้านล่างครับ</p>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                        คลิกไอคอนดินสอเพื่อ <strong>ปลดล็อกและแก้ไขชื่อหมวดหมู่หลัก</strong><br>
+
+                                        <i class="bi bi-layers-fill text-danger"></i>
+                                        ด้านขวาแสดง <strong>รายการประเภทย่อยที่มีอยู่</strong> ในระบบ<br>
+
+                                        <i class="bi bi-plus-circle-fill text-danger"></i>
+                                        เพิ่มประเภทย่อยใหม่โดยการเพิ่มแถวกรอกข้อมูล<br>
+
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <strong>ต้องกดปุ่มเครื่องหมายถูก (✔)</strong> เพื่อยืนยันรายการนั้น  
+                                        <span class="text-danger fw-bold">หากไม่กด ข้อมูลจะไม่ถูกบันทึก</span><br>
+
+                                        <i class="bi bi-trash-fill text-danger"></i>
+                                        ปุ่มถังขยะใช้สำหรับลบรายการที่ไม่ต้องการ<br>
+
+                                        <i class="bi bi-save-fill text-danger"></i>
+                                        เมื่อจัดการเสร็จแล้ว ให้กด <strong>บันทึกการเปลี่ยนแปลง</strong> เพื่อให้ข้อมูลมีผล
+                                    </p>
                             </div>
                         </div>
 

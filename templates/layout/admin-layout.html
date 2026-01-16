@@ -85,15 +85,16 @@
 
         <div class="mt-3">
           <div class="nav-section-title">ทั่วไป</div>
-          <a class="side-link" href="#/dashboard">📊 Dashboard</a>
+          <a class="side-link" href="{{ url_for('dashboard_admin.admin_dashboard') }}">📊 Dashboard</a>
         </div>
 
         <div class="mt-3">
           <div class="nav-section-title">เมนูงาน</div>
           <a class="side-link" href="#/news/create">✍️ เขียนข่าว</a>
           <a class="side-link" href="#/news">📰 หน้ารวมข่าว</a>
-          <a class="side-link" href="#/staff/add">👤➕ เพิ่มพนักงาน</a>
-          <a class="side-link" href="#/ads/review">📣 ตรวจสอบโฆษณา</a>
+          <a class="side-link" href="{{ url_for('user_role.user_role') }}">👤➕ เพิ่มพนักงาน</a>
+          <a class="side-link" href="{{ url_for('advert_review.advert_review') }}">📣 ตรวจสอบโฆษณา</a>
+          <a class="side-link" href="{{ url_for('category_management.category_management') }}">✏️ จัดการประเภทข่าวในระบบ</a>
         </div>
       </aside>
 

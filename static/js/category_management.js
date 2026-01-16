@@ -1,179 +1,254 @@
-$(document).ready(function() {
-    /**
-     * === 1. การจัดการ Modal แก้ไข (โหลดข้อมูลเดิมเข้าสู่ส่วนบน) ===
-     * ดึงข้อมูลชื่อหมวดหมู่และรายการประเภทย่อยปัจจุบันมาแสดงผล
-     */
-    $('#editCategoryModal').on('show.bs.modal', function(event) {
-        const button = $(event.relatedTarget);
-        const catId = button.data('id');
-        const catName = button.data('name');
-        
-        const modal = $(this);
-        modal.find('#editCatId').val(catId);
-        modal.find('#editCategoryName').val(catName);
+$(document).ready(function () {
 
-        const $list = $('#editSubCategoriesList');
-        // แสดง Spinner ระหว่างรอโหลดข้อมูลจาก API
-        $list.html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-danger"></div></div>');
-        
-        // ล้างแถวกรอกข้อมูลใหม่ที่อาจค้างอยู่ในส่วนล่าง
-        $('#newSubRowsContainer').empty(); 
+    // ======================================================
+    // SweetAlert2 Preset (RED • CENTER • PROFESSIONAL)
+    // ======================================================
+    const SwalCenter = Swal.mixin({
+        position: 'center',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'rounded-4 shadow-sm',
+            confirmButton: 'btn btn-danger px-4',
+            cancelButton: 'btn btn-outline-secondary px-4'
+        }
+    });
 
-        // เรียกข้อมูลจาก API (Flask Route)
+    const notifySuccess = (msg, timer = 1500) =>
+        SwalCenter.fire({ icon: 'success', title: msg, showConfirmButton: false, timer });
+
+    const notifyError = (msg) =>
+        SwalCenter.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: msg });
+
+    const notifyWarning = (msg) =>
+        SwalCenter.fire({ icon: 'warning', title: 'แจ้งเตือน', text: msg });
+
+    const showLoading = (msg = 'กำลังประมวลผล...') => {
+        SwalCenter.fire({
+            title: msg,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+    };
+
+    const confirmAction = (title, text, confirmText = 'ยืนยัน') =>
+        SwalCenter.fire({
+            icon: 'warning',
+            title,
+            text,
+            showCancelButton: true,
+            confirmButtonText: confirmText,
+            cancelButtonText: 'ยกเลิก'
+        });
+
+    // ======================================================
+    // FIX: Close Swal before open modal
+    // ======================================================
+    $('[data-bs-toggle="modal"]').on('click', () => Swal.close());
+
+    // ======================================================
+    // Add Category
+    // ======================================================
+    $('#btnConfirmAdd').click(function () {
+        const catName = $('input[name="cat_name"]').val().trim();
+        if (!catName) return notifyWarning('กรุณาระบุชื่อหมวดหมู่หลัก');
+
+        confirmAction(
+            'ยืนยันการบันทึก',
+            `ต้องการเพิ่มหมวดหมู่ "${catName}" ใช่หรือไม่?`,
+            'บันทึกข้อมูล'
+        ).then(res => {
+            if (!res.isConfirmed) return;
+
+            showLoading('กำลังบันทึกข้อมูล...');
+
+            $.post('/add-category', { cat_name: catName })
+                .done(res => {
+                    res.success
+                        ? notifySuccess('บันทึกข้อมูลเรียบร้อย')
+                        : notifyError(res.message);
+
+                    if (res.success) setTimeout(() => location.reload(), 1200);
+                })
+                .fail(() => notifyError('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
+        });
+    });
+
+    // ======================================================
+    // Edit Category Modal
+    // ======================================================
+    $('#editCategoryModal').on('show.bs.modal', function (event) {
+        const btn = $(event.relatedTarget);
+        const catId = btn.data('id');
+        const catName = btn.data('name');
+
+        $('#editCatId').val(catId);
+        $('#editCategoryName').val(catName).prop('readonly', true).addClass('bg-light');
+        $('#unlockEditName').html('<i class="bi bi-pencil-fill text-danger"></i>');
+        $('#newSubRowsContainer').empty();
+
+        const $list = $('#editSubCategoriesList').html(`
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-danger"></div>
+            </div>
+        `);
+
         $.getJSON(`/get-subcategories/${catId}`)
-            .done(function(data) {
+            .done(data => {
                 $list.empty();
-                let subData = data.subcategories || data;
-
-                if (!subData || subData.length === 0) {
-                    $list.append('<p class="text-muted small text-center py-2">ไม่มีประเภทย่อยในขณะนี้</p>');
+                if (!data || !data.length) {
+                    $list.append('<p class="text-muted small text-center no-data-msg">ไม่มีประเภทย่อย</p>');
                 } else {
-                    subData.forEach(sub => {
-                        const name = sub.subcat_name || sub.name || '';
-                        const id = sub.subcat_id || sub.id || null;
-                        // แสดงรายการเดิมพร้อมไอคอนถังขยะสีแดง
-                        appendSubItem($list, name, id);
-                    });
+                    data.forEach(sub => appendSubItem($list, sub.subcat_name, sub.subcat_id));
                 }
             })
-            .fail(function() {
-                $list.html('<p class="text-danger small text-center py-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>');
-            });
+            .fail(() => notifyError('โหลดข้อมูลประเภทย่อยไม่สำเร็จ'));
     });
 
-    /**
-     * === 2. การจัดการส่วนเพิ่มข้อมูลใหม่ (Dynamic Rows ในส่วนล่าง) ===
-     * สร้างแถวสำหรับกรอกข้อมูลใหม่พร้อมปุ่ม ยืนยัน และ ลบทิ้ง
-     */
-    $('.add-row-btn').click(function() {
-        const rowHtml = `
+    // ======================================================
+    // Unlock Category Name
+    // ======================================================
+    $(document).on('click', '#unlockEditName', function () {
+        const $input = $('#editCategoryName');
+        const locked = $input.prop('readonly');
+
+        $input.prop('readonly', !locked).toggleClass('bg-light bg-white');
+        $(this).html(
+            locked
+                ? '<i class="bi bi-unlock-fill text-danger"></i>'
+                : '<i class="bi bi-pencil-fill text-danger"></i>'
+        );
+
+        if (locked) notifySuccess('ปลดล็อกการแก้ไขชื่อแล้ว');
+    });
+
+    // ======================================================
+    // ADD NEW SUB ROW  ✅ (FIXED)
+    // ======================================================
+    $(document).on('click', '.add-row-btn', function () {
+        $('#newSubRowsContainer').append(`
             <div class="input-group mb-2 dynamic-sub-row animate__animated animate__fadeIn">
-                <input type="text" class="form-control shadow-none new-sub-input" 
-                       placeholder="ระบุชื่อประเภทย่อยใหม่..." 
-                       style="border-radius: 12px 0 0 12px; border: 1px solid #e9ecef; background-color: #f8f9fa; padding: 12px 20px;">
-                <button class="btn btn-light text-success border-top border-bottom px-3 confirm-row-btn shadow-none" 
-                        type="button" style="background-color: #f8f9fa; border-color: #e9ecef;">
-                    <i class="bi bi-check-circle-fill" style="font-size: 1.1rem;"></i>
+                <input type="text" class="form-control new-sub-input" placeholder="ชื่อประเภทย่อยใหม่">
+                <button type="button" class="btn btn-light text-danger confirm-row-btn">
+                    <i class="bi bi-check-circle-fill"></i>
                 </button>
-                <button class="btn btn-light text-danger border px-3 remove-row-btn shadow-none" 
-                        type="button" style="border-radius: 0 12px 12px 0; background-color: #f8f9fa; border-color: #e9ecef;">
+                <button type="button" class="btn btn-light text-danger remove-row-btn">
                     <i class="bi bi-trash3-fill"></i>
                 </button>
-            </div>`;
-        $('#newSubRowsContainer').append(rowHtml);
-        $('#newSubRowsContainer .new-sub-input').last().focus();
+            </div>
+        `);
+        $('.new-sub-input').last().focus();
     });
 
-    // ลบแถวกรอกข้อมูลที่เพิ่งสร้างขึ้นใหม่ (เฉพาะในหน้า UI)
-    $(document).on('click', '.remove-row-btn', function() {
-        $(this).closest('.dynamic-sub-row').fadeOut(200, function() { 
-            $(this).remove(); 
+    // Confirm new sub row
+    $(document).on('click', '.confirm-row-btn', function () {
+        const val = $(this).siblings('.new-sub-input').val().trim();
+        if (!val) return notifyWarning('กรุณาระบุชื่อประเภทย่อย');
+
+        $('.no-data-msg').remove();
+        appendNewSubItem($('#editSubCategoriesList'), val);
+        $(this).closest('.dynamic-sub-row').remove();
+        notifySuccess(`เพิ่ม "${val}" แล้ว`);
+    });
+
+    // Remove row
+    $(document).on('click', '.remove-row-btn', function () {
+        $(this).closest('.dynamic-sub-row').remove();
+    });
+
+    // Delete existing sub
+    $(document).on('click', '.delete-sub-btn', function () {
+        $(this).closest('.sub-item-card').fadeOut(200, function () {
+            $(this).remove();
         });
     });
 
-    // เมื่อกดยืนยัน (เช็คถูก) หรือกด Enter จะย้ายข้อมูลจากส่วนล่างขึ้นไปส่วนบน
-    $(document).on('click', '.confirm-row-btn', function() {
-        const $input = $(this).siblings('.new-sub-input');
-        const val = $input.val().trim();
-        if (val) {
-            // ส่งข้อมูลขึ้นไปแสดงใน List ส่วนบนพร้อมสถานะเตรียมบันทึก
-            appendNewSubItem($('#editSubCategoriesList'), val);
-            $(this).closest('.dynamic-sub-row').remove();
-        }
-    });
-
-    $(document).on('keypress', '.new-sub-input', function(e) {
-        if(e.which == 13) { // ปุ่ม Enter
-            e.preventDefault();
-            $(this).siblings('.confirm-row-btn').click();
-        }
-    });
-
-    /**
-     * === 3. การส่งข้อมูลไปบันทึกที่ Backend ===
-     * รวบรวมข้อมูลทั้งหมดทั้งของเดิมและของใหม่ส่งไปที่ Flask
-     */
-    $('#btnConfirmUpdate').click(function() {
-        const subs = [];
-        // เก็บรายชื่อประเภทย่อยทั้งหมดจาก List หลักด้านบน
-        $('#editSubCategoriesList .sub-text-val').each(function() {
-            subs.push($(this).text().trim());
-        });
-
+    // ======================================================
+    // Update Category
+    // ======================================================
+    $('#btnConfirmUpdate').click(function () {
         const data = {
-            id: $('#editCatId').val(),
-            name: $('#editCategoryName').val(),
-            'subs[]': subs // ส่งเป็น Array เพื่อให้ง่ายต่อการบันทึกข้อมูล
+            cat_id: $('#editCatId').val(),
+            cat_name: $('#editCategoryName').val().trim(),
+            'subs[]': $('#editSubCategoriesList .sub-text-val').map(function () {
+                return $(this).text().trim();
+            }).get()
         };
 
-        Swal.fire({ 
-            title: 'กำลังบันทึกข้อมูล...', 
-            allowOutsideClick: false, 
-            didOpen: () => Swal.showLoading() 
-        });
+        if (!data.cat_name) return notifyWarning('ชื่อหมวดหมู่ต้องไม่ว่าง');
 
-        $.post('/update-category', data)
-            .done(function() {
-                Swal.fire({ 
-                    icon: 'success', 
-                    title: 'อัปเดตข้อมูลสำเร็จ', 
-                    timer: 1500, 
-                    showConfirmButton: false 
-                }).then(() => location.reload());
-            })
-            .fail(() => {
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับระบบได้', 'error');
+        confirmAction('บันทึกการเปลี่ยนแปลง', 'คุณต้องการอัปเดตข้อมูลใช่หรือไม่?', 'บันทึก')
+            .then(res => {
+                if (!res.isConfirmed) return;
+
+                showLoading('กำลังอัปเดตข้อมูล...');
+
+                $.post('/update-category', data)
+                    .done(res => {
+                        res.success
+                            ? notifySuccess('อัปเดตข้อมูลเรียบร้อย')
+                            : notifyError(res.message);
+
+                        if (res.success) setTimeout(() => location.reload(), 1200);
+                    })
+                    .fail(() => notifyError('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
             });
-    });
-
-    /**
-     * === 4. ฟังก์ชันจัดการรายการประเภทย่อย (UI) ===
-     */
-    $(document).on('click', '.delete-sub-btn', function() {
-        const $item = $(this).closest('.sub-item-card');
-        Swal.fire({
-            title: 'ยืนยันการลบ?',
-            text: "ประเภทย่อยนี้จะหายไปหลังจากกดบันทึกการเปลี่ยนแปลง",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#db3741',
-            confirmButtonText: 'ลบรายการ',
-            cancelButtonText: 'ยกเลิก'
-        }).then(res => {
-            if (res.isConfirmed) {
-                $item.fadeOut(300, function() { $(this).remove(); });
-            }
-        });
     });
 });
 
-/**
- * ฟังก์ชันสร้างรายการ "เดิม" (สไตล์การ์ดสีขาว พร้อมไอคอนถังขยะสีแดง)
- */
+// ======================================================
+// Global Helpers
+// ======================================================
 function appendSubItem($container, text, id) {
-    const html = `
-        <div class="sub-item-card animate__animated animate__fadeIn shadow-sm" 
-             style="background-color: #ffffff; border: 1px solid #f1f2f4; border-radius: 12px; padding: 12px 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span class="sub-text-val fw-bold" style="color: #40444d; font-size: 0.9rem;">${text}</span>
-            <button type="button" class="btn btn-sm text-danger border-0 p-0 delete-sub-btn" data-id="${id}">
-                <i class="bi bi-trash3-fill" style="font-size: 1.1rem;"></i>
+    $container.append(`
+        <div class="sub-item-card d-flex justify-content-between align-items-center p-3 mb-2 border rounded shadow-sm">
+            <span class="sub-text-val fw-bold">
+                <i class="bi bi-layers me-2 text-danger"></i>${text}
+            </span>
+            <button class="btn btn-sm text-danger delete-sub-btn p-0 border-0" data-id="${id}">
+                <i class="bi bi-trash3-fill"></i>
             </button>
-        </div>`;
-    $container.append(html);
+        </div>
+    `);
 }
 
-/**
- * ฟังก์ชันสร้างรายการ "ใหม่" (สไตล์การ์ดสีเขียว แสดงสถานะเตรียมเพิ่ม)
- */
 function appendNewSubItem($container, text) {
-    const html = `
-        <div class="sub-item-card animate__animated animate__fadeIn" 
-             style="border-left: 5px solid #48bb78; background-color: #f0fff4; border-radius: 12px; padding: 12px 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span class="sub-text-val fw-bold" style="color: #2f855a; font-size: 0.9rem;">${text}</span>
-            <div class="text-success d-flex align-items-center">
-                <small class="me-2 fw-bold" style="font-size: 0.75rem;">เตรียมเพิ่ม</small>
-                <i class="bi bi-check-circle-fill" style="font-size: 1.2rem;"></i>
-            </div>
-        </div>`;
-    $container.append(html);
+    $container.append(`
+        <div class="sub-item-card d-flex justify-content-between align-items-center p-3 mb-2 border border-danger rounded">
+            <span class="sub-text-val fw-bold text-danger">
+                <i class="bi bi-plus-square-fill me-2"></i>${text}
+            </span>
+            <small class="text-danger">รอการบันทึก</small>
+        </div>
+    `);
+}
+
+function deleteCategory(id) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'ยืนยันการลบหมวดหมู่',
+        text: 'หมวดหมู่และประเภทย่อยทั้งหมดจะถูกซ่อนจากระบบ',
+        showCancelButton: true,
+        confirmButtonText: 'ลบข้อมูล',
+        cancelButtonText: 'ยกเลิก',
+        buttonsStyling: false,
+        customClass: {
+            confirmButton: 'btn btn-danger px-4',
+            cancelButton: 'btn btn-outline-secondary px-4'
+        }
+    }).then(res => {
+        if (!res.isConfirmed) return;
+
+        Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+
+        $.post('/delete-category', { cat_id: id })
+            .done(res => {
+                res.success
+                    ? Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', timer: 1200, showConfirmButton: false })
+                          .then(() => location.reload())
+                    : Swal.fire({ icon: 'error', title: 'ล้มเหลว', text: res.message });
+            })
+            .fail(() => Swal.fire({ icon: 'error', title: 'Error', text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้' }));
+    });
 }
