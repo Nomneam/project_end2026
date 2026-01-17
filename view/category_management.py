@@ -22,7 +22,6 @@ def connect_db():
 
 @category_management_bp.route('/category-management')
 def category_management():
-    """หน้าหลักจัดการหมวดหมู่: แสดงรายการทั้งหมด"""
     user = session.get("user")
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
