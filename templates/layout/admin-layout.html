@@ -91,14 +91,14 @@
         <div class="mt-3">
           <div class="nav-section-title">เมนูงาน</div>
           <a class="side-link" href="#/news/create">✍️ เขียนข่าว</a>
-          <a class="side-link" href="#/news">📰 หน้ารวมข่าว</a>
+          <a class="side-link" href="{{url_for('news_management.news_management')}}">📰 หน้ารวมข่าว</a>
           <a class="side-link" href="{{ url_for('user_role.user_role') }}">👤➕ เพิ่มพนักงาน</a>
           <a class="side-link" href="{{ url_for('advert_review.advert_review') }}">📣 ตรวจสอบโฆษณา</a>
           <a class="side-link" href="{{ url_for('category_management.category_management') }}">✏️ จัดการประเภทข่าวในระบบ</a>
         </div>
       </aside>
 
-      <!-- ✅ MAIN (ย้ายเข้ามาอยู่ใน app-shell) -->
+      <!-- MAIN (ย้ายเข้ามาอยู่ใน app-shell) -->
       <main id="main" class="main">
         {% block content %}{% endblock %}
       </main>

@@ -105,7 +105,8 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-1">
-                                <a href="#"
+                                <!-- ลิงค์ไปยังหน้าแก้ไขข่าว -->
+                                <a href="#"  
                                    class="btn-action btn-edit"
                                    title="แก้ไข">
                                     <i class="bi bi-pencil-square"></i>
@@ -115,13 +116,13 @@
                                         onclick="deleteNews({{ news.news_id }}, this)">
                                     <i class="bi bi-trash3"></i>
                                 </button>
-
                                 <button type="button"
                                         class="btn-action btn-view"
-                                        onclick='openViewModal({{ news | tojson | safe }})'
+                                        onclick="viewNews({{ news.news_id }})"
                                         title="ดูรายละเอียด">
                                     <i class="bi bi-eye"></i>
                                 </button>
+
                             </div>
                         </td>
                     </tr>

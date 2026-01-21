@@ -5,25 +5,99 @@ const viewModalEl = document.getElementById('viewNewsModal');
 const viewModal = new bootstrap.Modal(viewModalEl);
 
 /* =========================================================
-   Image preload helper (กันกระตุก + กัน retry)
+   Abort controller (กันกดรัว)
+========================================================= */
+let currentAbortController = null;
+
+/* =========================================================
+   Image preload helper
 ========================================================= */
 function preloadImage(src) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(src);
-        img.onerror = () => reject();
+        img.onerror = reject;
         img.src = src;
     });
 }
 
-/**
- * เปิด Modal เพื่อแสดงรายละเอียดข่าว
- * @param {Object} news
- */
-async function openViewModal(news) {
-    console.log('openViewModal:', news);
+/* =========================================================
+   Reset modal (ก่อนโหลดข้อมูลใหม่)
+========================================================= */
+function resetViewModal() {
+    document.getElementById('v-title').innerText = 'กำลังโหลด...';
+    document.getElementById('v-author').innerText = '-';
+    document.getElementById('v-category').innerText = '-';
+    document.getElementById('v-date-thai').innerText = '-';
+    document.getElementById('v-time-thai').innerText = '';
 
-    /* ---------- 1. ข้อมูลพื้นฐาน ---------- */
+    document.getElementById('v-status-container').innerHTML =
+        '<span class="badge bg-secondary w-100">กำลังโหลด</span>';
+
+    document.getElementById('v-content').innerHTML = `
+        <div class="text-center text-muted py-4">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            กำลังโหลดข้อมูล...
+        </div>
+    `;
+
+    const coverImg = document.getElementById('v-cover-image');
+    coverImg.style.display = 'none';
+    coverImg.src = '';
+}
+
+/* =========================================================
+   แสดง error ใน modal
+========================================================= */
+function showError(message) {
+    document.getElementById('v-content').innerHTML = `
+        <div class="alert alert-danger mb-0">
+            ${message}
+        </div>
+    `;
+}
+
+/* =========================================================
+   โหลดข่าวตาม ID และเปิด modal
+========================================================= */
+async function viewNews(newsId) {
+    if (!newsId) return;
+
+    // cancel request เก่า
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
+    currentAbortController = new AbortController();
+
+    resetViewModal();
+    viewModal.show();
+
+    try {
+        const res = await fetch(`/news-management/${newsId}`, {
+            signal: currentAbortController.signal
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            showError(result.message || 'ไม่พบข้อมูลข่าว');
+            return;
+        }
+
+        await openViewModal(result.data);
+
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            console.error(err);
+            showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+        }
+    }
+}
+
+/* =========================================================
+   เปิด modal พร้อมข้อมูลข่าว
+========================================================= */
+async function openViewModal(news) {
     document.getElementById('v-title').innerText =
         news.news_title || 'ไม่มีหัวข้อ';
 
@@ -33,20 +107,18 @@ async function openViewModal(news) {
     document.getElementById('v-category').innerText =
         news.cat_name || '-';
 
-    /* ---------- 2. เนื้อหา ---------- */
-    const contentArea = document.getElementById('v-content');
-    contentArea.innerHTML =
+    document.getElementById('v-content').innerHTML =
         news.news_content ||
         '<span class="text-muted fst-italic">ไม่มีเนื้อหา</span>';
 
-    /* ---------- 3. รูปปก ---------- */
+    /* ---------- รูปปก ---------- */
     const coverImg = document.getElementById('v-cover-image');
     coverImg.style.display = 'none';
     coverImg.src = '';
 
-    let imageSrc = null;
+    if (news.cover_image) {
+        let imageSrc = null;
 
-    if (news.cover_image && news.cover_image.trim() !== '') {
         if (news.cover_image.startsWith('data:image')) {
             imageSrc = news.cover_image;
         } else if (news.cover_image.length > 100) {
@@ -64,38 +136,34 @@ async function openViewModal(news) {
         }
     }
 
-    /* ---------- 4. วันที่ / เวลา ---------- */
-    const dateEl = document.getElementById('v-date-thai');
-    const timeEl = document.getElementById('v-time-thai');
-
+    /* ---------- วันที่ / เวลา ---------- */
     if (news.created_at) {
         const dateObj = new Date(news.created_at);
-        dateEl.innerText = dateObj.toLocaleDateString('th-TH', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        });
-        timeEl.innerText = dateObj.toLocaleTimeString('th-TH', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        document.getElementById('v-date-thai').innerText =
+            dateObj.toLocaleDateString('th-TH', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        document.getElementById('v-time-thai').innerText =
+            dateObj.toLocaleTimeString('th-TH', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
     } else {
-        dateEl.innerText = '-';
-        timeEl.innerText = '';
+        document.getElementById('v-date-thai').innerText = '-';
+        document.getElementById('v-time-thai').innerText = '';
     }
 
-    /* ---------- 5. สถานะ ---------- */
+    /* ---------- สถานะ ---------- */
     document.getElementById('v-status-container').innerHTML =
         news.status === 'publish'
             ? '<span class="badge bg-success w-100">เผยแพร่แล้ว</span>'
             : '<span class="badge bg-secondary w-100">ฉบับร่าง</span>';
-
-    /* ---------- 6. เปิด modal ---------- */
-    viewModal.show();
 }
 
 /* =========================================================
-   ลบข่าวแบบไม่ reload หน้า (เร็วขึ้นมาก)
+   ลบข่าวแบบไม่ reload หน้า
 ========================================================= */
 function deleteNews(id, btn) {
     if (!id) return;
@@ -108,7 +176,6 @@ function deleteNews(id, btn) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // ลบแถวออกจาก table ทันที
                 const row = btn.closest('tr');
                 row.style.transition = 'opacity .2s';
                 row.style.opacity = '0';
