@@ -1,14 +1,13 @@
-{% extends "layout/reporter-layout.html" %} {% block title %}Reporter
-Dashboard{% endblock %} {% block head %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/style.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/reporter-dashboard.css') }}"
-/>
-{% endblock %} {% block content %}
+{% extends "layout/reporter-layout.html" %}
+
+{% block title %}Reporter Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reporter-dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="main-content">
   <h2 class="mb-3">Dashboard Reporter</h2>
 
@@ -21,35 +20,25 @@ Dashboard{% endblock %} {% block head %}
     </div>
   </div>
 
-  <div class="row">
+  <div class="row ">
     <div class="col-md-12">
       <div class="card">
-        <div
-          class="card-header d-flex justify-content-between align-items-center"
-        >
+        <div class="card-header d-flex justify-content-between align-items-center">
           <span>ข่าวล่าสุดของฉัน</span>
         </div>
 
         <div class="card-body">
           <div class="table-wrap">
+
             <form method="GET" class="row g-2 align-items-end mb-3">
               <div class="col-md-4">
                 <label class="form-label">ประเภทข่าว</label>
                 <select name="cat_id" class="form-select">
                   <option value="">ทั้งหมด</option>
                   {% for c in categories %}
-                  <option
-                    value="{{ c.cat_id }}"
-                    {%
-                    if
-                    (f_cat_id|string)=""
-                    ="(c.cat_id|string)"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    {{ c.cat_name }}
-                  </option>
+                    <option value="{{ c.cat_id }}" {% if (f_cat_id|string) == (c.cat_id|string) %}selected{% endif %}>
+                      {{ c.cat_name }}
+                    </option>
                   {% endfor %}
                 </select>
               </div>
@@ -57,84 +46,18 @@ Dashboard{% endblock %} {% block head %}
               <div class="col-md-4">
                 <label class="form-label">ชนิดข่าว</label>
                 <select name="kind" class="form-select">
-                  <option
-                    value="all"
-                    {%
-                    if
-                    f_kind=""
-                    ="all"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    ทั้งหมด
-                  </option>
-                  <option
-                    value="featured"
-                    {%
-                    if
-                    f_kind=""
-                    ="featured"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    ข่าวยอดฮิต
-                  </option>
-                  <option
-                    value="normal"
-                    {%
-                    if
-                    f_kind=""
-                    ="normal"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    ข่าวทั่วไป
-                  </option>
+                  <option value="all" {% if f_kind == "all" %}selected{% endif %}>ทั้งหมด</option>
+                  <option value="featured" {% if f_kind == "featured" %}selected{% endif %}>ข่าวยอดฮิต</option>
+                  <option value="normal" {% if f_kind == "normal" %}selected{% endif %}>ข่าวทั่วไป</option>
                 </select>
               </div>
 
               <div class="col-md-4">
                 <label class="form-label">สถานะ</label>
                 <select name="status" class="form-select">
-                  <option
-                    value="all"
-                    {%
-                    if
-                    f_status=""
-                    ="all"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    ทั้งหมด
-                  </option>
-                  <option
-                    value="publish"
-                    {%
-                    if
-                    f_status=""
-                    ="publish"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    เผยแพร่แล้ว
-                  </option>
-                  <option
-                    value="draft"
-                    {%
-                    if
-                    f_status=""
-                    ="draft"
-                    %}selected{%
-                    endif
-                    %}
-                  >
-                    ฉบับร่าง
-                  </option>
+                  <option value="all" {% if f_status == "all" %}selected{% endif %}>ทั้งหมด</option>
+                  <option value="publish" {% if f_status == "publish" %}selected{% endif %}>เผยแพร่แล้ว</option>
+                  <option value="draft" {% if f_status == "draft" %}selected{% endif %}>ฉบับร่าง</option>
                 </select>
               </div>
 
@@ -143,10 +66,8 @@ Dashboard{% endblock %} {% block head %}
                   <i class="bi bi-search"></i> ค้นหา
                 </button>
 
-                <a
-                  class="btn btn-outline-secondary"
-                  href="{{ url_for('dashboard_reporter.reporter_dashboard') }}"
-                >
+                <a class="btn btn-outline-secondary"
+                   href="{{ url_for('dashboard_reporter.reporter_dashboard') }}">
                   ล้างค่า
                 </a>
               </div>
@@ -171,60 +92,56 @@ Dashboard{% endblock %} {% block head %}
 
                   <td class="text-center">
                     {% if (n.is_featured or 0) == 1 %}
-                    <span class="badge bg-danger">ข่าวยอดฮิต</span>
+                      <span class="badge bg-danger">ข่าวยอดฮิต</span>
                     {% else %}
-                    <span class="badge bg-secondary">ข่าวทั่วไป</span>
+                      <span class="badge bg-secondary">ข่าวทั่วไป</span>
                     {% endif %}
                   </td>
 
                   <td class="text-center">{{ n.category_name or "-" }}</td>
 
                   <td class="text-center">
-                    {% if n.published_at %} {{
-                    n.published_at.strftime("%d/%m/%Y") }} {% else %} - {% endif
-                    %}
-                  </td>
-
-                  <td class="text-center">
-                    {% if n.status == "publish" %}
-                    <span class="status-badge status-published"
-                      >เผยแพร่แล้ว</span
-                    >
+                    {% if n.published_at %}
+                      {{ n.published_at.strftime("%d/%m/%Y") }}
                     {% else %}
-                    <span class="status-badge status-draft">ฉบับร่าง</span>
+                      -
                     {% endif %}
                   </td>
 
                   <td class="text-center">
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary btn-sm rounded-circle btn-view-news"
-                      data-id="{{ n.news_id }}"
-                      data-bs-toggle="tooltip"
-                      data-bs-title="ดูรายละเอียด"
-                    >
-                      <i class="bi bi-eye"></i>
-                    </button>
+                    {% if n.status == "publish" %}
+                      <span class="status-badge status-published">เผยแพร่แล้ว</span>
+                    {% else %}
+                      <span class="status-badge status-draft">ฉบับร่าง</span>
+                    {% endif %}
+                  </td>
 
-                    <button
-                      type="button"
-                      class="btn btn-outline-warning btn-sm rounded-circle btn-edit-news"
-                      data-id="{{ n.news_id }}"
-                      data-bs-toggle="tooltip"
-                      data-bs-title="แก้ไขสินค้า"
-                    >
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
+                  <td class="text-center">
+                   
+                    <button type="button"
+                  class="btn btn-outline-primary btn-sm rounded-circle btn-view-news"
+                  data-id="{{ n.news_id }}"
+                  data-bs-toggle="tooltip"
+                  data-bs-title="ดูรายละเอียด">
+                  <i class="bi bi-eye"></i>
+                </button>
 
-                    <button
-                      type="button"
-                      class="btn btn-outline-danger btn-sm rounded-circle btn-soft-delete"
-                      data-id="{{ n.news_id }}"
-                      data-bs-toggle="tooltip"
-                      data-bs-title="ลบรายการ"
-                    >
-                      <i class="bi bi-trash3"></i>
-                    </button>
+                     <button type="button"
+                  class="btn btn-outline-warning btn-sm rounded-circle btn-edit-news"
+                  data-id="{{ n.news_id }}"
+                  data-bs-toggle="tooltip"
+                  data-bs-title="แก้ไขสินค้า">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                   <button type="button"
+                class="btn btn-outline-danger btn-sm rounded-circle btn-soft-delete"
+                data-id="{{ n.news_id }}"
+                data-bs-toggle="tooltip"
+                data-bs-title="ลบรายการ">
+                <i class="bi bi-trash3"></i>
+              </button>
+
                   </td>
                 </tr>
                 {% else %}
@@ -237,46 +154,39 @@ Dashboard{% endblock %} {% block head %}
               </tbody>
             </table>
 
-            {# --- Pagination --- #} {% if total_pages > 1 %}
-            <div class="pagination-wrap mt-3">
-              <nav aria-label="Pagination">
-                <ul class="pagination mb-0">
-                  <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                    <a
-                      class="page-link"
-                      href="{{ url_for('dashboard_reporter.reporter_dashboard',
+            {# --- Pagination --- #}
+            {% if total_pages > 1 %}
+              <div class="pagination-wrap mt-3">
+                <nav aria-label="Pagination">
+                  <ul class="pagination mb-0">
+
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                      <a class="page-link"
+                         href="{{ url_for('dashboard_reporter.reporter_dashboard',
                                           page=page-1, cat_id=f_cat_id, kind=f_kind, status=f_status) }}"
-                      aria-label="Previous"
-                      >&laquo;</a
-                    >
-                  </li>
+                         aria-label="Previous">&laquo;</a>
+                    </li>
 
-                  {% for p in range(1, total_pages + 1) %}
-                  <li class="page-item {% if p == page %}active{% endif %}">
-                    <a
-                      class="page-link"
-                      href="{{ url_for('dashboard_reporter.reporter_dashboard',
-                                            page=p, cat_id=f_cat_id, kind=f_kind, status=f_status) }}"
-                      >{{ p }}</a
-                    >
-                  </li>
-                  {% endfor %}
+                    {% for p in range(1, total_pages + 1) %}
+                      <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link"
+                           href="{{ url_for('dashboard_reporter.reporter_dashboard',
+                                            page=p, cat_id=f_cat_id, kind=f_kind, status=f_status) }}">{{ p }}</a>
+                      </li>
+                    {% endfor %}
 
-                  <li
-                    class="page-item {% if page >= total_pages %}disabled{% endif %}"
-                  >
-                    <a
-                      class="page-link"
-                      href="{{ url_for('dashboard_reporter.reporter_dashboard',
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                      <a class="page-link"
+                         href="{{ url_for('dashboard_reporter.reporter_dashboard',
                                           page=page+1, cat_id=f_cat_id, kind=f_kind, status=f_status) }}"
-                      aria-label="Next"
-                      >&raquo;</a
-                    >
-                  </li>
-                </ul>
-              </nav>
-            </div>
+                         aria-label="Next">&raquo;</a>
+                    </li>
+
+                  </ul>
+                </nav>
+              </div>
             {% endif %}
+
           </div>
         </div>
       </div>
@@ -284,98 +194,69 @@ Dashboard{% endblock %} {% block head %}
   </div>
 </div>
 
+
 <!-- ✅ View News Modal (Read-only) -->
 <div class="modal fade" id="viewNewsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
+
       <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="bi bi-eye me-1"></i> ดูรายละเอียดข่าว
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+        <h5 class="modal-title"><i class="bi bi-eye me-1"></i> ดูรายละเอียดข่าว</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
         <div class="row g-3">
+
           <div class="col-md-8">
             <label class="form-label">หัวข้อข่าว</label>
-            <input type="text" class="form-control" id="v_title" readonly />
+            <input type="text" class="form-control" id="v_title" readonly>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">ประเภทข่าว</label>
-            <input type="text" class="form-control" id="v_kind" readonly />
+            <input type="text" class="form-control" id="v_kind" readonly>
           </div>
 
           <div class="col-md-6">
             <label class="form-label">ประเภทข่าวหลัก</label>
-            <input type="text" class="form-control" id="v_category" readonly />
+            <input type="text" class="form-control" id="v_category" readonly>
           </div>
 
           <div class="col-md-6">
             <label class="form-label">ประเภทย่อย</label>
-            <input
-              type="text"
-              class="form-control"
-              id="v_subcategory"
-              readonly
-            />
+            <input type="text" class="form-control" id="v_subcategory" readonly>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">สถานะ</label>
-            <input type="text" class="form-control" id="v_status" readonly />
+            <input type="text" class="form-control" id="v_status" readonly>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">วันที่เผยแพร่</label>
-            <input
-              type="text"
-              class="form-control"
-              id="v_published_at"
-              readonly
-            />
+            <input type="text" class="form-control" id="v_published_at" readonly>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">อัปเดตล่าสุด</label>
-            <input
-              type="text"
-              class="form-control"
-              id="v_updated_at"
-              readonly
-            />
+            <input type="text" class="form-control" id="v_updated_at" readonly>
           </div>
 
           <div class="col-12">
             <label class="form-label">เนื้อหาข่าว</label>
-            <textarea
-              class="form-control"
-              id="v_content"
-              rows="8"
-              readonly
-            ></textarea>
+            <textarea class="form-control" id="v_content" rows="8" readonly></textarea>
           </div>
 
           <div class="col-12">
             <label class="form-label">ลิงก์วิดีโอ</label>
-            <input type="text" class="form-control" id="v_video_url" readonly />
+            <input type="text" class="form-control" id="v_video_url" readonly>
           </div>
 
           <div class="col-md-6">
             <label class="form-label">รูปปก</label>
             <div class="border rounded p-2 text-center bg-light">
-              <img
-                id="v_cover_img"
-                src=""
-                alt="cover"
-                style="max-height: 260px; max-width: 100%; display: none"
-              />
+              <img id="v_cover_img" src="" alt="cover" style="max-height:260px; max-width:100%; display:none;">
               <div id="v_cover_empty" class="text-muted">ไม่มีรูปปก</div>
             </div>
           </div>
@@ -385,50 +266,37 @@ Dashboard{% endblock %} {% block head %}
             <div id="v_sub_images" class="d-flex flex-wrap gap-2"></div>
             <div id="v_sub_images_empty" class="text-muted">ไม่มีรูปภาพรอง</div>
           </div>
+
         </div>
       </div>
 
       <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          data-bs-dismiss="modal"
-        >
-          ปิด
-        </button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
       </div>
+
     </div>
   </div>
 </div>
+
 
 <!-- ✅ Edit News Modal -->
 <div class="modal fade" id="editNewsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
+
       <div class="modal-header">
         <h5 class="modal-title"><i class="bi bi-pencil me-1"></i> แก้ไขข่าว</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <form id="editNewsForm" autocomplete="off" enctype="multipart/form-data">
         <div class="modal-body">
-          <input type="hidden" id="e_news_id" name="news_id" />
+          <input type="hidden" id="e_news_id" name="news_id">
 
           <div class="row g-3">
             <div class="col-md-8">
               <label class="form-label">หัวข้อข่าว *</label>
-              <input
-                type="text"
-                class="form-control"
-                id="e_title"
-                name="news_title"
-                required
-                maxlength="255"
-              />
+              <input type="text" class="form-control" id="e_title" name="news_title" required maxlength="255">
             </div>
 
             <div class="col-md-4">
@@ -444,19 +312,14 @@ Dashboard{% endblock %} {% block head %}
               <select class="form-select" id="e_cat_id" name="cat_id" required>
                 <option value="">-- เลือกประเภทข่าวหลัก --</option>
                 {% for c in categories %}
-                <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
+                  <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
                 {% endfor %}
               </select>
             </div>
 
             <div class="col-md-6">
               <label class="form-label">ประเภทย่อย</label>
-              <select
-                class="form-select"
-                id="e_subcat_id"
-                name="subcat_id"
-                disabled
-              >
+              <select class="form-select" id="e_subcat_id" name="subcat_id" disabled>
                 <option value="">-- เลือกประเภทย่อย --</option>
               </select>
               <small class="text-muted">เลือกประเภทข่าวหลักก่อน</small>
@@ -472,109 +335,65 @@ Dashboard{% endblock %} {% block head %}
 
             <div class="col-12">
               <label class="form-label">เนื้อหาข่าว *</label>
-              <textarea
-                class="form-control"
-                id="e_content"
-                name="news_content"
-                rows="8"
-                required
-              ></textarea>
+              <textarea class="form-control" id="e_content" name="news_content" rows="8" required></textarea>
             </div>
 
-            <hr class="my-2" />
+            <hr class="my-2">
 
             <!-- ✅ รูปปก -->
             <div class="col-md-6">
               <label class="form-label">รูปปก (Cover)</label>
-              <input
-                type="file"
-                class="form-control"
-                id="e_cover_file"
-                name="cover_image"
-                accept="image/*"
-              />
+              <input type="file" class="form-control" id="e_cover_file" name="cover_image" accept="image/*">
 
               <div class="mt-2 border rounded p-2 bg-light text-center">
-                <img
-                  id="e_cover_preview"
-                  src=""
-                  alt="cover"
-                  style="max-height: 220px; max-width: 100%; display: none"
-                />
+                <img id="e_cover_preview" src="" alt="cover" style="max-height:220px;max-width:100%;display:none;">
                 <div id="e_cover_empty" class="text-muted">ยังไม่มีรูปปก</div>
               </div>
 
               <div class="d-flex gap-2 mt-2">
-                <button
-                  type="button"
-                  class="btn btn-outline-danger btn-sm"
-                  id="btnRemoveCover"
-                >
+                <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemoveCover">
                   <i class="bi bi-trash"></i> ลบรูปปก
                 </button>
               </div>
 
-              <input
-                type="hidden"
-                id="e_remove_cover"
-                name="remove_cover"
-                value="0"
-              />
+              <input type="hidden" id="e_remove_cover" name="remove_cover" value="0">
             </div>
 
             <!-- ✅ รูปรอง -->
             <div class="col-md-6">
               <label class="form-label">รูปภาพรอง (เลือกได้หลายรูป)</label>
-              <input
-                type="file"
-                class="form-control"
-                id="e_sub_files"
-                name="sub_images"
-                accept="image/*"
-                multiple
-              />
+              <input type="file" class="form-control" id="e_sub_files" name="sub_images" accept="image/*" multiple>
 
               <div class="mt-2 d-flex flex-wrap gap-2" id="e_sub_preview"></div>
               <div id="e_sub_empty" class="text-muted">ยังไม่มีรูปภาพรอง</div>
 
               <div class="d-flex gap-2 mt-2">
-                <button
-                  type="button"
-                  class="btn btn-outline-danger btn-sm"
-                  id="btnRemoveSubs"
-                >
+                <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemoveSubs">
                   <i class="bi bi-trash"></i> ลบรูปรองทั้งหมด
                 </button>
               </div>
 
-              <input
-                type="hidden"
-                id="e_remove_subs"
-                name="remove_subs"
-                value="0"
-              />
+              <input type="hidden" id="e_remove_subs" name="remove_subs" value="0">
             </div>
+
           </div>
         </div>
 
         <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-outline-secondary"
-            data-bs-dismiss="modal"
-          >
-            ยกเลิก
-          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
           <button type="submit" class="btn btn-danger">
             <i class="bi bi-save me-1"></i> บันทึก
           </button>
         </div>
       </form>
+
     </div>
   </div>
 </div>
 
-{% endblock %} {% block scripts %}
+{% endblock %}
+
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/common.js') }}"></script>
 <script src="{{ url_for('static', filename='js/reporter-dashboard.js') }}"></script>
 {% endblock %}
