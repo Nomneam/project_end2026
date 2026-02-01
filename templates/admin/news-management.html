@@ -9,29 +9,30 @@
 
 {% block content %}
 
-<div class="main-content container-fluid py-4">
-    <h2 class="mb-4">NEWS MANAGEMENT</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">NEWS MANAGEMENT</h2>
+        <p class="text-muted small mb-0">จัดการและเพิ่มข่าวในระบบ</p>
+    </div>
+    
+    <button type="button" class="btn-add-news" onclick="location.href='#'">
+        <i class="bi bi-plus-lg"></i>
+        <span>เพิ่มข่าวสารใหม่</span>
+    </button>
+</div>
 
-
-<div class="card card-custom">
-    <!-- ================= Header ================= -->
-    <div class="card-header-custom d-flex justify-content-between align-items-center">
-        <div>
-            <i class="bi bi-grid-fill me-2"></i>
-            <span>รายชื่อข่าวในระบบ</span>
-        </div>
-        <div>
-            <button class="btn btn-sm btn-outline-light me-2"
+    <div class="card card-custom">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-grid-fill me-2"></i>
+                <span>รายชื่อข่าวในระบบ</span>
+            </div>
+            <button class="btn btn-sm btn-outline-light"
                     data-bs-toggle="collapse"
                     data-bs-target="#searchForm">
                 <i class="bi bi-search"></i> ค้นหา
             </button>
-            <a href="#" class="btn btn-sm btn-light">
-                <i class="bi bi-plus-circle"></i> เพิ่มข่าวใหม่
-            </a>
         </div>
-    </div>
-
     <!-- ================= Body ================= -->
     <div class="card-body p-0">
         <!-- ===== Search ===== -->

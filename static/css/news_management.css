@@ -1,90 +1,100 @@
-    /* ปรับแต่งส่วนหัวของ Card ให้เป็นสีแดงตามรูป */
-    .card-header-custom {
-        background-color: #d32f2f !important; /* สีแดง */
-        color: white !important;
-        font-weight: 500;
-        border-radius: 8px 8px 0 0 !important;
-        padding: 12px 20px;
-    }
-    
-    .card-custom {
-        border-radius: 8px;
-        border: none;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        overflow: hidden;
-    }
+/* Container & Layout */
+.main-content {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
 
-    /* สไตล์ตาราง */
-    .table thead th {
-        background-color: #ffffff;
-        color: #888;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        border-bottom: 1px solid #eee;
-        padding: 15px 20px;
-        letter-spacing: 0.5px;
-    }
+/* ปุ่มเพิ่มข่าวสารใหม่ (Button Style) */
+.btn-add-news {
+    background-color: #e63946;
+    color: white;
+    border-radius: 12px;
+    padding: 10px 24px;
+    border: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
 
-    .table tbody td {
-        padding: 15px 20px;
-        vertical-align: middle;
-        border-bottom: 1px solid #f1f1f1;
-        font-size: 0.9rem;
-        color: #333;
-    }
+.btn-add-news:hover {
+    background-color: #d62828;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+}
 
-    /* ปุ่มจัดการ (Action Icons) */
-    .btn-action {
-        border: 1px solid #e0e0e0;
-        background: white;
-        padding: 4px 8px;
-        border-radius: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        text-decoration: none;
-    }
-    
-    .btn-edit { color: #888; }
-    .btn-edit:hover { background-color: #f8f9fa; color: #0d6efd; border-color: #0d6efd; }
-    
-    .btn-delete { color: #dc3545; }
-    .btn-delete:hover { background-color: #fff5f5; border-color: #dc3545; }
+/* Card Styling */
+.card-custom {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    overflow: hidden;
+    background-color: #ffffff;
+}
 
-    .btn-view { color: #0dcaf0; }
-    .btn-view:hover { background-color: #f0faff; border-color: #0dcaf0; }
-
-    /* ตกแต่ง Badge สถานะ */
-    .badge-custom {
-        font-weight: 500;
-        font-size: 0.75rem;
-        padding: 4px 10px;
-        border-radius: 4px;
-    }
-
-/* --- ส่วนเพิ่มเติมสำหรับ Modal โทนสีแดง --- */
-
-/* หัวข้อ Modal */
-.modal-header-custom {
-    background-color: #d32f2f !important; /* สีแดงเดียวกับ Card Header */
+.card-header-custom {
+    background-color: #d32f2f !important; /* สีแดงตามรูป */
     color: white !important;
-    border-bottom: none;
-    padding: 1.25rem 1.5rem;
+    font-weight: 500;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 15px 20px;
 }
 
-/* ปุ่มปิด Modal (X) ให้เป็นสีขาว */
-.btn-close-white {
-    filter: invert(1) grayscale(100%) brightness(200%);
-    opacity: 0.8;
+/* Table Styling */
+.table thead th {
+    background-color: #ffffff;
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    padding: 15px 20px;
+    letter-spacing: 0.5px;
 }
 
-.btn-close-white:hover {
-    opacity: 1;
+.table tbody td {
+    padding: 15px 20px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 0.9rem;
+    color: #333;
 }
 
-/* ส่วนเนื้อหา Modal */
+/* Action Buttons */
+.btn-action {
+    border: 1px solid #e0e0e0;
+    background: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-edit { color: #888; }
+.btn-edit:hover { background-color: #f8f9fa; color: #0d6efd; border-color: #0d6efd; }
+
+.btn-delete { color: #dc3545; border: none; }
+.btn-delete:hover { background-color: #fff5f5; color: #c82333; }
+
+.btn-view { color: #0dcaf0; border: none; }
+.btn-view:hover { background-color: #f0faff; color: #0aa2c0; }
+
+/* Status Badges */
+.badge-custom {
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+}
+
+/* Modal Styling */
 .modal-content-custom {
     border: none;
     border-radius: 12px;
@@ -92,32 +102,39 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-/* หัวข้อเนื้อหาภายใน Modal */
+.modal-header-custom {
+    background-color: #d32f2f !important;
+    color: white !important;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.8;
+}
+
 #v-title {
-    color: #d32f2f; /* หัวข้อข่าวใช้สีแดง */
+    color: #d32f2f;
     font-size: 1.5rem;
     line-height: 1.4;
 }
 
-/* ตกแต่งไอคอนในส่วนข้อมูลสรุป */
-.info-icon-red {
-    color: #d32f2f;
-    margin-right: 5px;
-}
-
-/* ส่วนแสดงเนื้อหาข่าว */
 #v-content {
-    border-left: 4px solid #d32f2f; /* เพิ่มเส้นขอบสีแดงด้านซ้าย */
+    border-left: 4px solid #d32f2f;
     background-color: #fcfcfc;
     padding: 1.5rem;
     color: #444;
     line-height: 1.8;
+    border-radius: 0 8px 8px 0;
 }
 
-/* ปุ่มปิดด้านล่าง */
 .btn-red-outline {
     color: #d32f2f;
     border: 1px solid #d32f2f;
+    background: transparent;
+    padding: 8px 20px;
+    border-radius: 8px;
     transition: all 0.3s;
 }
 

@@ -93,7 +93,7 @@ def advert_review():
 
 
 
-# ✅ Approve
+#  Approve
 @advert_review_bp.route('/ad-review/approve', methods=['POST'])
 def approve_advert():
     user = session.get("user")
@@ -119,7 +119,7 @@ def approve_advert():
         conn.close()
 
 
-# ❌ Reject
+#  Reject
 @advert_review_bp.route('/ad-review/reject', methods=['POST'])
 def reject_advert():
     user = session.get("user")
