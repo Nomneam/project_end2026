@@ -114,12 +114,12 @@
                                 </a>
                                 <button type="button"
                                         class="btn-action btn-delete"
-                                        onclick="deleteNews({{ news.news_id }}, this)">
+                                       onclick="deleteNews('{{ news.news_id }}', this)">
                                     <i class="bi bi-trash3"></i>
                                 </button>
                                 <button type="button"
                                         class="btn-action btn-view"
-                                        onclick="viewNews({{ news.news_id }})"
+                                        onclick="viewNews('{{ news.news_id }}')"
                                         title="ดูรายละเอียด">
                                     <i class="bi bi-eye"></i>
                                 </button>
