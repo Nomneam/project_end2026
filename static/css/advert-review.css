@@ -1,0 +1,153 @@
+/* เลือกใช้ฟอนต์ที่ให้ความรู้สึก Modern & Clean */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap');
+
+/* 1. Backdrop: เบลอพื้นหลังในระดับที่อ่านง่าย */
+.modal-backdrop.show {
+    backdrop-filter: blur(8px);
+    background-color: rgba(15, 23, 42, 0.3);
+}
+
+/* 2. Modal Container: เน้นเหลี่ยมมุมที่มนแต่ไม่กลมมนจนดูเป็นของเล่น */
+.modal-content {
+    font-family: 'Inter', 'Sarabun', sans-serif;
+    border: none !important;
+    border-radius: 24px !important; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+    background: #ffffff !important;
+}
+
+/* 3. Header: ขาวคลีน 100% และใช้เส้นเน้นแนวตั้งสไตล์ Dashbaord ชั้นนำ */
+.modal-header {
+    padding: 1.5rem 2.5rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    background: #ffffff !important;
+    position: relative;
+}
+
+/* เส้นเน้นสถานะแบบ Professional */
+#adDetailModal .modal-header { border-left: 8px solid #be123c !important; } /* แดง Ruby */
+#adApprovedModal .modal-header { border-left: 8px solid #10b981 !important; } /* เขียวมรกต */
+
+.modal-title {
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.01em;
+}
+
+.btn-close {
+    background-size: 0.8rem;
+    transition: all 0.2s;
+}
+.btn-close:hover { opacity: 1; transform: scale(1.1); }
+
+/* 4. Image Wrapper: เน้นความคมชัดของภาพ */
+.image-preview-wrapper {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+#modalImage, #approvedModalImage {
+    border-radius: 12px;
+    width: 100%;
+    object-fit: cover;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 5. Typography Layering: ลำดับความสำคัญของสายตาแบบ Pro */
+.info-label {
+    font-size: 0.7rem;
+    color: #64748b; /* Slate-500 */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #1e293b; /* Slate-800 */
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+/* 6. Highlight Card: กล่องเน้นข้อมูลสำคัญที่ดูแพง */
+.data-highlight-box {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.25rem !important;
+    border: 1px solid #e2e8f0 !important;
+    margin: 1.5rem 0 !important;
+}
+
+.price-highlight {
+    font-size: 1.6rem !important;
+    color: #be123c !important; /* แดง Ruby */
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+}
+
+.badge-custom {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+}
+
+/* 7. Footer: ปรับปุ่มให้ดูเรียบร้อย ไม่ตะโกนเกินไป */
+.modal-footer {
+    padding: 1.5rem 2.5rem !important;
+    border-top: 1px solid #f1f5f9 !important;
+    background: #f8fafc;
+}
+
+.btn-admin {
+    padding: 0.7rem 1.75rem !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ปุ่มอนุมัติ: แดง Ruby สุขุม */
+.btn-approve {
+    background: #be123c !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.btn-approve:hover {
+    background: #9f1239 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(190, 18, 60, 0.2);
+}
+
+/* ปุ่มปฏิเสธ: Outline เรียบหรู */
+.btn-reject {
+    background: #ffffff !important;
+    color: #64748b !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+.btn-reject:hover {
+    background: #fef2f2 !important;
+    color: #be123c !important;
+    border-color: #fecdd3 !important;
+}
+
+.btn-close-custom {
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
