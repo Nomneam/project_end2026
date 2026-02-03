@@ -1,0 +1,249 @@
+{% extends "layout/admin-layout.html" %}
+
+{% block title %}จัดการข่าวสาร{% endblock %}
+
+{% block head %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news_management.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">NEWS MANAGEMENT</h2>
+        <p class="text-muted small mb-0">จัดการและเพิ่มข่าวในระบบ</p>
+    </div>
+    
+    <button type="button" class="btn-add-news" onclick="location.href='#'">
+        <i class="bi bi-plus-lg"></i>
+        <span>เพิ่มข่าวสารใหม่</span>
+    </button>
+</div>
+
+    <div class="card card-custom">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-grid-fill me-2"></i>
+                <span>รายชื่อข่าวในระบบ</span>
+            </div>
+            <button class="btn btn-sm btn-outline-light"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#searchForm">
+                <i class="bi bi-search"></i> ค้นหา
+            </button>
+        </div>
+    <!-- ================= Body ================= -->
+    <div class="card-body p-0">
+        <!-- ===== Search ===== -->
+        <div class="collapse p-3 border-bottom" id="searchForm">
+            <form action="" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small">ค้นหาจากหัวข้อ</label>
+                    <input type="text"
+                           name="q"
+                           class="form-control form-control-sm"
+                           placeholder="กรอกหัวข้อข่าว">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small">ประเภทข่าว</label>
+                    <select class="form-select form-select-sm" name="category">
+                        <option value="">ทั้งหมด</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.cat_id }}">{{ cat.cat_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small">สถานะ</label>
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="">ทั้งหมด</option>
+                        <option value="publish">เผยแพร่แล้ว</option>
+                        <option value="draft">ฉบับร่าง</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        ค้นหา
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ===== Table ===== -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:35%">News Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for news in news_list %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark news-title">
+                                {{ news.news_title }}
+                            </div>
+                        </td>
+                        <td>{{ news.emp_fname or '' }} {{ news.emp_lname or '' }}</td>
+                        <td>{{ news.cat_name or '-' }}</td>
+                        <td>
+                            <span class="badge badge-custom {{ 'bg-success' if news.status == 'publish' else 'bg-secondary' }} text-white">
+                                {{ 'เผยแพร่แล้ว' if news.status == 'publish' else 'ฉบับร่าง' }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">
+                            {{ news.created_at.strftime('%d/%m/%Y') if news.created_at is not none else '-' }}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <!-- ลิงค์ไปยังหน้าแก้ไขข่าว -->
+                                <a href="#"  
+                                   class="btn-action btn-edit"
+                                   title="แก้ไข">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn-action btn-delete"
+                                       onclick="deleteNews('{{ news.news_id }}', this)">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn-action btn-view"
+                                        onclick="viewNews('{{ news.news_id }}')"
+                                        title="ดูรายละเอียด">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6"
+                            class="text-center py-5 text-muted">
+                            ไม่พบข้อมูลข่าวสาร
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= Pagination ================= -->
+    {% if total_pages > 1 %}
+    <div class="card-footer d-flex justify-content-between align-items-center bg-white border-0 py-3">
+        <span class="small text-muted">
+            แสดงหน้า {{ page }} จาก {{ total_pages }}
+        </span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ 'disabled' if page == 1 }}">
+                    <a class="page-link"
+                       href="{{ url_for('news_management.news_management', page=page-1) }}">
+                        Previous
+                    </a>
+                </li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {{ 'active' if p == page }}">
+                    <a class="page-link"
+                       href="{{ url_for('news_management.news_management', page=p) }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% endfor %}
+                <li class="page-item {{ 'disabled' if page == total_pages }}">
+                    <a class="page-link"
+                       href="{{ url_for('news_management.news_management', page=page+1) }}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+</div>
+
+<!-- ===================== View Modal ===================== -->
+
+<div class="modal fade" id="viewNewsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title d-flex align-items-center">
+                    <i class="bi bi-file-earmark-text-fill me-2"></i>
+                    รายละเอียดข่าวสาร
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+
+        <div class="modal-body p-4">
+            <h3 id="v-title" class="fw-bold mb-4"></h3>
+
+            <div class="text-center mb-4">
+                <img id="v-cover-image"
+                     class="img-fluid rounded-3 shadow-sm"
+                     style="max-height:400px;width:100%;object-fit:cover;display:none;border:1px solid #eee;">
+            </div>
+
+            <div class="row g-3 mb-4 py-3 border-top border-bottom bg-light rounded-2">
+                <div class="col-md-3">
+                    <small class="text-muted d-block mb-1">ผู้เขียน</small>
+                    <span class="fw-bold" id="v-author"></span>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block mb-1">หมวดหมู่</small>
+                    <span class="fw-bold" id="v-category"></span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block mb-1">วันที่สร้าง</small>
+                    <div id="v-date-thai"></div>
+                    <div id="v-time-thai"></div>
+                </div>
+                <div class="col-md-2">
+                    <small class="text-muted d-block mb-1">สถานะ</small>
+                    <div id="v-status-container"></div>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-muted fw-bold small mb-2">เนื้อหาข่าว</p>
+                <div id="v-content"
+                     class="rounded shadow-sm p-3 bg-white border-start border-danger border-4"></div>
+            </div>
+        </div>
+
+        <div class="modal-footer border-0">
+            <button class="btn btn-red-outline"
+                    data-bs-dismiss="modal">
+                ปิดหน้าต่าง
+            </button>
+        </div>
+    </div>
+</div>
+```
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/news_management.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,252 @@
+/* Card & Header */
+.main-content .card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.main-content .card-header {
+    background-color: #db3741 !important; /* สีแดงตามรูป */
+    color: white;
+    padding: 1.2rem 1.5rem;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Category Identity (Avatar Icon) */
+.category-identity {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* เว้นระยะห่างระหว่างไอคอนกับข้อความ */
+}
+
+.category-icon {
+    flex-shrink: 0; /* ป้องกันไอคอนถูกบีบ */
+    width: 48px;
+    height: 48px;
+    background-color: #fff5f5;
+    color: #db3741;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.category-name {
+    font-weight: 700;
+    color: #232d42;
+    margin-bottom: 0;
+    white-space: nowrap; /* ป้องกันชื่อข่าวดีดลงบรรทัดใหม่ */
+}
+
+/* Buttons Actions */
+.btn-action-custom {
+    width: 38px;
+    height: 38px;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    color: #8a92a6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.btn-action-custom:hover {
+    border-color: #db3741;
+    color: #db3741;
+}
+
+/* ขยายขนาด Modal ให้สมดุล */
+.modal-dialog {
+    max-width: 750px; 
+}
+
+/* ปรับแต่งตัว Modal Content ให้ดูสะอาดตา */
+.modal-content { 
+    border: none; 
+    border-radius: 28px; /* เพิ่มความโค้งมนให้ดูทันสมัย */
+    box-shadow: 0 25px 80px rgba(0,0,0,0.1); 
+    background-color: #ffffff;
+}
+
+/* ส่วนหัว Modal ปรับเป็นสีขาวและใช้ไอคอนสีแดงตามรูป */
+.modal-header { 
+    background: #ffffff; 
+    color: #232d42; 
+    border-bottom: 1px solid #f1f1f1; 
+    padding: 1.5rem 2.5rem; 
+    display: flex;
+    align-items: center;
+}
+
+.modal-header .modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+.modal-header .modal-title i {
+    color: #db3741; /* ไอคอนสีแดงนำหน้าหัวข้อ */
+    margin-right: 12px;
+}
+
+/* ปรับแต่งฟิลด์รับข้อมูล (Input) ให้เป็นสีเทาอ่อนและไม่มีขอบเข้ม */
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase; /* ตัวอักษรพิมพ์ใหญ่ตามรูป */
+    letter-spacing: 0.5px;
+    color: #8a92a6;
+    margin-bottom: 0.6rem;
+}
+
+.form-control { 
+    border-radius: 12px; 
+    border: 1px solid #e9ecef; 
+    padding: 14px 20px; 
+    font-size: 0.95rem;
+    background-color: #f8f9fa; /* สีพื้นหลังอ่อนๆ ตามรูป */
+    color: #232d42;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus { 
+    background-color: #ffffff;
+    border-color: #db3741; 
+    box-shadow: 0 10px 20px rgba(219, 55, 65, 0.05); 
+    transform: translateY(-2px);
+}
+
+/* ปรับปรุงปุ่มใน Footer ให้มนและมีขนาดตามรูป */
+.modal-footer {
+    border-top: none;
+    padding: 1.5rem 2.5rem 2.5rem;
+    justify-content: flex-end;
+}
+
+.btn-close-custom {
+    background-color: #e9ecef;
+    color: #4a5073;
+    border-radius: 12px;
+    padding: 12px 25px;
+    font-weight: 700;
+    border: none;
+    margin-right: 10px;
+}
+
+.btn-save-custom {
+    background-color: #db3741;
+    color: #ffffff;
+    border-radius: 15px;
+    padding: 12px 35px;
+    font-weight: 700;
+    border: none;
+    box-shadow: 0 10px 25px rgba(219, 55, 65, 0.2);
+}
+/* รายการประเภทย่อยแต่ละแถว */
+.sub-item-card {
+    background-color: #ffffff;
+    border: 1px solid #f1f2f4;
+    border-radius: 12px;
+    padding: 10px 18px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+}
+
+.sub-item-card span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #40444d;
+}
+/* ปุ่มเพิ่มแถวสไตล์ Dashed ตามรูป */
+.btn-add-row-dashed {
+    background: #ffffff;
+    color: #db3741;
+    border: 2px dashed #fed7d7;
+    border-radius: 15px;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.btn-add-row-dashed:hover {
+    background: #fff5f5;
+    border-color: #db3741;
+}
+
+/* ปรับแต่ง Scrollbar สำหรับรายการย่อย */
+#editSubCategoriesList::-webkit-scrollbar {
+    width: 4px;
+}
+#editSubCategoriesList::-webkit-scrollbar-thumb {
+    background: #eee;
+    border-radius: 10px;
+}
+
+/* เอฟเฟกต์ Fade In เมื่อเพิ่มแถวใหม่ */
+.dynamic-sub-row {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* การจัดวางช่องกรอกข้อมูลใหม่แบบ Premium */
+.input-group-premium {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.input-group-premium:focus-within {
+    border-color: #db3741;
+    background: white;
+    box-shadow: 0 10px 25px rgba(219, 55, 65, 0.05);
+}
+
+.btn-input-action {
+    background: #f8f9fa;
+    border: none;
+    border-left: 1px solid #e9ecef;
+    padding: 0 18px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    font-size: 1.1rem;
+}
+
+.btn-input-action:hover {
+    background: #ffffff;
+}
+
+.btn-input-action.text-success:hover { color: #2f855a !important; }
+.btn-input-action.text-danger:hover { color: #b32d35 !important; }
+
+/* ปรับแต่งความโค้งมนและเงาของ Card */
+.sub-item-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sub-item-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05) !important;
+}

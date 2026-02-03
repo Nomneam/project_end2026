@@ -104,3 +104,4 @@ def login_emp():
 def logout_emp():
     session.clear()
     return redirect(url_for("login_emp.login_emp"))
+
