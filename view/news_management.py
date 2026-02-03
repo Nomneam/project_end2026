@@ -207,3 +207,60 @@ def ajax_search_news_management():
         "total": total_news
     })
 
+
+@news_management_bp.route('/admin/news/delete/<int:news_id>', methods=['POST'])
+def delete_news(news_id):
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return jsonify({
+            "success": False,
+            "message": "Unauthorized"
+        }), 401
+
+    users_id = user.get("id")
+
+    connection = connect_db()
+    try:
+        with connection.cursor() as cursor:
+            # เช็กว่ามีข่าวจริง และยังไม่ถูกลบ
+            cursor.execute("""
+                SELECT news_id
+                FROM news
+                WHERE news_id = %s AND del_flg = 0
+                LIMIT 1
+            """, (news_id,))
+            row = cursor.fetchone()
+
+            if not row:
+                return jsonify({
+                    "success": False,
+                    "message": "ไม่พบข่าว หรือข่าวถูกลบไปแล้ว"
+                }), 404
+
+            # Soft delete + เก็บคนลบ + เวลา
+            cursor.execute("""
+                UPDATE news
+                SET del_flg = 1,
+                    updated_at = NOW(),
+                    updated_by = %s
+                WHERE news_id = %s
+            """, (users_id, news_id))
+
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify({
+            "success": False,
+            "message": "ลบข่าวไม่สำเร็จ",
+            "error": str(e)
+        }), 500
+
+    finally:
+        connection.close()
+
+    return jsonify({
+        "success": True,
+        "message": "ลบข่าวเรียบร้อยแล้ว"
+    })
+

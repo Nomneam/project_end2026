@@ -2,7 +2,7 @@
    Bootstrap Modal (สร้างครั้งเดียว)
 ========================================================= */
 const viewModalEl = document.getElementById('viewNewsModal');
-const viewModal = new bootstrap.Modal(viewModalEl);
+const viewModal = viewModalEl ? new bootstrap.Modal(viewModalEl) : null;
 
 /* =========================================================
    Abort controller (กันกดรัว)
@@ -26,6 +26,8 @@ function preloadImage(src) {
    Reset modal (ก่อนโหลดข้อมูลใหม่)
 ========================================================= */
 function resetViewModal() {
+    if (!viewModalEl) return;
+
     document.getElementById('v-title').innerText = 'กำลังโหลด...';
     document.getElementById('v-author').innerText = '-';
     document.getElementById('v-category').innerText = '-';
@@ -62,7 +64,7 @@ function showError(message) {
    โหลดข่าวตาม ID และเปิด modal
 ========================================================= */
 async function viewNews(newsId) {
-    if (!newsId) return;
+    if (!newsId || !viewModal) return;
 
     if (currentAbortController) {
         currentAbortController.abort();
@@ -162,31 +164,83 @@ async function openViewModal(news) {
 }
 
 /* =========================================================
-   ลบข่าวแบบไม่ reload หน้า
+   ลบข่าวแบบไม่ reload หน้า (ใช้ SweetAlert2)
 ========================================================= */
 function deleteNews(id, btn) {
     if (!id) return;
-    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข่าวนี้?')) return;
 
-    fetch(`/admin/news/delete/${id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const row = btn.closest('tr');
-                row.style.transition = 'opacity .2s';
-                row.style.opacity = '0';
-                setTimeout(() => row.remove(), 200);
-            } else {
-                alert(data.message || 'ไม่สามารถลบข้อมูลได้');
-            }
+    Swal.fire({
+        title: 'ยืนยันการลบข่าว',
+        text: 'คุณแน่ใจหรือไม่ว่าต้องการลบข่าวนี้?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ลบข่าว',
+        cancelButtonText: 'ยกเลิก',
+        reverseButtons: true
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        if (btn) btn.disabled = true;
+
+        fetch(`/admin/news/delete/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
         })
-        .catch(err => {
-            console.error(err);
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
-        });
+            .then(async (res) => {
+                const data = await res.json();
+
+                if (res.status === 401) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Session หมดอายุ',
+                        text: 'กรุณาเข้าสู่ระบบใหม่'
+                    }).then(() => {
+                        window.location.href = '/login';
+                    });
+                    return;
+                }
+
+                if (!res.ok) throw data;
+                return data;
+            })
+            .then(data => {
+                if (!data) return;
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลบสำเร็จ',
+                        text: data.message || 'ลบข่าวเรียบร้อยแล้ว',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+
+                    const row = btn.closest('tr');
+                    if (row) {
+                        row.style.transition = 'opacity .2s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 200);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ลบไม่สำเร็จ',
+                        text: data.message || 'ไม่สามารถลบข้อมูลได้'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: err?.message || err?.error || 'เกิดข้อผิดพลาดในการเชื่อมต่อ'
+                });
+            })
+            .finally(() => {
+                if (btn) btn.disabled = false;
+            });
+    });
 }
 
 /* =========================================================
