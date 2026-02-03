@@ -15,11 +15,13 @@ dashboard_reporter_bp = Blueprint("dashboard_reporter", __name__)
 UPLOAD_DIR = os.path.join("static", "uploads", "news")
 ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
 
+
 def allowed_file(filename: str) -> bool:
     if not filename or "." not in filename:
         return False
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXT
+
 
 def save_image(file_storage):
     os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -30,6 +32,7 @@ def save_image(file_storage):
     file_storage.save(full_path)
     return f"/static/uploads/news/{new_name}"
 
+
 def safe_int(v, default=None):
     try:
         if v is None or str(v).strip() == "":
@@ -37,6 +40,7 @@ def safe_int(v, default=None):
         return int(v)
     except Exception:
         return default
+
 
 def connect_db():
     return pymysql.connect(
@@ -49,6 +53,7 @@ def connect_db():
         autocommit=True,
     )
 
+
 def require_reporter():
     user = session.get("user")
     if not user:
@@ -60,15 +65,8 @@ def require_reporter():
     return user
 
 
-# ---------------- Dashboard ----------------
-@dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
-def reporter_dashboard():
-    user = require_reporter()
-    if not user:
-        return "Forbidden", 403
-
-    user_id = int(user["id"])
-
+# ---------------- Shared query builder ----------------
+def build_news_filters(user_id: int):
     per_page = 5
     page = request.args.get("page", default=1, type=int)
     if page < 1:
@@ -100,11 +98,32 @@ def reporter_dashboard():
     elif status == "draft":
         where.append("n.status <> 'publish'")
 
-    where_sql = " AND ".join(where)
+    return {
+        "per_page": per_page,
+        "page": page,
+        "offset": offset,
+        "cat_id": cat_id,
+        "kind": kind,
+        "status": status,
+        "where_sql": " AND ".join(where),
+        "params": params,
+    }
+
+
+# ---------------- Dashboard (HTML render) ----------------
+@dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
+def reporter_dashboard():
+    user = require_reporter()
+    if not user:
+        return "Forbidden", 403
+
+    user_id = int(user["id"])
+    f = build_news_filters(user_id)
 
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
+            # total news (all written, not deleted)
             cursor.execute(
                 """
                 SELECT COUNT(*) AS total
@@ -115,6 +134,7 @@ def reporter_dashboard():
             )
             total_news = int((cursor.fetchone() or {}).get("total") or 0)
 
+            # categories
             cursor.execute(
                 """
                 SELECT cat_id, cat_name
@@ -125,20 +145,88 @@ def reporter_dashboard():
             )
             categories = cursor.fetchall() or []
 
+            # total rows (filtered)
             cursor.execute(
                 f"""
                 SELECT COUNT(*) AS total
                 FROM news n
-                WHERE {where_sql}
+                WHERE {f["where_sql"]}
                 """,
-                tuple(params),
+                tuple(f["params"]),
             )
             total_rows = int((cursor.fetchone() or {}).get("total") or 0)
 
-            total_pages = max(1, math.ceil(total_rows / per_page))
-            if page > total_pages:
-                page = total_pages
-                offset = (page - 1) * per_page
+            total_pages = max(1, math.ceil(total_rows / f["per_page"]))
+            if f["page"] > total_pages:
+                f["page"] = total_pages
+                f["offset"] = (f["page"] - 1) * f["per_page"]
+
+            # latest news (filtered)
+            cursor.execute(
+                f"""
+                SELECT
+                    n.news_id,
+                    n.news_title,
+                    n.is_featured,
+                    n.status,
+                    n.published_at,
+                    n.created_at,
+                    c.cat_name AS category_name
+                FROM news n
+                LEFT JOIN news_category c ON n.cat_id = c.cat_id
+                WHERE {f["where_sql"]}
+                ORDER BY n.created_at DESC
+                LIMIT %s OFFSET %s
+                """,
+                tuple(f["params"] + [f["per_page"], f["offset"]]),
+            )
+            latest_news = cursor.fetchall() or []
+    finally:
+        conn.close()
+
+    return render_template(
+        "reporter/reporter-dashboard.html",
+        user=user,
+        total_news=total_news,
+        latest_news=latest_news,
+        page=f["page"],
+        per_page=f["per_page"],
+        total_rows=total_rows,
+        total_pages=total_pages,
+        categories=categories,
+        f_cat_id=f["cat_id"],
+        f_kind=f["kind"],
+        f_status=f["status"],
+    )
+
+
+# ---------------- Dashboard Data (AJAX JSON) ----------------
+@dashboard_reporter_bp.route("/reporter/dashboard/data", methods=["GET"])
+def reporter_dashboard_data():
+    user = require_reporter()
+    if not user:
+        return jsonify({"ok": False, "message": "Forbidden"}), 403
+
+    user_id = int(user["id"])
+    f = build_news_filters(user_id)
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT COUNT(*) AS total
+                FROM news n
+                WHERE {f["where_sql"]}
+                """,
+                tuple(f["params"]),
+            )
+            total_rows = int((cursor.fetchone() or {}).get("total") or 0)
+
+            total_pages = max(1, math.ceil(total_rows / f["per_page"]))
+            if f["page"] > total_pages:
+                f["page"] = total_pages
+                f["offset"] = (f["page"] - 1) * f["per_page"]
 
             cursor.execute(
                 f"""
@@ -152,30 +240,43 @@ def reporter_dashboard():
                     c.cat_name AS category_name
                 FROM news n
                 LEFT JOIN news_category c ON n.cat_id = c.cat_id
-                WHERE {where_sql}
+                WHERE {f["where_sql"]}
                 ORDER BY n.created_at DESC
                 LIMIT %s OFFSET %s
                 """,
-                tuple(params + [per_page, offset]),
+                tuple(f["params"] + [f["per_page"], f["offset"]]),
             )
-            latest_news = cursor.fetchall() or []
+            rows = cursor.fetchall() or []
+
+        out = []
+        for r in rows:
+            pub = r.get("published_at")
+            published_date = pub.strftime("%d/%m/%Y") if pub else "-"
+            out.append(
+                {
+                    "news_id": r.get("news_id"),
+                    "news_title": r.get("news_title") or "",
+                    "is_featured": int(r.get("is_featured") or 0),
+                    "status": r.get("status") or "draft",
+                    "category_name": r.get("category_name") or "-",
+                    "published_date": published_date,
+                }
+            )
+
+        return jsonify(
+            {
+                "ok": True,
+                "rows": out,
+                "paging": {
+                    "page": f["page"],
+                    "per_page": f["per_page"],
+                    "total_rows": total_rows,
+                    "total_pages": total_pages,
+                },
+            }
+        ), 200
     finally:
         conn.close()
-
-    return render_template(
-        "reporter/reporter-dashboard.html",
-        user=user,
-        total_news=total_news,
-        latest_news=latest_news,
-        page=page,
-        per_page=per_page,
-        total_rows=total_rows,
-        total_pages=total_pages,
-        categories=categories,
-        f_cat_id=cat_id,
-        f_kind=kind,
-        f_status=status,
-    )
 
 
 # ---------------- Soft Delete ----------------
@@ -240,8 +341,8 @@ def reporter_news_detail(news_id):
                     n.published_at,
                     n.updated_at,
 
-                    n.cat_id,       -- ✅ เพิ่ม
-                    n.subcat_id,    -- ✅ เพิ่ม
+                    n.cat_id,
+                    n.subcat_id,
 
                     n.cover_image,
                     n.sub_images,
@@ -323,16 +424,14 @@ def reporter_news_update(news_id):
     if is_featured not in (0, 1):
         is_featured = 0
 
-    # files + remove flags
-    cover_file = request.files.get("cover_image")          # single
-    sub_files = request.files.getlist("sub_images")        # multiple
+    cover_file = request.files.get("cover_image")
+    sub_files = request.files.getlist("sub_images")
     remove_cover = (request.form.get("remove_cover") or "0").strip() == "1"
     remove_subs = (request.form.get("remove_subs") or "0").strip() == "1"
 
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
-            # load old
             cursor.execute(
                 """
                 SELECT cover_image, sub_images, published_at
@@ -348,7 +447,6 @@ def reporter_news_update(news_id):
             new_cover = old.get("cover_image")
             old_sub_raw = old.get("sub_images")
 
-            # cover
             if remove_cover:
                 new_cover = None
             elif cover_file and cover_file.filename:
@@ -356,7 +454,6 @@ def reporter_news_update(news_id):
                     return jsonify({"ok": False, "message": "ไฟล์รูปปกไม่รองรับ"}), 400
                 new_cover = save_image(cover_file)
 
-            # subs
             if remove_subs:
                 new_subs = []
             elif sub_files and any(f and f.filename for f in sub_files):
@@ -387,6 +484,7 @@ def reporter_news_update(news_id):
                   status=%s,
                   cover_image=%s,
                   sub_images=%s,
+                  video_url=%s,
                   updated_by=%s,
                   updated_at=NOW(),
                   published_at = CASE
@@ -397,12 +495,18 @@ def reporter_news_update(news_id):
                 WHERE news_id=%s
                 """,
                 (
-                    news_title, news_content, cat_id, subcat_id,
-                    is_featured, status,
+                    news_title,
+                    news_content,
+                    cat_id,
+                    subcat_id,
+                    is_featured,
+                    status,
                     new_cover,
                     json.dumps(new_subs, ensure_ascii=False),
+                    video_url,
                     user_id,
-                    status, status,
+                    status,
+                    status,
                     news_id,
                 ),
             )
