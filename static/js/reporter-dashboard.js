@@ -1,5 +1,8 @@
+// static/js/reporter-dashboard.js
 $(function () {
-  // -------- SweetAlert helpers --------
+  // ======================================================
+  // SweetAlert helpers
+  // ======================================================
   function hasSwal() {
     return typeof window.Swal !== "undefined" && typeof window.Swal.fire === "function";
   }
@@ -28,7 +31,22 @@ $(function () {
     return d.toLocaleString("th-TH");
   }
 
-  // -------- View helpers --------
+  // ======================================================
+  // tooltip init (สำคัญหลัง render DOM ใหม่)
+  // ======================================================
+  function initTooltips() {
+    if (!window.bootstrap || !bootstrap.Tooltip) return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+      const t = bootstrap.Tooltip.getInstance(el);
+      if (t) t.dispose();
+      new bootstrap.Tooltip(el);
+    });
+  }
+  initTooltips();
+
+  // ======================================================
+  // View helpers
+  // ======================================================
   function safeSetImg($img, $empty, src) {
     if (src && String(src).trim() !== "") {
       $img.attr("src", src).show();
@@ -47,7 +65,7 @@ $(function () {
       if (typeof parsed === "string" && parsed.trim()) return [parsed];
       return [];
     } catch {
-      return String(raw).split(",").map(s => s.trim()).filter(Boolean);
+      return String(raw).split(",").map((s) => s.trim()).filter(Boolean);
     }
   }
 
@@ -70,7 +88,208 @@ $(function () {
     });
   }
 
-  // -------- Soft delete handler --------
+  // ======================================================
+  // AJAX Pagination + Filter (ไม่เปลี่ยน URL)
+  // ======================================================
+  let currentPage = 1;
+  let isLoadingPage = false;
+
+  function getFilters() {
+    return {
+      cat_id: $("#filter_cat_id").val() || "",
+      kind: $("#filter_kind").val() || "all",
+      status: $("#filter_status").val() || "all",
+    };
+  }
+
+  function buildDataUrl(page) {
+    const f = getFilters();
+    const qs = new URLSearchParams({
+      page: String(page || 1),
+      cat_id: f.cat_id,
+      kind: f.kind,
+      status: f.status,
+    });
+    return "/reporter/dashboard/data?" + qs.toString();
+  }
+
+  // ใช้ escapeHtml จาก common.js ถ้ามี; ถ้าไม่มีทำ fallback
+  function _escapeHtml(s) {
+    if (typeof window.escapeHtml === "function") return window.escapeHtml(s);
+    return String(s || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderRows(rows) {
+    const $tbody = $("#newsTbody");
+    $tbody.empty();
+
+    if (!rows || !rows.length) {
+      $tbody.append(`
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">ไม่พบข้อมูล</td>
+        </tr>
+      `);
+      return;
+    }
+
+    rows.forEach((r) => {
+      const isFeatured = Number(r.is_featured || 0) === 1;
+      const kindBadge = isFeatured
+        ? `<span class="badge bg-danger">ข่าวยอดฮิต</span>`
+        : `<span class="badge bg-secondary">ข่าวทั่วไป</span>`;
+
+      const statusBadge =
+        String(r.status || "") === "publish"
+          ? `<span class="status-badge status-published">เผยแพร่แล้ว</span>`
+          : `<span class="status-badge status-draft">ฉบับร่าง</span>`;
+
+      const published = r.published_date || "-";
+
+      $tbody.append(`
+        <tr>
+          <td class="fw-semibold text-center">${_escapeHtml(r.news_title || "")}</td>
+          <td class="text-center">${kindBadge}</td>
+          <td class="text-center">${_escapeHtml(r.category_name || "-")}</td>
+          <td class="text-center">${_escapeHtml(published)}</td>
+          <td class="text-center">${statusBadge}</td>
+          <td class="text-center">
+
+            <button type="button"
+              class="btn btn-outline-primary btn-sm rounded-circle btn-view-news"
+              data-id="${r.news_id}"
+              data-bs-toggle="tooltip"
+              data-bs-title="ดูรายละเอียด">
+              <i class="bi bi-eye"></i>
+            </button>
+
+            <button type="button"
+              class="btn btn-outline-warning btn-sm rounded-circle btn-edit-news"
+              data-id="${r.news_id}"
+              data-bs-toggle="tooltip"
+              data-bs-title="แก้ไขข่าว">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+
+            <button type="button"
+              class="btn btn-outline-danger btn-sm rounded-circle btn-soft-delete"
+              data-id="${r.news_id}"
+              data-title="${_escapeHtml(r.news_title || "")}"
+              data-bs-toggle="tooltip"
+              data-bs-title="ลบรายการ">
+              <i class="bi bi-trash3"></i>
+            </button>
+
+          </td>
+        </tr>
+      `);
+    });
+
+    initTooltips();
+  }
+
+  function renderPagination(paging) {
+    const $wrap = $("#paginationWrap");
+    const total = Number(paging.total_pages || 1);
+    const page = Number(paging.page || 1);
+
+    if (total <= 1) {
+      $wrap.html("");
+      return;
+    }
+
+    const prevDisabled = page <= 1 ? "disabled" : "";
+    const nextDisabled = page >= total ? "disabled" : "";
+
+    let html = `
+      <div class="pagination-wrap mt-3">
+        <nav aria-label="Pagination">
+          <ul class="pagination mb-0">
+
+            <li class="page-item ${prevDisabled}">
+              <a class="page-link js-page" data-page="${page - 1}" href="#" aria-label="Previous">&laquo;</a>
+            </li>
+    `;
+
+    for (let p = 1; p <= total; p++) {
+      const active = p === page ? "active" : "";
+      html += `
+        <li class="page-item ${active}">
+          <a class="page-link js-page" data-page="${p}" href="#">${p}</a>
+        </li>
+      `;
+    }
+
+    html += `
+            <li class="page-item ${nextDisabled}">
+              <a class="page-link js-page" data-page="${page + 1}" href="#" aria-label="Next">&raquo;</a>
+            </li>
+
+          </ul>
+        </nav>
+      </div>
+    `;
+
+    $wrap.html(html);
+  }
+
+  async function loadPage(page) {
+    if (isLoadingPage) return;
+    if (!page || page < 1) page = 1;
+    isLoadingPage = true;
+
+    try {
+      const r = await fetch(buildDataUrl(page), {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) {
+        await swalFire({ icon: "error", title: "โหลดข้อมูลไม่ได้", text: j.message || "เกิดข้อผิดพลาด" });
+        return;
+      }
+
+      currentPage = Number(j.paging?.page || page);
+      renderRows(j.rows || []);
+      renderPagination(j.paging || { page: currentPage, total_pages: 1 });
+    } catch (e) {
+      await swalFire({ icon: "error", title: "โหลดข้อมูลไม่ได้", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
+    } finally {
+      isLoadingPage = false;
+    }
+  }
+
+  // ✅ pagination: ไม่เปลี่ยน URL
+  $(document).on("click", "a.js-page", function (e) {
+    e.preventDefault();
+    const $li = $(this).closest(".page-item");
+    if ($li.hasClass("disabled") || $li.hasClass("active")) return;
+
+    const p = Number($(this).data("page") || 1);
+    loadPage(p);
+  });
+
+  // ✅ search: ไม่เปลี่ยน URL
+  $(document).on("submit", "#filterForm", function (e) {
+    e.preventDefault();
+    loadPage(1);
+  });
+
+  // ✅ reset: ไม่เปลี่ยน URL
+  $(document).on("click", "#btnReset", function () {
+    $("#filter_cat_id").val("");
+    $("#filter_kind").val("all");
+    $("#filter_status").val("all");
+    loadPage(1);
+  });
+
+  // ======================================================
+  // Soft delete
+  // ======================================================
   $(document).on("click", ".btn-soft-delete", async function () {
     const newsId = $(this).data("id");
     const title = $(this).data("title") || "";
@@ -98,13 +317,15 @@ $(function () {
       }
 
       swalToast("success", data.message || "ลบแล้ว");
-      setTimeout(() => location.reload(), 600);
+      setTimeout(() => loadPage(currentPage), 350);
     } catch (e) {
       await swalFire({ icon: "error", title: "ลบไม่สำเร็จ", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
     }
   });
 
-  // -------- View modal --------
+  // ======================================================
+  // View modal
+  // ======================================================
   $(document).on("click", ".btn-view-news", async function () {
     const newsId = $(this).data("id");
 
@@ -142,7 +363,9 @@ $(function () {
     }
   });
 
-  // -------- Edit modal: subcategories --------
+  // ======================================================
+  // Edit modal: load subcategories
+  // ======================================================
   async function loadSubcats(catId, selectedSubcatId) {
     const $sub = $("#e_subcat_id");
     $sub.prop("disabled", true).html(`<option value="">-- เลือกประเภทย่อย --</option>`);
@@ -158,7 +381,7 @@ $(function () {
 
     const rows = j.data || [];
     let html = `<option value="">-- เลือกประเภทย่อย --</option>`;
-    rows.forEach(x => {
+    rows.forEach((x) => {
       const sel = String(x.subcat_id) === String(selectedSubcatId) ? "selected" : "";
       html += `<option value="${x.subcat_id}" ${sel}>${x.subcat_name}</option>`;
     });
@@ -166,7 +389,6 @@ $(function () {
     $sub.html(html).prop("disabled", false);
   }
 
-  // -------- Edit modal: image preview helpers --------
   function setCoverPreviewFromUrl(url) {
     const $img = $("#e_cover_preview");
     const $empty = $("#e_cover_empty");
@@ -199,7 +421,6 @@ $(function () {
     });
   }
 
-  // file input preview
   $("#e_cover_file").on("change", function () {
     const f = this.files && this.files[0];
     $("#e_remove_cover").val("0");
@@ -211,10 +432,9 @@ $(function () {
     const files = Array.from(this.files || []);
     $("#e_remove_subs").val("0");
     if (!files.length) return;
-    setSubPreviewFromUrls(files.map(f => URL.createObjectURL(f)));
+    setSubPreviewFromUrls(files.map((f) => URL.createObjectURL(f)));
   });
 
-  // remove buttons
   $("#btnRemoveCover").on("click", function () {
     $("#e_cover_file").val("");
     $("#e_remove_cover").val("1");
@@ -227,7 +447,7 @@ $(function () {
     setSubPreviewFromUrls([]);
   });
 
-  // -------- Open edit modal --------
+  // open edit modal
   $(document).on("click", ".btn-edit-news", async function (e) {
     e.preventDefault();
     e.stopPropagation();
@@ -247,7 +467,6 @@ $(function () {
 
       const d = j.data || {};
 
-      // Fill fields
       $("#e_news_id").val(d.news_id);
       $("#e_title").val(d.news_title || "");
       $("#e_content").val(d.news_content || "");
@@ -255,35 +474,30 @@ $(function () {
       $("#e_status").val(d.status || "draft");
       $("#e_kind").val(String(Number(d.is_featured || 0)));
 
-      // ✅ สำคัญ: ต้องมี cat_id/subcat_id จาก API detail
       $("#e_cat_id").val(d.cat_id || "");
       await loadSubcats(d.cat_id, d.subcat_id);
 
-      // Reset flags + inputs
       $("#e_remove_cover").val("0");
       $("#e_remove_subs").val("0");
       $("#e_cover_file").val("");
       $("#e_sub_files").val("");
 
-      // Show old images
       setCoverPreviewFromUrl(d.cover_image || "");
       setSubPreviewFromUrls(parseSubImages(d.sub_images));
 
       const m = bsModal("editNewsModal");
       if (m) m.show();
-
     } catch (err) {
       await swalFire({ icon: "error", title: "โหลดข้อมูลไม่ได้", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
     }
   });
 
-  // change cat -> reload subcats
   $(document).on("change", "#e_cat_id", async function () {
     const catId = $(this).val();
     await loadSubcats(catId, "");
   });
 
-  // -------- Submit edit --------
+  // submit edit
   $(document).on("submit", "#editNewsForm", async function (e) {
     e.preventDefault();
 
@@ -314,9 +528,12 @@ $(function () {
       }
 
       swalToast("success", j.message || "บันทึกแล้ว");
-      setTimeout(() => location.reload(), 600);
+      setTimeout(() => loadPage(currentPage), 350);
     } catch (err) {
       await swalFire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
     }
   });
+
+  // ✅ ไม่บังคับโหลดหน้า 1 ผ่าน API (ปล่อยให้ SSR แสดงก่อน แล้วค่อย AJAX ตอนกด)
+  // loadPage(1);
 });
