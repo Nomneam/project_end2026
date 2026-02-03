@@ -1,0 +1,33 @@
+.news-thead th{
+  background: #f7f7f7;
+  font-weight: 700;
+}
+
+/* กัน modal ถูก navbar บัง + ให้เลื่อนได้แน่นอน */
+.modal{
+  z-index: 2000;
+}
+.modal-backdrop{
+  z-index: 1990;
+}
+
+/* ถ้า header/navbar ของคุณ fixed แล้วทับ modal ให้ดันลง */
+.modal-dialog{
+  margin-top: 80px;
+}
+
+/* บังคับให้ body ใน modal เลื่อนได้ */
+.modal-dialog-scrollable .modal-body{
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+/* รูปย่อย */
+#pv_sub_images img{
+  height: 90px;
+  width: auto;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 2px;
+}
