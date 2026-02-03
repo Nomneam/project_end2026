@@ -37,13 +37,13 @@
     <div class="card-body p-0">
         <!-- ===== Search ===== -->
         <div class="collapse p-3 border-bottom" id="searchForm">
-            <form action="" method="GET" class="row g-3">
+            <form id="searchFormAjax" class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label small">ค้นหาจากหัวข้อ</label>
                     <input type="text"
-                           name="q"
-                           class="form-control form-control-sm"
-                           placeholder="กรอกหัวข้อข่าว">
+                        name="q"
+                        class="form-control form-control-sm"
+                        placeholder="กรอกหัวข้อข่าว">
                 </div>
 
                 <div class="col-md-3">
@@ -72,6 +72,7 @@
                 </div>
             </form>
         </div>
+
 
         <!-- ===== Table ===== -->
         <div class="table-responsive">
@@ -179,65 +180,71 @@
 <!-- ===================== View Modal ===================== -->
 
 <div class="modal fade" id="viewNewsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-content-custom">
-            <div class="modal-header modal-header-custom">
-                <h5 class="modal-title d-flex align-items-center">
-                    <i class="bi bi-file-earmark-text-fill me-2"></i>
-                    รายละเอียดข่าวสาร
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 950px; margin-top: 50px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            
+            <div class="modal-header py-3 px-4 border-0 bg-danger text-white">
+                <h5 class="modal-title fw-bold m-0">
+                    <i class="bi bi-file-earmark-text-fill me-2"></i>รายละเอียดข่าวสาร
                 </h5>
-                <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-7 border-end pe-4">
+                        <h4 id="v-title" class="fw-bold mb-3" style="color: #d32f2f; line-height: 1.4; font-size: 1.25rem;"></h4>
+                        
+                        <div class="rounded-3 overflow-hidden shadow-sm border mb-0 bg-light">
+                            <img id="v-cover-image"
+                                 class="img-fluid w-100"
+                                 style="max-height: 350px; object-fit: cover; display: none;">
+                        </div>
+                    </div>
 
-        <div class="modal-body p-4">
-            <h3 id="v-title" class="fw-bold mb-4"></h3>
+                    <div class="col-md-5 d-flex flex-column">
+                        <div class="card border-0 bg-light p-3 mb-3 rounded-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">ผู้เขียน</small>
+                                    <strong class="text-dark" id="v-author"></strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">หมวดหมู่</small>
+                                    <span class="badge bg-danger rounded-pill px-3" id="v-category"></span>
+                                </div>
+                                <div class="col-7">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">วันที่เผยแพร่</small>
+                                    <span class="fw-bold text-dark" id="v-date-thai"></span>
+                                    <small class="text-muted d-block" id="v-time-thai"></small>
+                                </div>
+                                <div class="col-5 text-end">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">สถานะ</small>
+                                    <div id="v-status-container"></div>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="text-center mb-4">
-                <img id="v-cover-image"
-                     class="img-fluid rounded-3 shadow-sm"
-                     style="max-height:400px;width:100%;object-fit:cover;display:none;border:1px solid #eee;">
+                        <div class="flex-grow-1">
+                            <label class="fw-bold text-muted mb-2 small text-uppercase" style="letter-spacing: 1px;">เนื้อหาข่าวสาร</label>
+                            <div id="v-content"
+                                 class="rounded-3 p-3 bg-white border border-light shadow-sm custom-scrollbar"
+                                 style="font-size: 0.95rem; max-height: 220px; overflow-y: auto; line-height: 1.6; color: #444;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="row g-3 mb-4 py-3 border-top border-bottom bg-light rounded-2">
-                <div class="col-md-3">
-                    <small class="text-muted d-block mb-1">ผู้เขียน</small>
-                    <span class="fw-bold" id="v-author"></span>
-                </div>
-                <div class="col-md-3">
-                    <small class="text-muted d-block mb-1">หมวดหมู่</small>
-                    <span class="fw-bold" id="v-category"></span>
-                </div>
-                <div class="col-md-4">
-                    <small class="text-muted d-block mb-1">วันที่สร้าง</small>
-                    <div id="v-date-thai"></div>
-                    <div id="v-time-thai"></div>
-                </div>
-                <div class="col-md-2">
-                    <small class="text-muted d-block mb-1">สถานะ</small>
-                    <div id="v-status-container"></div>
-                </div>
+            <div class="modal-footer py-3 px-4 border-0 bg-light">
+                <button class="btn btn-secondary px-4 rounded-pill fw-bold"
+                        style="font-size: 0.9rem;"
+                        data-bs-dismiss="modal">
+                    ปิดหน้าต่าง
+                </button>
             </div>
-
-            <div>
-                <p class="text-muted fw-bold small mb-2">เนื้อหาข่าว</p>
-                <div id="v-content"
-                     class="rounded shadow-sm p-3 bg-white border-start border-danger border-4"></div>
-            </div>
-        </div>
-
-        <div class="modal-footer border-0">
-            <button class="btn btn-red-outline"
-                    data-bs-dismiss="modal">
-                ปิดหน้าต่าง
-            </button>
         </div>
     </div>
-</div>
-```
-
 </div>
 {% endblock %}
 

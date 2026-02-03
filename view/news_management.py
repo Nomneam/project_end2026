@@ -129,3 +129,81 @@ def get_news_by_id(news_id):
         "success": True,
         "data": news
     })
+
+
+@news_management_bp.route('/news-management/ajax-search')
+def ajax_search_news_management():
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return jsonify({
+            "success": False,
+            "message": "Unauthorized"
+        }), 401
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 5
+    offset = (page - 1) * per_page
+
+    q = request.args.get('q', '').strip()
+    category = request.args.get('category', '').strip()
+    status = request.args.get('status', '').strip()
+
+    base_where = " WHERE n.del_flg = 0 "
+    params = []
+
+    if q:
+        base_where += " AND n.news_title LIKE %s "
+        params.append(f"%{q}%")
+
+    if category:
+        base_where += " AND n.cat_id = %s "
+        params.append(category)
+
+    if status:
+        base_where += " AND n.status = %s "
+        params.append(status)
+
+    connection = connect_db()
+    try:
+        with connection.cursor() as cursor:
+
+            # นับจำนวนทั้งหมด
+            cursor.execute(f"""
+                SELECT COUNT(*) AS total
+                FROM news n
+                {base_where}
+            """, params)
+            total_news = cursor.fetchone()['total']
+            total_pages = (total_news + per_page - 1) // per_page
+
+            # ดึงข้อมูลหน้า
+            cursor.execute(f"""
+                SELECT
+                    n.news_id,
+                    n.news_title,
+                    n.status,
+                    n.created_at,
+                    e.emp_fname,
+                    e.emp_lname,
+                    c.cat_name
+                FROM news n
+                LEFT JOIN employee e ON n.created_by = e.emp_id
+                LEFT JOIN news_category c ON n.cat_id = c.cat_id
+                {base_where}
+                ORDER BY n.created_at DESC
+                LIMIT %s OFFSET %s
+            """, params + [per_page, offset])
+
+            rows = cursor.fetchall()
+
+    finally:
+        connection.close()
+
+    return jsonify({
+        "success": True,
+        "data": rows,
+        "page": page,
+        "total_pages": total_pages,
+        "total": total_news
+    })
+
