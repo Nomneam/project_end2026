@@ -1,0 +1,92 @@
+{% extends "layout/admin-layout.html" %}
+{% block title %}โปรไฟล์ผู้ใช้{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="main d-flex justify-content-center">
+  <div class="profile-wrap">
+
+    <!-- Hero -->
+
+    <div class="profile-hero text-center mb-3">
+      <div class="position-relative d-inline-block">
+        {% if user.emp_profile %}
+          <img src="/{{ user.emp_profile }}" class="profile-avatar">
+        {% else %}
+          <div class="profile-avatar avatar-text">
+            {{ (user.emp_fname[:1] if user.emp_fname else user.emp_username[:1]) | upper }}
+          </div>
+        {% endif %}
+
+        <a href="#" class="profile-edit-btn" title="แก้ไขรูปโปรไฟล์">
+          <i class="bi bi-pencil"></i>
+        </a>
+      </div>
+
+      <h5 class="profile-title mt-3 mb-1">โปรไฟล์ผู้ใช้</h5>
+      <div class="profile-sub">รหัสพนักงาน: {{ user.emp_code }}</div>
+    </div>
+
+
+    <!-- Info Card -->
+    <div class="profile-list">
+
+      <div class="profile-row">
+        <div>
+          <div class="profile-key">ชื่อผู้ใช้</div>
+          <div class="profile-val">{{ user.emp_username }}</div>
+        </div>
+      </div>
+
+      <div class="profile-row">
+        <div>
+          <div class="profile-key">ชื่อ-นามสกุล</div>
+          <div class="profile-val">{{ user.emp_fname }} {{ user.emp_lname }}</div>
+        </div>
+        <a href="#" class="profile-action" title="แก้ไขชื่อ">
+          <i class="bi bi-pencil"></i>
+        </a>
+      </div>
+
+      <div class="profile-row">
+        <div>
+          <div class="profile-key">อีเมล</div>
+          <div class="profile-val">{{ user.emp_email }}</div>
+        </div>
+        <a href="#" class="profile-action" title="แก้ไขอีเมล">
+          <i class="bi bi-pencil"></i>
+        </a>
+      </div>
+
+      <div class="profile-row">
+        <div>
+          <div class="profile-key">เบอร์โทรศัพท์</div>
+          <div class="profile-val">{{ user.emp_phone }}</div>
+        </div>
+        <a href="#" class="profile-action" title="แก้ไขเบอร์โทร">
+          <i class="bi bi-pencil"></i>
+        </a>
+      </div>
+
+      <div class="profile-row">
+        <div>
+          <div class="profile-key">เลขบัตรประชาชน</div>
+          <div class="profile-val">{{ user.emp_idcard }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-footer">
+      <a href="#" class="profile-cta">เปลี่ยนรหัสผ่าน</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
