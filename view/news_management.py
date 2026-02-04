@@ -4,6 +4,7 @@ import os
 import pymysql
 import pymysql.cursors
 from datetime import datetime
+import base64
 
 # โหลดค่าคอนฟิกจากไฟล์ .env
 load_dotenv()
@@ -21,7 +22,31 @@ def connect_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
+ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
 
+def allowed_file(filename: str) -> bool:
+    if not filename or "." not in filename:
+        return False
+    return filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
+
+def file_to_data_uri(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+    if not allowed_file(file_storage.filename):
+        return None
+    mime = (file_storage.mimetype or "").lower()
+    if mime not in ALLOWED_MIME:
+        return None
+    raw = file_storage.read()
+    if not raw:
+        return None
+    return f"data:{mime};base64,{base64.b64encode(raw).decode('utf-8')}"
+
+
+# =====================================================
+# 1) หน้า จัดการข่าว (Admin)
+# =====================================================
 @news_management_bp.route('/news-management')
 def news_management():
     user = session.get("user")
@@ -85,7 +110,9 @@ def news_management():
     )
 
 
-
+# =====================================================
+# 2) API ดึงข้อมูลข่าวตาม ID (Admin)
+# =====================================================
 @news_management_bp.route('/news-management/<int:news_id>', methods=['GET'])
 def get_news_by_id(news_id):
     user = session.get("user")
@@ -103,6 +130,8 @@ def get_news_by_id(news_id):
                     n.created_at,
                     n.news_content,
                     n.cover_image,
+                    n.cat_id,
+                    n.subcat_id,
                     e.emp_fname,
                     e.emp_lname,
                     c.cat_name
@@ -130,7 +159,31 @@ def get_news_by_id(news_id):
         "data": news
     })
 
+# =====================================================
+# 3) API ดึงหมวดย่อยตามหมวดหลัก (Admin)
+# ====================================================
+@news_management_bp.route('/admin/categories/<int:cat_id>/subcategories')
+def get_subcategories(cat_id):
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT subcat_id, subcat_name
+                FROM news_subcategory
+                WHERE cat_id = %s AND del_flg = 0
+                ORDER BY subcat_name
+            """, (cat_id,))
+            rows = cursor.fetchall()
+    finally:
+        conn.close()
 
+    return jsonify(success=True, data=rows)
+
+
+
+# =====================================================
+# 1) AJAX ค้นหาข่าว (Admin)
+# =====================================================
 @news_management_bp.route('/news-management/ajax-search')
 def ajax_search_news_management():
     user = session.get("user")
@@ -207,7 +260,9 @@ def ajax_search_news_management():
         "total": total_news
     })
 
-
+# ======================================================
+# 1) API ลบข่าว (Admin)
+# ======================================================
 @news_management_bp.route('/admin/news/delete/<int:news_id>', methods=['POST'])
 def delete_news(news_id):
     user = session.get("user")
@@ -264,3 +319,66 @@ def delete_news(news_id):
         "message": "ลบข่าวเรียบร้อยแล้ว"
     })
 
+@news_management_bp.route('/admin/news/<int:news_id>/update', methods=['POST'])
+def update_news_modal(news_id):
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return jsonify(success=False, message="Unauthorized"), 401
+
+    title = (request.form.get("title") or "").strip()
+    content = (request.form.get("content") or "").strip()
+    status = (request.form.get("status") or "").strip()
+    cat_id = request.form.get("cat_id", type=int)
+    subcat_id = request.form.get("subcat_id", type=int)   # ✅ เพิ่ม
+    main_image = request.files.get("main_image")
+
+    if not title or not content:
+        return jsonify(success=False, message="กรุณากรอกข้อมูลให้ครบ"), 400
+
+    connection = connect_db()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT cover_image
+                FROM news
+                WHERE news_id = %s AND del_flg = 0
+            """, (news_id,))
+            old = cursor.fetchone()
+
+            if not old:
+                return jsonify(success=False, message="ไม่พบข่าว"), 404
+
+            cover_image = old["cover_image"]
+            if main_image and main_image.filename:
+                new_cover = file_to_data_uri(main_image)
+                if not new_cover:
+                    return jsonify(success=False, message="ไฟล์รูปไม่ถูกต้อง"), 400
+                cover_image = new_cover
+
+            cursor.execute("""
+                UPDATE news
+                SET news_title = %s,
+                    news_content = %s,
+                    status = %s,
+                    cat_id = %s,
+                    subcat_id = %s,   -- ✅ เพิ่ม
+                    cover_image = %s,
+                    updated_at = NOW(),
+                    updated_by = %s
+                WHERE news_id = %s
+            """, (
+                title, content, status, cat_id, subcat_id,
+                cover_image,
+                user.get("id"),
+                news_id
+            ))
+
+        connection.commit()
+        return jsonify(success=True, message="แก้ไขข่าวสำเร็จ")
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify(success=False, message=str(e)), 500
+
+    finally:
+        connection.close()

@@ -1,8 +1,11 @@
 /* =========================================================
-   Bootstrap Modal (สร้างครั้งเดียว)
+   Bootstrap Modal (View + Edit)
 ========================================================= */
 const viewModalEl = document.getElementById('viewNewsModal');
 const viewModal = viewModalEl ? new bootstrap.Modal(viewModalEl) : null;
+
+const editModalEl = document.getElementById('editNewsModal');
+const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
 
 /* =========================================================
    Abort controller (กันกดรัว)
@@ -14,364 +17,353 @@ let ajaxAbortController = null;
    Image preload helper
 ========================================================= */
 function preloadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(src);
-        img.onerror = reject;
-        img.src = src;
-    });
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(src);
+    img.onerror = reject;
+    img.src = src;
+  });
 }
 
 /* =========================================================
-   Reset modal (ก่อนโหลดข้อมูลใหม่)
+   Reset view modal
 ========================================================= */
 function resetViewModal() {
-    if (!viewModalEl) return;
+  if (!viewModalEl) return;
 
-    document.getElementById('v-title').innerText = 'กำลังโหลด...';
-    document.getElementById('v-author').innerText = '-';
-    document.getElementById('v-category').innerText = '-';
-    document.getElementById('v-date-thai').innerText = '-';
-    document.getElementById('v-time-thai').innerText = '';
+  document.getElementById('v-title').innerText = 'กำลังโหลด...';
+  document.getElementById('v-author').innerText = '-';
+  document.getElementById('v-category').innerText = '-';
+  document.getElementById('v-date-thai').innerText = '-';
+  document.getElementById('v-time-thai').innerText = '';
 
-    document.getElementById('v-status-container').innerHTML =
-        '<span class="badge bg-secondary w-100">กำลังโหลด</span>';
+  document.getElementById('v-status-container').innerHTML =
+    '<span class="badge bg-secondary w-100">กำลังโหลด</span>';
 
-    document.getElementById('v-content').innerHTML = `
-        <div class="text-center text-muted py-4">
-            <div class="spinner-border spinner-border-sm me-2"></div>
-            กำลังโหลดข้อมูล...
-        </div>
-    `;
+  document.getElementById('v-content').innerHTML = `
+    <div class="text-center text-muted py-4">
+      <div class="spinner-border spinner-border-sm me-2"></div>
+      กำลังโหลดข้อมูล...
+    </div>
+  `;
 
-    const coverImg = document.getElementById('v-cover-image');
+  const coverImg = document.getElementById('v-cover-image');
+  if (coverImg) {
     coverImg.style.display = 'none';
     coverImg.src = '';
+  }
 }
 
 /* =========================================================
-   แสดง error ใน modal
+   แสดง error ใน view modal
 ========================================================= */
 function showError(message) {
-    document.getElementById('v-content').innerHTML = `
-        <div class="alert alert-danger mb-0">
-            ${message}
-        </div>
-    `;
+  const el = document.getElementById('v-content');
+  if (!el) return;
+  el.innerHTML = `<div class="alert alert-danger mb-0">${message}</div>`;
 }
 
 /* =========================================================
-   โหลดข่าวตาม ID และเปิด modal
+   View news
 ========================================================= */
 async function viewNews(newsId) {
-    if (!newsId || !viewModal) return;
+  if (!newsId || !viewModal) return;
 
-    if (currentAbortController) {
-        currentAbortController.abort();
+  if (currentAbortController) currentAbortController.abort();
+  currentAbortController = new AbortController();
+
+  resetViewModal();
+  viewModal.show();
+
+  try {
+    const res = await fetch(`/news-management/${newsId}`, {
+      signal: currentAbortController.signal
+    });
+
+    if (!res.ok) throw new Error("Network error");
+    const result = await res.json();
+
+    if (!result.success) {
+      showError(result.message || 'ไม่พบข้อมูลข่าว');
+      return;
     }
-    currentAbortController = new AbortController();
 
-    resetViewModal();
-    viewModal.show();
+    await openViewModal(result.data);
 
-    try {
-        const res = await fetch(`/news-management/${newsId}`, {
-            signal: currentAbortController.signal
-        });
-
-        if (!res.ok) throw new Error("Network error");
-
-        const result = await res.json();
-
-        if (!result.success) {
-            showError(result.message || 'ไม่พบข้อมูลข่าว');
-            return;
-        }
-
-        await openViewModal(result.data);
-
-    } catch (err) {
-        if (err.name !== 'AbortError') {
-            console.error(err);
-            showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-        }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error(err);
+      showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
     }
+  }
 }
 
 /* =========================================================
-   เปิด modal พร้อมข้อมูลข่าว
+   Open view modal
 ========================================================= */
 async function openViewModal(news) {
-    document.getElementById('v-title').innerText =
-        news.news_title || 'ไม่มีหัวข้อ';
+  document.getElementById('v-title').innerText = news.news_title || 'ไม่มีหัวข้อ';
+  document.getElementById('v-author').innerText =
+    `${news.emp_fname || ''} ${news.emp_lname || ''}`.trim() || '-';
+  document.getElementById('v-category').innerText =
+    [news.cat_name, news.subcat_name].filter(Boolean).join(" / ") || '-';
 
-    document.getElementById('v-author').innerText =
-        `${news.emp_fname || ''} ${news.emp_lname || ''}`.trim() || '-';
+  document.getElementById('v-content').innerHTML =
+    news.news_content || '<span class="text-muted fst-italic">ไม่มีเนื้อหา</span>';
 
-    document.getElementById('v-category').innerText =
-        news.cat_name || '-';
-
-    document.getElementById('v-content').innerHTML =
-        news.news_content ||
-        '<span class="text-muted fst-italic">ไม่มีเนื้อหา</span>';
-
-    const coverImg = document.getElementById('v-cover-image');
+  const coverImg = document.getElementById('v-cover-image');
+  if (coverImg) {
     coverImg.style.display = 'none';
     coverImg.src = '';
+  }
 
-    if (news.cover_image) {
-        let imageSrc = null;
+  if (news.cover_image && coverImg) {
+    let imageSrc = news.cover_image.startsWith('data:image')
+      ? news.cover_image
+      : news.cover_image.length > 100
+        ? 'data:image/jpeg;base64,' + news.cover_image
+        : '/static/' + news.cover_image;
 
-        if (news.cover_image.startsWith('data:image')) {
-            imageSrc = news.cover_image;
-        } else if (news.cover_image.length > 100) {
-            imageSrc = 'data:image/jpeg;base64,' + news.cover_image;
-        } else {
-            imageSrc = '/static/' + news.cover_image;
-        }
-
-        try {
-            await preloadImage(imageSrc);
-            coverImg.src = imageSrc;
-            coverImg.style.display = 'block';
-        } catch {
-            console.warn('Image load failed:', imageSrc);
-        }
+    try {
+      await preloadImage(imageSrc);
+      coverImg.src = imageSrc;
+      coverImg.style.display = 'block';
+    } catch {
+      console.warn('Image load failed:', imageSrc);
     }
+  }
 
-    if (news.created_at) {
-        const dateObj = new Date(news.created_at);
-        document.getElementById('v-date-thai').innerText =
-            dateObj.toLocaleDateString('th-TH', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-        document.getElementById('v-time-thai').innerText =
-            dateObj.toLocaleTimeString('th-TH', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-    } else {
-        document.getElementById('v-date-thai').innerText = '-';
-        document.getElementById('v-time-thai').innerText = '';
-    }
+  if (news.created_at) {
+    const d = new Date(news.created_at);
+    document.getElementById('v-date-thai').innerText =
+      d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' });
+    document.getElementById('v-time-thai').innerText =
+      d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    document.getElementById('v-date-thai').innerText = '-';
+    document.getElementById('v-time-thai').innerText = '';
+  }
 
-    document.getElementById('v-status-container').innerHTML =
-        news.status === 'publish'
-            ? '<span class="badge bg-success w-100">เผยแพร่แล้ว</span>'
-            : '<span class="badge bg-secondary w-100">ฉบับร่าง</span>';
+  document.getElementById('v-status-container').innerHTML =
+    news.status === 'publish'
+      ? '<span class="badge bg-success w-100">เผยแพร่แล้ว</span>'
+      : '<span class="badge bg-secondary w-100">ฉบับร่าง</span>';
 }
 
 /* =========================================================
-   ลบข่าวแบบไม่ reload หน้า (ใช้ SweetAlert2)
+   Load subcategories by category
 ========================================================= */
-function deleteNews(id, btn) {
-    if (!id) return;
+async function loadSubcategories(catId, selectedSubcatId = null) {
+  const subSelect = document.getElementById("editSubCategory");
+  if (!subSelect) return;
 
-    Swal.fire({
-        title: 'ยืนยันการลบข่าว',
-        text: 'คุณแน่ใจหรือไม่ว่าต้องการลบข่าวนี้?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'ลบข่าว',
-        cancelButtonText: 'ยกเลิก',
-        reverseButtons: true
-    }).then((result) => {
-        if (!result.isConfirmed) return;
+  if (!catId) {
+    subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย --</option>`;
+    return;
+  }
 
-        if (btn) btn.disabled = true;
+  subSelect.innerHTML = `<option value="">กำลังโหลด...</option>`;
 
-        fetch(`/admin/news/delete/${id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        })
-            .then(async (res) => {
-                const data = await res.json();
+  try {
+    const res = await fetch(`/admin/categories/${catId}/subcategories`);
+    const result = await res.json();
 
-                if (res.status === 401) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Session หมดอายุ',
-                        text: 'กรุณาเข้าสู่ระบบใหม่'
-                    }).then(() => {
-                        window.location.href = '/login';
-                    });
-                    return;
-                }
+    subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย --</option>`;
 
-                if (!res.ok) throw data;
-                return data;
-            })
-            .then(data => {
-                if (!data) return;
-
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'ลบสำเร็จ',
-                        text: data.message || 'ลบข่าวเรียบร้อยแล้ว',
-                        timer: 1200,
-                        showConfirmButton: false
-                    });
-
-                    const row = btn.closest('tr');
-                    if (row) {
-                        row.style.transition = 'opacity .2s';
-                        row.style.opacity = '0';
-                        setTimeout(() => row.remove(), 200);
-                    }
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'ลบไม่สำเร็จ',
-                        text: data.message || 'ไม่สามารถลบข้อมูลได้'
-                    });
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: err?.message || err?.error || 'เกิดข้อผิดพลาดในการเชื่อมต่อ'
-                });
-            })
-            .finally(() => {
-                if (btn) btn.disabled = false;
-            });
-    });
+    if (result.success && Array.isArray(result.data)) {
+      result.data.forEach(sub => {
+        const opt = document.createElement("option");
+        opt.value = sub.subcat_id;
+        opt.textContent = sub.subcat_name;
+        if (selectedSubcatId && String(selectedSubcatId) === String(sub.subcat_id)) {
+          opt.selected = true;
+        }
+        subSelect.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    subSelect.innerHTML = `<option value="">โหลดหมวดย่อยไม่สำเร็จ</option>`;
+  }
 }
 
 /* =========================================================
-   AJAX Search + Pagination (ไม่ reload หน้า)
+   Edit news (เปิด Modal + โหลดข้อมูล + subcategory)
 ========================================================= */
-let currentPage = 1;
+async function editNews(newsId) {
+  if (!newsId || !editModal) return;
 
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("searchFormAjax");
-    if (!form) return;
+  try {
+    const res = await fetch(`/news-management/${newsId}`);
+    if (!res.ok) throw new Error("Network error");
 
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        fetchNewsAjax(1);
-    });
+    const result = await res.json();
+    if (!result.success) {
+      if (window.Swal) Swal.fire("ผิดพลาด", result.message || "ไม่พบข้อมูลข่าว", "error");
+      return;
+    }
+
+    const n = result.data;
+
+    document.getElementById("editNewsId").value = n.news_id || '';
+    document.getElementById("editTitle").value = n.news_title || '';
+    document.getElementById("editContent").value = n.news_content || '';
+    document.getElementById("editCategory").value = n.cat_id || '';
+    document.getElementById("editStatus").value = n.status || 'draft';
+    document.getElementById("editFeatured").value = n.is_featured ? "1" : "0";
+    document.getElementById("editVideoUrl").value = n.video_url || '';
+
+    await loadSubcategories(n.cat_id, n.subcat_id);
+
+    const preview = document.getElementById("editPreview");
+    if (preview) {
+      if (n.cover_image) {
+        let imageSrc = n.cover_image.startsWith('data:image')
+          ? n.cover_image
+          : n.cover_image.length > 100
+            ? 'data:image/jpeg;base64,' + n.cover_image
+            : '/static/' + n.cover_image;
+
+        preview.src = imageSrc;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    editModal.show();
+
+  } catch (err) {
+    console.error(err);
+    if (window.Swal) Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลข่าวได้", "error");
+  }
+}
+
+/* =========================================================
+   เปลี่ยนหมวดหลัก → โหลดหมวดย่อยใหม่
+========================================================= */
+document.getElementById("editCategory")?.addEventListener("change", function () {
+  loadSubcategories(this.value, null);
 });
 
-function fetchNewsAjax(page = 1) {
-    currentPage = page;
+/* =========================================================
+   Submit Edit News Form (AJAX)
+========================================================= */
 
-    if (ajaxAbortController) {
-        ajaxAbortController.abort();
-    }
-    ajaxAbortController = new AbortController();
+document.getElementById("editNewsForm")?.addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-    const q = document.querySelector('input[name="q"]')?.value || '';
-    const category = document.querySelector('select[name="category"]')?.value || '';
-    const status = document.querySelector('select[name="status"]')?.value || '';
+  const id = document.getElementById("editNewsId")?.value;
+  if (!id) return;
 
-    const params = new URLSearchParams({ q, category, status, page });
+  const formData = new FormData(this);
 
-    const tbody = document.querySelector("table tbody");
-    if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center py-4 text-muted">
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                    กำลังค้นหา...
-                </td>
-            </tr>
-        `;
-    }
-
-    fetch(`/news-management/ajax-search?${params.toString()}`, {
-        signal: ajaxAbortController.signal
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Network error");
-            return res.json();
-        })
-        .then(res => {
-            if (!res || !res.success) return;
-            renderNewsTableAjax(res.data || []);
-            renderPaginationAjax(res.page || 1, res.total_pages || 1);
-        })
-        .catch(err => {
-            if (err.name !== "AbortError") {
-                console.error("AJAX Search error:", err);
-            }
-        });
-}
-
-function renderNewsTableAjax(list) {
-    const tbody = document.querySelector("table tbody");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-
-    if (!list.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center py-5 text-muted">
-                    ไม่พบข้อมูลข่าวสาร
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    list.forEach(news => {
-        const statusBadge = news.status === 'publish'
-            ? `<span class="badge bg-success text-white">เผยแพร่แล้ว</span>`
-            : `<span class="badge bg-secondary text-white">ฉบับร่าง</span>`;
-
-        const date = news.created_at
-            ? new Date(news.created_at).toLocaleDateString('th-TH')
-            : '-';
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><div class="fw-bold text-dark">${news.news_title || '-'}</div></td>
-            <td>${(news.emp_fname || '')} ${(news.emp_lname || '')}</td>
-            <td>${news.cat_name || '-'}</td>
-            <td>${statusBadge}</td>
-            <td class="text-muted small">${date}</td>
-            <td class="text-end">
-                <button class="btn-action btn-delete" onclick="deleteNews('${news.news_id}', this)">
-                    <i class="bi bi-trash3"></i>
-                </button>
-                <button class="btn-action btn-view" onclick="viewNews('${news.news_id}')">
-                    <i class="bi bi-eye"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
+  try {
+    const res = await fetch(`/admin/news/${id}/update`, {
+      method: "POST",
+      body: formData
     });
-}
 
-function renderPaginationAjax(page, totalPages) {
-    const ul = document.querySelector(".pagination");
-    if (!ul) return;
+    const result = await res.json();
 
-    let html = `
-        <li class="page-item ${page === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="fetchNewsAjax(${page - 1}); return false;">Previous</a>
-        </li>
-    `;
-
-    for (let p = 1; p <= totalPages; p++) {
-        html += `
-            <li class="page-item ${p === page ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="fetchNewsAjax(${p}); return false;">${p}</a>
-            </li>
-        `;
+    if (!res.ok || !result.success) {
+      if (window.Swal) {
+        Swal.fire("ผิดพลาด", result.message || "บันทึกไม่สำเร็จ", "error");
+      }
+      return;
     }
 
-    html += `
-        <li class="page-item ${page === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="fetchNewsAjax(${page + 1}); return false;">Next</a>
-        </li>
-    `;
+    if (window.Swal) {
+      Swal.fire({
+        icon: "success",
+        title: "บันทึกสำเร็จ",
+        timer: 1200,
+        showConfirmButton: false
+      });
+    }
 
-    ul.innerHTML = html;
+    editModal?.hide();
+
+    if (typeof fetchNewsAjax === "function") {
+      fetchNewsAjax(currentPage || 1);
+    } else {
+      location.reload();
+    }
+
+  } catch (err) {
+    console.error("Update error:", err);
+    if (window.Swal) {
+      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
+    }
+  }
+});
+
+/* =========================================================
+   Delete news (SweetAlert2)
+========================================================= */
+function deleteNews(id, btn) {
+  if (!id || !window.Swal) return;
+
+  Swal.fire({
+    title: 'ยืนยันการลบข่าว',
+    text: 'คุณแน่ใจหรือไม่ว่าต้องการลบข่าวนี้?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ลบข่าว',
+    cancelButtonText: 'ยกเลิก',
+    reverseButtons: true
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    if (btn) btn.disabled = true;
+
+    fetch(`/admin/news/delete/${id}`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1200, showConfirmButton: false });
+          const row = btn?.closest('tr');
+          if (row) {
+            row.style.transition = 'opacity .2s';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 200);
+          }
+        } else {
+          Swal.fire('ลบไม่สำเร็จ', data.message || '', 'error');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire('เกิดข้อผิดพลาด', 'ลบข้อมูลไม่สำเร็จ', 'error');
+      })
+      .finally(() => {
+        if (btn) btn.disabled = false;
+      });
+  });
 }
+
+/* =========================================================
+   Event binding ปุ่มในตาราง
+========================================================= */
+document.addEventListener("click", function (e) {
+  const editBtn = e.target.closest(".btn-edit");
+  if (editBtn) {
+    e.preventDefault();
+    const id = editBtn.dataset.id;
+    if (id) editNews(id);
+  }
+
+  const viewBtn = e.target.closest(".btn-view");
+  if (viewBtn) {
+    e.preventDefault();
+    const id = viewBtn.dataset.id;
+    if (id) viewNews(id);
+  }
+
+  const deleteBtn = e.target.closest(".btn-delete");
+  if (deleteBtn) {
+    e.preventDefault();
+    const id = deleteBtn.dataset.id;
+    if (id) deleteNews(id, deleteBtn);
+  }
+});

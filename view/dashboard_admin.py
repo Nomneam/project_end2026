@@ -35,7 +35,7 @@ def admin_dashboard():
     connection = connect_db()
     try:
         with connection.cursor() as cursor:
-            # 1. ดึงพนักงานทั้งหมด (อิงจากฐานข้อมูลจริงที่มี 3 คน)
+            # 1. ดึงพนักงานทั้งหมด 
             cursor.execute("""
                 SELECT emp_id, emp_fname, emp_lname, emp_code, emp_email, role_id 
                 FROM employee 

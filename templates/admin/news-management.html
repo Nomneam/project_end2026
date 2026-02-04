@@ -107,10 +107,11 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-1">
-                                <!-- ลิงค์ไปยังหน้าแก้ไขข่าว -->
-                                <a href="#"  
-                                   class="btn-action btn-edit"
-                                   title="แก้ไข">
+                                <!-- ปุ่มแก้ไขข่าว (เปิด Modal) -->
+                                <a href="#"
+                                class="btn-action btn-edit"
+                                data-id="{{ news.news_id }}"
+                                title="แก้ไข">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                                 <button type="button"
@@ -246,6 +247,82 @@
         </div>
     </div>
 </div>
+
+<!-- ===================== Edit Modal (RED THEME) ===================== -->
+<div class="modal fade" id="editNewsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 950px; margin-top: 50px;">
+    <form id="editNewsForm" class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;" enctype="multipart/form-data">
+      <input type="hidden" id="editNewsId" name="news_id">
+
+      <!-- Header สีแดง -->
+      <div class="modal-header py-3 px-4 border-0 bg-danger text-white">
+        <h5 class="modal-title fw-bold m-0">
+          <i class="bi bi-pencil-square me-2"></i>แก้ไขข่าวสาร
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          <div class="col-md-7">
+            <label class="form-label fw-bold">หัวข้อข่าว</label>
+            <input type="text" class="form-control mb-2" id="editTitle" name="title">
+
+            <label class="form-label fw-bold">เนื้อหา</label>
+            <textarea class="form-control mb-3" id="editContent" name="content" rows="6"></textarea>
+
+            <label class="form-label fw-bold">เปลี่ยนรูปปก (ถ้าไม่เลือก = ใช้รูปเดิม)</label>
+            <input type="file" class="form-control mb-2" name="main_image" accept="image/*">
+            <img id="editPreview" class="img-fluid rounded shadow-sm mt-2" style="max-height:220px; display:none;">
+          </div>
+
+          <div class="col-md-5">
+            <label class="form-label fw-bold">หมวดหมู่</label>
+            <select id="editCategory" name="cat_id" class="form-select mb-2">
+              {% for cat in categories %}
+                <option value="{{ cat.cat_id }}">{{ cat.cat_name }}</option>
+              {% endfor %}
+            </select>
+
+            <!-- ✅ เพิ่มหมวดย่อย -->
+            <label class="form-label fw-bold">หมวดย่อย</label>
+                <select id="editSubCategory" name="subcat_id" class="form-select mb-2">
+                    <option value="">-- เลือกหมวดย่อย --</option>
+                </select>
+
+
+            <label class="form-label fw-bold">สถานะ</label>
+            <select id="editStatus" name="status" class="form-select mb-2">
+              <option value="publish">เผยแพร่</option>
+              <option value="draft">ฉบับร่าง</option>
+            </select>
+
+            <label class="form-label fw-bold">ประเภทข่าว</label>
+            <select id="editFeatured" name="is_featured" class="form-select mb-2">
+              <option value="0">ข่าวทั่วไป</option>
+              <option value="1">ข่าวเด่น (Featured)</option>
+            </select>
+
+            <label class="form-label fw-bold">Video URL (ถ้ามี)</label>
+            <input type="text" id="editVideoUrl" name="video_url" class="form-control" placeholder="https://...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer py-3 px-4 border-0 bg-light">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+          ยกเลิก
+        </button>
+        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+          บันทึกการแก้ไข
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 {% endblock %}
 
 {% block scripts %}
