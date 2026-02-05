@@ -1,38 +1,20 @@
-// index.js
+// static/js/index.js
 $(function () {
   // ======================================================
-  // Config (⭐ หมวดละ 3 หน้า)
-  // - ใช้ "pagination เดียว" คุมทั้ง ข่าวล่าสุด + ข่าวเพิ่มเติม
-  // - ลบ Global pagination (ล่างสุด) ออกแล้ว
+  // Config
   // ======================================================
-  const CATEGORIES = [
-    "ทั้งหมด",
-    "การเมือง",
-    "เศรษฐกิจ",
-    "สังคม",
-    "อาชญากรรม",
-    "บันเทิง",
-    "เทคโนโลยี",
-    "กีฬา",
-    "ไลฟ์สไตล์",
-    "ดูดวง",
-  ];
-
-  const PAGE_SIZE = 12; // ⭐ 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
-  const MAX_PAGES = 3; // ⭐ 3 หน้า/หมวด
-  const MAX_ITEMS_PER_CAT = PAGE_SIZE * MAX_PAGES; // 36 ข่าว/หมวด
-
+  const PAGE_SIZE = 12; // 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
+  const MAX_PAGES = 3; // จำกัด 3 หน้า/หมวด (ยังคงไว้ เผื่อคุณใช้ใน API)
   const LATEST_TOP_COUNT = 6; // ข่าวล่าสุดโชว์ 6
-  const POPULAR_COUNT = 7;
+  const POPULAR_COUNT = 7; // ยอดนิยมโชว์ 7
+  const SLIDE_COUNT = 3; // สไลด์โชว์ 3
+  const MUST_READ_COUNT = 4; // ไม่ควรพลาดโชว์ 4
 
   // ======================================================
   // Utils
   // ======================================================
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const pick = (arr) => arr[rand(0, arr.length - 1)];
-
   function escapeHtml(s) {
-    return String(s)
+    return String(s ?? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
@@ -40,78 +22,134 @@ $(function () {
       .replaceAll("'", "&#039;");
   }
 
-  // ======================================================
-  // Mock Data
-  // ======================================================
-  const AUTHORS = [
-    "ทีมข่าวบางกอก",
-    "กองบรรณาธิการ",
-    "ศูนย์ข่าวเศรษฐกิจ",
-    "ข่าวกีฬา",
-    "สายสังคม",
-    "โต๊ะบันเทิง",
-    "Tech Desk",
-    "Bangkok Today",
-  ];
+  function safeText(s, fallback = "—") {
+    const t = String(s ?? "").trim();
+    return t ? t : fallback;
+  }
 
-  const TIMES = ["10 นาทีที่แล้ว", "25 นาทีที่แล้ว", "1 ชม. ที่แล้ว", "2 ชม. ที่แล้ว", "4 ชม. ที่แล้ว", "เมื่อวานนี้"];
+  function toDate(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
 
-  const TITLES_BY_CAT = {
-    การเมือง: [
-      "สภาถกเดือด! งบประมาณปี 2569 ประเด็นไหนประชาชนจับตา",
-      "ครม. ถกมาตรการเร่งด่วน รับมือค่าครองชีพ-ค่าไฟรอบใหม่",
-      "โผปรับ ครม. สะเทือนการเมือง? วิเคราะห์แรงกระเพื่อม",
-      "ฝ่ายค้านยื่นญัตติซักฟอก ประเด็นร้อนมีอะไรบ้าง",
-    ],
-    เศรษฐกิจ: [
-      "SET แกว่งแรง นักลงทุนจับตาหุ้น AI-ชิป จ่อทำจุดสูงใหม่",
-      "ทองพุ่งแรงต่อเนื่อง นักลงทุนแห่ซื้อสินทรัพย์ปลอดภัย",
-      "เศรษฐกิจโลกชะลอ? นักวิเคราะห์คาดน้ำมันอ่อนตัวต่อเนื่อง",
-      "ค่าเงินบาทแข็ง-อ่อนวันนี้ กระทบส่งออกแค่ไหน",
-    ],
-    สังคม: [
-      "สังคมจับตา: เคสหลอกลวงออนไลน์พุ่ง ตำรวจเร่งกวาดล้าง",
-      "ชีวิตในเมือง: 7 วิธีรับมือฝุ่นและภูมิแพ้ในฤดูนี้",
-      "รถไฟฟ้า-ถนนเส้นหลัก ปี 2569 โครงการไหนเสร็จก่อน",
-      "ดราม่าบนโซเชียล: ประเด็นร้อนที่ถกกันทั้งวัน",
-    ],
-    อาชญากรรม: [
-      "อาชญากรรมข้ามชาติ: รวบแก๊งคอลเซ็นเตอร์ ยึดของกลางเพียบ",
-      "แตกตื่นกลางดึก! เพลิงไหม้โกดังย่านชานเมือง เร่งอพยพ",
-      "ตำรวจแถลงคดีดัง หลักฐานใหม่ชี้มุมมองเปลี่ยน",
-      "เตือนภัย: มิจฉาชีพปลอมเป็นขนส่ง โทรหลอกเอา OTP",
-    ],
-    บันเทิง: [
-      "ดราม่าลิขสิทธิ์เพลงดัง: ค่าย-ศิลปินชี้แจงคนละมุม",
-      "วงการบันเทิง: เปิดลิสต์หนังไทยทำเงินสูงสุดไตรมาสแรก",
-      "เผยโฉมชุดประจำชาติ “สุวรรณมณี” พร้อมลุยเวทีโลก",
-      "ไอดอลดังประกาศคัมแบ็ก แฟนคลับแห่ติดแฮชแท็ก",
-    ],
-    เทคโนโลยี: [
-      "เปิดตัวมือถือรุ่นใหม่ กล้องเทพ-แบตอึด พร้อมฟีเจอร์ AI",
-      "เทรนด์ทำงานปี 2026: Hybrid, AI, ทักษะที่บริษัทแย่งตัว",
-      "รีวิวแว่น AR รุ่นใหม่ ใส่แล้วเหมือนหลุดไปโลกอนาคต",
-      "เตือนภัยไซเบอร์: วิธีตั้งค่าความปลอดภัยบัญชีให้รอด",
-    ],
-    กีฬา: [
-      "กีฬาไทย: สรุปผลลีกวันนี้ ทีมไหนฟอร์มแรงต่อเนื่อง",
-      "ทีมชาติไทยเตรียมอุ่นเครื่อง ฟีฟ่าเดย์ มีนาคม ลุ้นดาวรุ่ง",
-      "วิเคราะห์ก่อนเกม: แท็กติก-ตัวจริงที่คาดว่าจะลงสนาม",
-      "ดราม่า VAR: จังหวะปัญหาที่ทำแฟนบอลเดือด",
-    ],
-    ไลฟ์สไตล์: [
-      "ไลฟ์สไตล์: คาเฟ่โทนแดง-น้ำเงินในกรุงเทพฯ ที่ห้ามพลาด",
-      "สูตรส้มตำปูปลาร้าแซ่บนัว! ทำง่ายใน 10 นาที",
-      "ทริคแต่งตัวโทนสีให้ดูแพง (แต่ไม่ต้องแพง)",
-      "กินยังไงให้ไม่อ้วน: แนวทางง่ายๆที่ทำได้จริง",
-    ],
-    ดูดวง: ["เช็คดวง 12 ราศี กุมภาพันธ์: งาน เงิน ความรัก ใครปังสุด", "สีมงคลวันนี้: เสริมงาน-เงิน-ความรัก ตามวันเกิด", "เลขเด็ด-วันดี: สายมูเตรียมจด!", "ไพ่ทาโรต์รายสัปดาห์: ระวังเรื่องไหนเป็นพิเศษ"],
+  function fmtDateTH(ts) {
+    const d = toDate(ts);
+    if (!d) return "—";
+    return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function timeAgo(ts) {
+    const d = toDate(ts);
+    if (!d) return "—";
+    const diff = Math.max(0, Date.now() - d.getTime());
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "เมื่อสักครู่";
+    if (mins < 60) return `${mins} นาทีที่แล้ว`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} ชม. ที่แล้ว`;
+    const days = Math.floor(hrs / 24);
+    return `${days} วันก่อน`;
+  }
+
+  function buildNewsUrl(id) {
+    return `/news/${encodeURIComponent(id)}`;
+  }
+
+  function apiGet(url, data) {
+    return $.ajax({
+      url,
+      method: "GET",
+      data: data || {},
+      dataType: "json",
+      timeout: 20000,
+    });
+  }
+
+  function setLoading($el, html) {
+    if (!$el || !$el.length) return;
+    $el.html(html || `<div class="text-muted small">กำลังโหลด...</div>`);
+  }
+
+  function safeCall(fn) {
+    try {
+      fn();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // ======================================================
+  // State
+  // ======================================================
+  let page = 1;
+  let state = {
+    q: "",
+    type: "home", // home | cat | subcat
+    cat_id: null,
+    subcat_id: null,
   };
 
-  // ================================
-  // FIX: Navbar dropdown (hover + ไม่โดน clip จาก overflow-x)
-  // (อันนี้จำเป็นต้อง set left/top แบบ runtime)
-  // ================================
+  // ======================================================
+  // Navbar Active
+  // ======================================================
+  function setActiveNavFromState() {
+    const $navLinks = $("nav a.nav-cat, nav a.sub-cat");
+    $navLinks.removeClass("active");
+
+    if (state.type === "home") {
+      $(`nav a.nav-cat[data-type="home"]`).addClass("active");
+      return;
+    }
+
+    if (state.type === "cat" && state.cat_id) {
+      $(`nav a.nav-cat[data-type="cat"][data-cat="${state.cat_id}"]`).addClass("active");
+      return;
+    }
+
+    if (state.type === "subcat" && state.cat_id && state.subcat_id) {
+      $(`nav a.nav-cat[data-type="cat"][data-cat="${state.cat_id}"]`).addClass("active");
+      $(`nav a.sub-cat[data-type="subcat"][data-cat="${state.cat_id}"][data-subcat="${state.subcat_id}"]`).addClass(
+        "active"
+      );
+    }
+  }
+
+  function bindNavbarCategories() {
+    setActiveNavFromState();
+
+    $("nav")
+      .off("click.nav")
+      .on("click.nav", "a.nav-cat, a.sub-cat", function (e) {
+        e.preventDefault();
+
+        const $a = $(this);
+        const type = ($a.attr("data-type") || "home").toString();
+
+        if (type === "home") {
+          state.type = "home";
+          state.cat_id = null;
+          state.subcat_id = null;
+        } else if (type === "cat") {
+          state.type = "cat";
+          state.cat_id = $a.attr("data-cat") || null;
+          state.subcat_id = null;
+        } else if (type === "subcat") {
+          state.type = "subcat";
+          state.cat_id = $a.attr("data-cat") || null;
+          state.subcat_id = $a.attr("data-subcat") || null;
+        }
+
+        page = 1;
+        setActiveNavFromState();
+        renderAll();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+  }
+
+  // ======================================================
+  // FIX: Navbar dropdown hover + ไม่โดน clip
+  // ======================================================
   (function initNavDropdownFix() {
     const nav = document.querySelector(".top-nav-sticky");
     if (!nav || !window.bootstrap) return;
@@ -123,10 +161,7 @@ $(function () {
       const menu = dd.querySelector(".dropdown-menu");
       if (!toggle || !menu) return;
 
-      const inst = bootstrap.Dropdown.getOrCreateInstance(toggle, {
-        autoClose: "outside",
-      });
-
+      const inst = bootstrap.Dropdown.getOrCreateInstance(toggle, { autoClose: "outside" });
       let hoverTimer = null;
 
       function placeMenuFixed() {
@@ -181,74 +216,28 @@ $(function () {
     });
   })();
 
-  function buildMockNews() {
-    const out = [];
-    let id = 1000;
+  // ======================================================
+  // API params helper
+  // ======================================================
+  function buildListParams() {
+    const params = {
+      page,
+      page_size: PAGE_SIZE,
+      q: (state.q || "").trim(),
+    };
 
-    CATEGORIES.slice(1).forEach((cat) => {
-      const titles = TITLES_BY_CAT[cat] || ["ข่าวอัปเดตประจำวัน"];
-      for (let i = 0; i < MAX_ITEMS_PER_CAT; i++) {
-        const minutesAgo = rand(5, 900) + i;
-        out.push({
-          id: id++,
-          cat,
-          title: `${pick(titles)} #${i + 1}`,
-          excerpt: "สรุปเนื้อหาแบบย่อเพื่อโชว์ภาพรวมหน้าเว็บ (mock) ในอนาคตจะดึงจากฐานข้อมูลจริง...",
-          imgId: rand(100, 320),
-          dateText: "3 ก.พ. 2569",
-          author: pick(AUTHORS),
-          timeAgo: pick(TIMES),
-          minutesAgo,
-          popularScore: rand(10, 999),
-          trendingScore: rand(10, 999),
-        });
-      }
-    });
+    if (state.type === "cat" && state.cat_id) params.cat_id = state.cat_id;
+    if (state.type === "subcat" && state.cat_id && state.subcat_id) {
+      params.cat_id = state.cat_id;
+      params.subcat_id = state.subcat_id;
+    }
 
-    return out;
+    return params;
   }
 
-  const ALL_NEWS = buildMockNews();
-
-  // ✅ เปลี่ยนจาก tagStyle (inline) -> tagClass
-  const SLIDES = [
-    {
-      tag: "BREAKING NEWS",
-      tagClass: "slide-tag-breaking",
-      title: "วิกฤตฝุ่นพิษ PM 2.5 วันนี้พุ่งสูง 10 เขต กทม. แนะประชาชนสวมแมสก์ N95",
-      desc: "ศูนย์ข้อมูลคุณภาพอากาศแจ้งเตือนค่าฝุ่นเข้าขั้นสีแดง คาดอากาศนิ่งต่อเนื่องหลายวัน...",
-      img: "https://images.unsplash.com/photo-1571366992791-2ad20fe25a04?auto=format&fit=crop&w=1400&q=80",
-    },
-    {
-      tag: "ECONOMY",
-      tagClass: "slide-tag-economy",
-      title: "นักวิเคราะห์คาด SET Index ปีนี้มีลุ้นแตะ 1,600 จุด รับกระแสลงทุนกลุ่ม AI",
-      desc: "หุ้นเทคฯ นำตลาด นักลงทุนต่างชาติกลับเข้ามา จับตานโยบายเศรษฐกิจดิจิทัลภาครัฐ...",
-      img: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1400&q=80",
-    },
-    {
-      tag: "SPORT",
-      tagClass: "slide-tag-sport",
-      title: "ทีมชาติไทยเตรียมประกาศรายชื่อ ฟีฟ่าเดย์ มีนาคม แฟนบอลรอลุ้นดาวรุ่ง",
-      desc: "สมาคมฯ เดินหน้าวางแผนเกมอุ่นเครื่องเพื่อทดสอบระบบ ก่อนลุยทัวร์นาเมนต์สำคัญ...",
-      img: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1400&q=80",
-    },
-  ];
-
-  const MUST_READ = [
-    { cat: "บันเทิง", title: "เผยโฉมชุดประจำชาติ “สุวรรณมณี” พร้อมลุยประกวดเวทีโลก", img: "101", time: "2 ชม. ที่แล้ว" },
-    { cat: "สังคม", title: "สรุปดราม่าแฮชแท็กร้อน: ลิขสิทธิ์เพลงดัง ใครผิดใครถูก?", img: "102", time: "4 ชม. ที่แล้ว" },
-    { cat: "การเมือง", title: "สภาถกเดือด! ประเด็นค่าแรง-สวัสดิการ ประชาชนจับตา", img: "103", time: "5 ชม. ที่แล้ว" },
-    { cat: "เศรษฐกิจ", title: "ทองพุ่งแรงต่อเนื่อง นักลงทุนแห่ซื้อสินทรัพย์ปลอดภัย", img: "104", time: "6 ชม. ที่แล้ว" },
-  ];
-
-  const EDITOR_PICKS = [
-    { cat: "ไลฟ์สไตล์", title: "7 วิธีรับมือฝุ่นและภูมิแพ้ในเมือง แบบไม่พังสุขภาพ", img: 166 },
-    { cat: "เทคโนโลยี", title: "เทรนด์งานปี 2026: AI + Hybrid ทักษะไหนบริษัทแย่งตัว", img: 170 },
-    { cat: "สังคม", title: "หลอกลวงออนไลน์พุ่ง: วิธีเช็คก่อนโอนเงิน ลดความเสี่ยง", img: 172 },
-  ];
-
-  // ✅ เอา color inline ออก -> ใช้ class ตาม sponsorKey
+  // ======================================================
+  // Sponsor marquee (MOCK) ✅
+  // ======================================================
   const SPONSORS = [
     { name: "KBank", key: "kbank", mark: "K", url: "https://www.kasikornbank.com", tag: "Banking" },
     { name: "True", key: "true", mark: "T", url: "https://www.true.th", tag: "Telecom" },
@@ -260,97 +249,60 @@ $(function () {
     { name: "Grab", key: "grab", mark: "G", url: "https://www.grab.com/th", tag: "Delivery" },
   ];
 
-  const FOOTER_ADS = [
-    {
-      title: "โปรแรง! ส่วนลดตั๋วเครื่องบิน",
-      sub: "ดีลพิเศษวันนี้เท่านั้น • 3 ก.พ. 2569",
-      img: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1400&q=80",
-      url: "https://example.com",
-    },
-    {
-      title: "มือถือใหม่ + แพ็กเน็ตสุดคุ้ม",
-      sub: "ผ่อน 0% • ของแถมเพียบ",
-      img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1400&q=80",
-      url: "https://example.com",
-    },
-    {
-      title: "คูปองส่วนลดร้านดัง",
-      sub: "รับส่วนลดเพิ่ม • จำกัดเวลา",
-      img: "https://images.unsplash.com/photo-1520975958225-1baf0af5f3f1?auto=format&fit=crop&w=1400&q=80",
-      url: "https://example.com",
-    },
-  ];
-
-  // ======================================================
-  // State
-  // ======================================================
-  let page = 1; // ⭐ หน้าเดียวคุม "ข่าวล่าสุด" + "ข่าวเพิ่มเติม"
-  let state = { q: "", cat: "ทั้งหมด" };
-
-  // ======================================================
-  // Filter + Paging
-  // ======================================================
-  function getFilteredNews() {
-    let items = [...ALL_NEWS];
-
-    const q = (state.q || "").trim().toLowerCase();
-    if (q) items = items.filter((n) => (n.title + " " + n.excerpt).toLowerCase().includes(q));
-
-    const cat = (state.cat || "ทั้งหมด").trim();
-    if (cat && cat !== "ทั้งหมด") items = items.filter((n) => n.cat === cat);
-
-    items.sort((a, b) => a.minutesAgo - b.minutesAgo);
-    items = items.slice(0, MAX_ITEMS_PER_CAT);
-
-    return items;
+  function buildSponsorPill(s) {
+    return `
+      <a class="sponsor-pill" href="${s.url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(s.name)}">
+        <span class="sponsor-mark sponsor-${escapeHtml(s.key)}">${escapeHtml(s.mark)}</span>
+        <span class="sponsor-meta">
+          <div class="sponsor-name">${escapeHtml(s.name)}</div>
+          <div class="sponsor-sub">${escapeHtml(s.tag)}</div>
+        </span>
+      </a>
+    `;
   }
 
-  function getSearchOnlyNews() {
-    let items = [...ALL_NEWS];
-    const q = (state.q || "").trim().toLowerCase();
-    if (q) items = items.filter((n) => (n.title + " " + n.excerpt).toLowerCase().includes(q));
-    items.sort((a, b) => a.minutesAgo - b.minutesAgo);
-    return items;
-  }
-
-  function getPageItems() {
-    const items = getFilteredNews();
-    const totalPages = Math.min(MAX_PAGES, Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
-    if (page > totalPages) page = totalPages;
-
-    const start = (page - 1) * PAGE_SIZE;
-    const pageItems = items.slice(start, start + PAGE_SIZE);
-    return { itemsAll: items, pageItems, totalPages, start };
+  function renderLogoMarquee() {
+    const $track = $("#logoTrack");
+    if (!$track.length) return; // ✅ ถ้าไม่มีใน HTML ก็ไม่ทำอะไร
+    const list = [...SPONSORS, ...SPONSORS]; // ✅ ทำซ้ำให้ marquee ลื่น
+    $track.html(list.map(buildSponsorPill).join(""));
   }
 
   // ======================================================
-  // Hero Swiper
+  // Hero Swiper (ข่าวยอดฮิต)
   // ======================================================
   let mainSwiper = null;
 
-  function renderSwiper() {
-    const html = SLIDES.map(
-      (s) => `
-      <div class="swiper-slide position-relative">
-        <img src="${s.img}" class="hero-img" alt="">
-        <div class="hero-overlay news-gradient d-flex flex-column justify-content-end p-4 p-md-5 text-white">
-          <span class="slide-tag ${escapeHtml(s.tagClass)}">${escapeHtml(s.tag)}</span>
-          <h2 class="font-kanit fw-bold mt-2 hero-title">
-            ${escapeHtml(s.title)}
-          </h2>
-          <p class="text-white-75 mt-2 line-clamp-2 hero-desc">
-            ${escapeHtml(s.desc)}
-          </p>
-          <div class="mt-3 d-flex align-items-center gap-3 flex-wrap">
-            <button class="btn btn-bkk-red hero-cta" type="button">อ่านต่อ</button>
-            <span class="small text-white-50">อัปเดต • 3 ก.พ. 2569</span>
-          </div>
-        </div>
-      </div>
-    `
-    ).join("");
+  function renderSwiperFromItems(items) {
+    const html = (items || [])
+      .map((s) => {
+        const tag = safeText(s.cat_name || "HOT");
+        const title = safeText(s.news_title);
+        const desc = safeText(s.excerpt || "");
+        const img = safeText(s.cover_image || "");
+        const url = buildNewsUrl(s.news_id);
 
-    $("#swiper-wrapper").html(html);
+        // ✅ รูปใหญ่แค่ไหนก็ไม่ล้นกรอบ เพราะ CSS hero-img ให้ height:100% + object-fit
+        return `
+          <div class="swiper-slide position-relative">
+            <a href="${url}" class="d-block text-decoration-none">
+              <img src="${escapeHtml(img)}" class="hero-img" alt="">
+              <div class="hero-overlay news-gradient d-flex flex-column justify-content-end p-4 p-md-5 text-white">
+                <span class="slide-tag slide-tag-breaking">${escapeHtml(tag)}</span>
+                <h2 class="font-kanit fw-bold mt-2 hero-title">${escapeHtml(title)}</h2>
+                <p class="text-white-75 mt-2 line-clamp-2 hero-desc">${escapeHtml(desc)}</p>
+                <div class="mt-3 d-flex align-items-center gap-3 flex-wrap">
+                  <span class="btn btn-bkk-red hero-cta">อ่านต่อ</span>
+                  <span class="small text-white-50">อัปเดต • ${escapeHtml(fmtDateTH(s.published_at))}</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        `;
+      })
+      .join("");
+
+    $("#swiper-wrapper").html(html || `<div class="p-4 text-muted small">ยังไม่มีข่าวยอดฮิต (featured)</div>`);
 
     if (mainSwiper) {
       mainSwiper.destroy(true, true);
@@ -358,7 +310,7 @@ $(function () {
     }
 
     mainSwiper = new Swiper(".mainSwiper", {
-      loop: true,
+      loop: (items || []).length > 1,
       effect: "fade",
       fadeEffect: { crossFade: true },
       autoplay: { delay: 6000, disableOnInteraction: false },
@@ -366,64 +318,90 @@ $(function () {
     });
   }
 
+  function loadSwiper() {
+    return apiGet("/api/news/featured", { limit: SLIDE_COUNT })
+      .then((res) => {
+        if (!res || !res.ok) throw new Error(res?.message || "โหลดข่าวยอดฮิตไม่สำเร็จ");
+        renderSwiperFromItems(res.items || []);
+      })
+      .catch((err) => {
+        $("#swiper-wrapper").html(`<div class="p-4 text-danger small">โหลดสไลด์ไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`);
+      });
+  }
+
   // ======================================================
   // Must Read
   // ======================================================
-  function renderMustRead() {
-    const html = MUST_READ.map(
-      (x, idx) => `
-      <div class="must-read-card bg-white p-3 shadow-sm d-flex gap-3 border rounded-4 ${idx === 1 ? "must-read-accent" : ""}">
-        <img src="https://picsum.photos/id/${x.img}/120/120" class="rounded-3 must-read-img" alt="">
-        <div class="flex-grow-1 must-read-body">
-          <div class="fw-bold small line-clamp-2">${escapeHtml(x.title)}</div>
-          <div class="small text-muted mt-1">${escapeHtml(x.cat)} • ${escapeHtml(x.time)}</div>
-        </div>
-      </div>
-    `
-    ).join("");
-
-    $("#must-read").html(html);
-  }
-
-  // ======================================================
-  // Latest (⭐ เปลี่ยนตาม "page" ด้วย)
-  // ======================================================
-  function renderNewsGrid() {
-    const { pageItems } = getPageItems();
-    const topItems = pageItems.slice(0, LATEST_TOP_COUNT);
-
-    const html = topItems
-      .map(
-        (n) => `
-      <div class="col-md-6">
-        <div class="bg-white rounded-4 overflow-hidden shadow-sm border h-100">
-          <div class="position-relative">
-            <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100 latest-img" alt="">
-            <div class="position-absolute top-0 start-0 p-3">
-              <span class="ad-badge ad-badge-news">news</span>
+  function renderMustRead(items) {
+    const html = (items || [])
+      .slice(0, MUST_READ_COUNT)
+      .map((x, idx) => {
+        const url = buildNewsUrl(x.news_id);
+        return `
+          <a href="${url}" class="must-read-card bg-white p-3 shadow-sm d-flex gap-3 border rounded-4 text-decoration-none text-dark ${
+            idx === 1 ? "must-read-accent" : ""
+          }">
+            <img src="${escapeHtml(x.cover_image || "")}" class="rounded-3 must-read-img" alt="">
+            <div class="flex-grow-1 must-read-body">
+              <div class="fw-bold small line-clamp-2">${escapeHtml(safeText(x.news_title))}</div>
+              <div class="small text-muted mt-1">${escapeHtml(safeText(x.cat_name))} • ${escapeHtml(timeAgo(x.published_at))}</div>
             </div>
-          </div>
-          <div class="p-3 latest-body">
-            <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(n.cat)}</span>
-              <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
-            </div>
-            <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(n.title)}</div>
-            <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(n.excerpt)}</div>
-            <div class="small text-muted mt-3">${escapeHtml(n.dateText)} • โดย ${escapeHtml(n.author)}</div>
-          </div>
-        </div>
-      </div>
-    `
-      )
+          </a>
+        `;
+      })
       .join("");
 
-    $("#news-grid").html(html);
+    $("#must-read").html(html || `<div class="text-muted small">ยังไม่มีข่าว</div>`);
+  }
+
+  function loadMustRead() {
+    setLoading($("#must-read"));
+    return apiGet("/api/news/must-read", { limit: MUST_READ_COUNT })
+      .then((res) => {
+        if (!res || !res.ok) throw new Error(res?.message || "โหลดไม่ควรพลาดไม่สำเร็จ");
+        renderMustRead(res.items || []);
+      })
+      .catch((err) => {
+        $("#must-read").html(`<div class="text-danger small">โหลดไม่ควรพลาดไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`);
+      });
   }
 
   // ======================================================
-  // More (⭐ เหลือ 6 ข่าวท้ายของหน้าเดียวกัน)
+  // Latest + More
   // ======================================================
+  function renderNewsGrid(items) {
+    const topItems = (items || []).slice(0, LATEST_TOP_COUNT);
+
+    const html = topItems
+      .map((n) => {
+        const url = buildNewsUrl(n.news_id);
+        return `
+          <div class="col-md-6">
+            <a href="${url}" class="bg-white rounded-4 overflow-hidden shadow-sm border h-100 d-block text-decoration-none text-dark">
+              <div class="position-relative">
+                <img src="${escapeHtml(n.cover_image || "")}" class="w-100 latest-img" alt="">
+                <div class="position-absolute top-0 start-0 p-3">
+                  <span class="ad-badge ad-badge-news">news</span>
+                </div>
+              </div>
+              <div class="p-3 latest-body">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                  <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.cat_name))}</span>
+                  <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
+                </div>
+                <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
+                <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.excerpt || ""))}</div>
+                <div class="small text-muted mt-3">${escapeHtml(fmtDateTH(n.published_at))}</div>
+              </div>
+            </a>
+          </div>
+        `;
+      })
+      .join("");
+
+    $("#news-grid").html(html || `<div class="text-muted small">ไม่มีข่าวล่าสุด</div>`);
+  }
+
   function renderMorePagination(totalPages) {
     const cur = page;
 
@@ -441,14 +419,8 @@ $(function () {
     const html = pages
       .map((p) => {
         if (p === "...") return `<span class="px-2 text-muted">…</span>`;
-
-        if (p === "prev") {
-          return `<button class="btn-page" id="btnPagePrev" ${cur === 1 ? "disabled" : ""}>ก่อนหน้า</button>`;
-        }
-        if (p === "next") {
-          return `<button class="btn-page" id="btnPageNext" ${cur === totalPages ? "disabled" : ""}>ถัดไป</button>`;
-        }
-
+        if (p === "prev") return `<button class="btn-page" id="btnPagePrev" ${cur === 1 ? "disabled" : ""}>ก่อนหน้า</button>`;
+        if (p === "next") return `<button class="btn-page" id="btnPageNext" ${cur === totalPages ? "disabled" : ""}>ถัดไป</button>`;
         return `<button class="btn-page ${cur === p ? "active" : ""}" data-page="${p}">${p}</button>`;
       })
       .join("");
@@ -460,8 +432,7 @@ $(function () {
       .on("click", function () {
         if (page > 1) {
           page--;
-          renderLatestAndMore();
-          document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          loadLatestAndMore(true);
         }
       });
 
@@ -470,8 +441,7 @@ $(function () {
       .on("click", function () {
         if (page < totalPages) {
           page++;
-          renderLatestAndMore();
-          document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          loadLatestAndMore(true);
         }
       });
 
@@ -482,230 +452,209 @@ $(function () {
         const p = parseInt($(this).attr("data-page"), 10);
         if (!Number.isFinite(p)) return;
         page = p;
-        renderLatestAndMore();
-        document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        loadLatestAndMore(true);
       });
   }
 
-  function renderMoreNews() {
-    const { pageItems, itemsAll, totalPages, start } = getPageItems();
-
-    const moreItems = pageItems.slice(LATEST_TOP_COUNT);
-    const total = itemsAll.length;
+  function renderMoreNews(items, meta) {
+    const moreItems = (items || []).slice(LATEST_TOP_COUNT);
+    const total = meta?.total ?? 0;
+    const totalPages = meta?.total_pages ?? 1;
+    const from = total === 0 ? 0 : (meta.page - 1) * meta.page_size + 1;
+    const to = Math.min(meta.page * meta.page_size, total);
 
     const html = moreItems
-      .map(
-        (n) => `
-      <div class="col-md-6 col-lg-4">
-        <div class="bg-white rounded-4 overflow-hidden shadow-sm border h-100">
-          <div class="position-relative">
-            <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100 more-img" alt="">
-            <div class="position-absolute top-0 start-0 p-3">
-              <span class="ad-badge ad-badge-news">news</span>
-            </div>
+      .map((n) => {
+        const url = buildNewsUrl(n.news_id);
+        return `
+          <div class="col-md-6 col-lg-4">
+            <a href="${url}" class="bg-white rounded-4 overflow-hidden shadow-sm border h-100 d-block text-decoration-none text-dark">
+              <div class="position-relative">
+                <img src="${escapeHtml(n.cover_image || "")}" class="w-100 more-img" alt="">
+                <div class="position-absolute top-0 start-0 p-3">
+                  <span class="ad-badge ad-badge-news">news</span>
+                </div>
+              </div>
+              <div class="p-3 latest-body">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                  <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.cat_name))}</span>
+                  <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
+                </div>
+                <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
+                <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.excerpt || ""))}</div>
+                <div class="small text-muted mt-3">${escapeHtml(fmtDateTH(n.published_at))}</div>
+              </div>
+            </a>
           </div>
-          <div class="p-3 latest-body">
-            <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(n.cat)}</span>
-              <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
-            </div>
-            <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(n.title)}</div>
-            <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(n.excerpt)}</div>
-            <div class="small text-muted mt-3">${escapeHtml(n.dateText)} • โดย ${escapeHtml(n.author)}</div>
-          </div>
-        </div>
-      </div>
-    `
-      )
+        `;
+      })
       .join("");
 
     $("#more-news-grid").html(html || `<div class="text-muted small">ไม่มีข่าวเพิ่มเติมในหน้านี้</div>`);
 
-    const from = total === 0 ? 0 : start + 1;
-    const to = Math.min(start + PAGE_SIZE, total);
-    $("#more-pagination-info").text(
-      `แสดง ${from} - ${to} จากทั้งหมด ${total} ข่าว • หน้า ${page} / ${totalPages}` +
-        (state.cat && state.cat !== "ทั้งหมด" ? ` • หมวด: ${state.cat} (มี 3 หน้า)` : ` • (รวม)`)
-    );
+    const label =
+      state.type === "home"
+        ? "รวม"
+        : state.type === "cat"
+        ? `หมวด: ${state.cat_id}`
+        : `หมวด: ${state.cat_id} / ย่อย: ${state.subcat_id}`;
 
+    $("#more-pagination-info").text(`แสดง ${from} - ${to} จากทั้งหมด ${total} ข่าว • หน้า ${page} / ${totalPages} • ${label}`);
     renderMorePagination(totalPages);
   }
 
-  function renderLatestAndMore() {
-    renderNewsGrid();
-    renderMoreNews();
+  function loadLatestAndMore(scrollToTop) {
+    setLoading($("#news-grid"));
+    setLoading($("#more-news-grid"));
+    $("#more-pagination").empty();
+    $("#more-pagination-info").text("—");
+
+    const params = buildListParams();
+
+    return apiGet("/api/news/list", params)
+      .then((res) => {
+        if (!res || !res.ok) throw new Error(res?.message || "โหลดข่าวไม่สำเร็จ");
+        const items = res.items || [];
+
+        renderNewsGrid(items);
+        renderMoreNews(items, {
+          page: res.page,
+          page_size: res.page_size,
+          total: res.total,
+          total_pages: res.total_pages,
+        });
+
+        if (scrollToTop) {
+          document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      })
+      .catch((err) => {
+        const msg = escapeHtml(err.message || err);
+        $("#news-grid").html(`<div class="text-danger small">โหลดข่าวล่าสุดไม่สำเร็จ: ${msg}</div>`);
+        $("#more-news-grid").html(`<div class="text-danger small">โหลดข่าวเพิ่มเติมไม่สำเร็จ: ${msg}</div>`);
+      });
   }
 
   // ======================================================
-  // Popular (ไม่กรองตามหมวด)
+  // Popular
   // ======================================================
-  function renderPopular() {
-    const top = [...getSearchOnlyNews()].sort((a, b) => b.popularScore - a.popularScore).slice(0, POPULAR_COUNT);
-
-    const html = top
-      .map(
-        (n, idx) => `
-      <div class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white">
-        <div class="popular-rank">${idx + 1}</div>
-        <div class="flex-grow-1 popular-body">
-          <div class="small text-muted mb-1">${escapeHtml(n.cat)} • ${escapeHtml(n.timeAgo)}</div>
-          <div class="fw-bold small line-clamp-2">${escapeHtml(n.title)}</div>
-        </div>
-      </div>
-    `
-      )
-      .join("");
-
-    $("#popular-list").html(html);
-  }
-
-  // ======================================================
-  // Editors Picks
-  // ======================================================
-  function renderEditorsPicks() {
-    const html = EDITOR_PICKS.map(
-      (p) => `
-      <div class="col-md-4">
-        <div class="rounded-4 overflow-hidden border bg-white h-100">
-          <img src="https://picsum.photos/id/${p.img}/800/600" class="w-100 editors-img" alt="">
-          <div class="p-3">
-            <div class="text-red-bkk fw-bold editors-cat">${escapeHtml(p.cat)}</div>
-            <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(p.title)}</div>
-            <div class="small text-muted mt-2">3 ก.พ. 2569 • แนะนำโดยกองบรรณาธิการ</div>
-          </div>
-        </div>
-      </div>
-    `
-    ).join("");
-
-    $("#editors-picks").html(html);
-  }
-
-  // ======================================================
-  // Topic Sections (ถ้าเลือกหมวดเดียว จะโชว์หมวดนั้น)
-  // ======================================================
-  function buildMiniCard(n) {
-    return `
-      <article class="mini-card h-100">
-        <img class="mini-img" src="https://picsum.photos/id/${n.imgId}/900/520" alt="">
-        <div class="mini-body">
-          <div class="d-flex align-items-center justify-content-between gap-2">
-            <span class="mini-cat">${escapeHtml(n.cat)}</span>
-            <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
-          </div>
-          <div class="fw-bold mt-2 line-clamp-2">${escapeHtml(n.title)}</div>
-          <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(n.excerpt)}</div>
-          <div class="small text-muted mt-3">${escapeHtml(n.dateText)} • ${escapeHtml(n.author)}</div>
-        </div>
-      </article>
-    `;
-  }
-
-  function renderTopicSections() {
-    const items = getFilteredNews();
-    const cats = state.cat && state.cat !== "ทั้งหมด" ? [state.cat] : CATEGORIES.slice(1);
-
-    const html = cats
-      .map((cat) => {
-        const list = items.filter((x) => x.cat === cat).slice(0, 6);
-
-        const grid = list
-          .map(
-            (n) => `
-          <div class="col-md-6 col-lg-4">
-            ${buildMiniCard(n)}
-          </div>
-        `
-          )
-          .join("");
+  function renderPopular(items) {
+    const html = (items || [])
+      .slice(0, POPULAR_COUNT)
+      .map((n, idx) => {
+        const url = buildNewsUrl(n.news_id);
+        const views24 = n.views_24h_after_publish ?? n.views_24h ?? 0;
 
         return `
-        <section>
-          <div class="d-flex align-items-end justify-content-between gap-3 mb-2 flex-wrap">
-            <div>
-              <div class="bbc-kicker">${escapeHtml(cat)}</div>
-              <div class="bbc-section-title">${escapeHtml(cat)}</div>
+          <a href="${url}" class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white text-decoration-none text-dark">
+            <div class="popular-rank">${idx + 1}</div>
+            <div class="flex-grow-1 popular-body">
+              <div class="small text-muted mb-1">
+                ${escapeHtml(safeText(n.cat_name))} • ${escapeHtml(timeAgo(n.published_at))} • ${escapeHtml(String(views24))} วิว
+              </div>
+              <div class="fw-bold small line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
             </div>
-            <a href="#" class="fw-bold small text-red-bkk text-decoration-none">ดูทั้งหมด ></a>
-          </div>
-
-          <div class="row g-3">
-            ${grid || `<div class="text-muted small">ไม่มีข้อมูลในหมวดนี้ (mock)</div>`}
-          </div>
-        </section>
-      `;
+          </a>
+        `;
       })
       .join("");
 
-    $("#topicSections").html(html);
+    $("#popular-list").html(html || `<div class="text-muted small">ยังไม่มีข้อมูลยอดนิยม</div>`);
+  }
+
+  function loadPopular() {
+    setLoading($("#popular-list"));
+    return apiGet("/api/news/popular", { limit: POPULAR_COUNT })
+      .then((res) => {
+        if (!res || !res.ok) throw new Error(res?.message || "โหลดข่าวยอดนิยมไม่สำเร็จ");
+        renderPopular(res.items || []);
+      })
+      .catch((err) => {
+        $("#popular-list").html(`<div class="text-danger small">โหลดยอดนิยมไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`);
+      });
   }
 
   // ======================================================
-  // In Pictures (กรองตามหมวด)
+  // MOCK sections (เดิม)
   // ======================================================
-  function renderInPictures() {
-    const items = getFilteredNews();
-    const hero = items[0] || ALL_NEWS[0];
+  const EDITOR_PICKS = [
+    { cat: "ไลฟ์สไตล์", title: "7 วิธีรับมือฝุ่นและภูมิแพ้ในเมือง แบบไม่พังสุขภาพ", img: 166 },
+    { cat: "เทคโนโลยี", title: "เทรนด์งานปี 2026: AI + Hybrid ทักษะไหนบริษัทแย่งตัว", img: 170 },
+    { cat: "สังคม", title: "หลอกลวงออนไลน์พุ่ง: วิธีเช็คก่อนโอนเงิน ลดความเสี่ยง", img: 172 },
+  ];
 
-    $("#pictureHeroImg").attr("src", `https://picsum.photos/id/${hero.imgId}/1600/900`);
-    $("#pictureHeroCat").text(hero.cat);
-    $("#pictureHeroTime").text(hero.timeAgo);
-    $("#pictureHeroTitle").text(hero.title);
-    $("#pictureHeroDesc").text(hero.excerpt);
+  function renderEditorsPicks() {
+    const $el = $("#editors-picks");
+    if (!$el.length) return;
 
-    const minis = items.slice(1, 4);
-    const html = minis
-      .map(
-        (n) => `
-      <div class="col-md-4">
-        <div class="bg-white rounded-4 border overflow-hidden h-100">
-          <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100 picture-mini-img" alt="">
-          <div class="p-3">
-            <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(n.cat)}</span>
-              <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
+    const html = EDITOR_PICKS.map(
+      (p) => `
+        <div class="col-md-4">
+          <div class="rounded-4 overflow-hidden border bg-white h-100">
+            <img src="https://picsum.photos/id/${p.img}/800/600" class="w-100 editors-img" alt="">
+            <div class="p-3">
+              <div class="text-red-bkk fw-bold editors-cat">${escapeHtml(p.cat)}</div>
+              <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(p.title)}</div>
+              <div class="small text-muted mt-2">แนะนำโดยกองบรรณาธิการ</div>
             </div>
-            <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(n.title)}</div>
-            <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(n.excerpt)}</div>
           </div>
         </div>
-      </div>
-    `
+      `
+    ).join("");
+    $el.html(html);
+  }
+
+  function renderInPictures() {
+    if (!$("#pictureHeroImg").length) return;
+
+    $("#pictureHeroImg").attr("src", `https://picsum.photos/id/301/1600/900`);
+    $("#pictureHeroCat").text("PHOTO");
+    $("#pictureHeroTime").text("วันนี้");
+    $("#pictureHeroTitle").text("ภาพข่าวเด่นประจำวัน (mock)");
+    $("#pictureHeroDesc").text("โซนนี้ยังเป็น mock อยู่ ถ้าจะดึงจาก DB จริง เดี๋ยวผมทำให้เป็นชุดเดียวกันได้เลย");
+
+    const html = [302, 303, 304]
+      .map(
+        (id) => `
+          <div class="col-md-4">
+            <div class="bg-white rounded-4 border overflow-hidden h-100">
+              <img src="https://picsum.photos/id/${id}/900/520" class="w-100 picture-mini-img" alt="">
+              <div class="p-3">
+                <div class="fw-bold mt-1 line-clamp-2">ภาพประกอบ (mock)</div>
+                <div class="text-secondary small mt-2 line-clamp-2">คำอธิบายสั้นๆ</div>
+              </div>
+            </div>
+          </div>
+        `
       )
       .join("");
-
     $("#pictureMiniGrid").html(html);
   }
 
-  // ======================================================
-  // Watch rail (ไม่กรองตามหมวด)
-  // ======================================================
   let watchSwiper = null;
-
   function renderWatchRail() {
-    const items = [...getSearchOnlyNews()].sort((a, b) => b.trendingScore - a.trendingScore).slice(0, 10);
-    const list = [...items, ...items];
+    if (!$("#watchWrapper").length) return;
 
+    const list = [210, 211, 212, 213, 214, 215];
     const html = list
       .map(
-        (n) => `
-      <div class="swiper-slide">
-        <div class="rail-card">
-          <div class="rail-thumb">
-            <img src="https://picsum.photos/id/${n.imgId}/900/520" alt="">
-            <div class="play-badge">▶ watch</div>
+        (imgId) => `
+          <div class="swiper-slide">
+            <div class="rail-card">
+              <div class="rail-thumb">
+                <img src="https://picsum.photos/id/${imgId}/900/520" alt="">
+                <div class="play-badge">▶ watch</div>
+              </div>
+              <div class="p-3">
+                <div class="small text-white-50 mb-2">Mock • วันนี้</div>
+                <div class="fw-bold text-white line-clamp-2">วิดีโอแนะนำ (mock)</div>
+                <div class="small text-white-50 mt-2">Mock video • 2:34</div>
+              </div>
+            </div>
           </div>
-          <div class="p-3">
-            <div class="small text-white-50 mb-2">${escapeHtml(n.cat)} • ${escapeHtml(n.timeAgo)}</div>
-            <div class="fw-bold text-white line-clamp-2">${escapeHtml(n.title)}</div>
-            <div class="small text-white-50 mt-2">Mock video • 2:34</div>
-          </div>
-        </div>
-      </div>
-    `
+        `
       )
       .join("");
-
     $("#watchWrapper").html(html);
 
     if (watchSwiper) {
@@ -723,30 +672,48 @@ $(function () {
     });
   }
 
-  // ======================================================
-  // Footer ads
-  // ======================================================
   let footerAdSwiper = null;
+  const FOOTER_ADS = [
+    {
+      title: "โปรแรง! ส่วนลดตั๋วเครื่องบิน",
+      sub: "ดีลพิเศษวันนี้เท่านั้น",
+      img: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1400&q=80",
+      url: "https://example.com",
+    },
+    {
+      title: "มือถือใหม่ + แพ็กเน็ตสุดคุ้ม",
+      sub: "ผ่อน 0% • ของแถมเพียบ",
+      img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1400&q=80",
+      url: "https://example.com",
+    },
+    {
+      title: "คูปองส่วนลดร้านดัง",
+      sub: "รับส่วนลดเพิ่ม • จำกัดเวลา",
+      img: "https://images.unsplash.com/photo-1520975958225-1baf0af5f3f1?auto=format&fit=crop&w=1400&q=80",
+      url: "https://example.com",
+    },
+  ];
 
   function renderFooterAds() {
-    const list = [...FOOTER_ADS, ...FOOTER_ADS];
+    if (!$("#footerAdWrapper").length) return;
 
+    const list = [...FOOTER_ADS, ...FOOTER_ADS];
     const html = list
       .map(
         (ad) => `
-      <div class="swiper-slide">
-        <a class="ad-banner" href="${ad.url}" target="_blank" rel="noopener noreferrer" aria-label="โฆษณา">
-          <img src="${ad.img}" alt="">
-          <div class="ad-meta">
-            <div class="ad-meta-body">
-              <div class="ad-title line-clamp-2">${escapeHtml(ad.title)}</div>
-              <div class="ad-sub line-clamp-2">${escapeHtml(ad.sub)}</div>
-            </div>
-            <span class="ad-badge ad-badge-ad">ad</span>
+          <div class="swiper-slide">
+            <a class="ad-banner" href="${ad.url}" target="_blank" rel="noopener noreferrer" aria-label="โฆษณา">
+              <img src="${ad.img}" alt="">
+              <div class="ad-meta">
+                <div class="ad-meta-body">
+                  <div class="ad-title line-clamp-2">${escapeHtml(ad.title)}</div>
+                  <div class="ad-sub line-clamp-2">${escapeHtml(ad.sub)}</div>
+                </div>
+                <span class="ad-badge ad-badge-ad">ad</span>
+              </div>
+            </a>
           </div>
-        </a>
-      </div>
-    `
+        `
       )
       .join("");
 
@@ -765,6 +732,22 @@ $(function () {
       autoplay: { delay: 3500, disableOnInteraction: false, pauseOnMouseEnter: true },
       navigation: { prevEl: "#adPrev", nextEl: "#adNext" },
       breakpoints: { 768: { slidesPerView: 2 } },
+    });
+  }
+
+  function renderTopicSections() {
+    if (!$("#topicSections").length) return;
+    $("#topicSections").html(`<div class="text-muted small">โซน Topics ยังเป็น mock (ถ้าจะทำ DB จริง เดี๋ยวผมจัด API ให้ครบ)</div>`);
+  }
+
+  // ======================================================
+  // Top Search
+  // ======================================================
+  function bindTopSearch() {
+    $("#topSearch").on("input", function () {
+      state.q = ($(this).val() || "").toString();
+      page = 1;
+      renderAll();
     });
   }
 
@@ -885,113 +868,6 @@ $(function () {
   }
 
   // ======================================================
-  // Sponsors (marquee)
-  // ======================================================
-  function buildSponsorPill(s) {
-    return `
-      <a class="sponsor-pill" href="${s.url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(s.name)}">
-        <span class="sponsor-mark sponsor-${escapeHtml(s.key)}">${escapeHtml(s.mark)}</span>
-        <span class="sponsor-meta">
-          <div class="sponsor-name">${escapeHtml(s.name)}</div>
-          <div class="sponsor-sub">${escapeHtml(s.tag)}</div>
-        </span>
-      </a>
-    `;
-  }
-
-  function renderLogoMarquee() {
-    const list = [...SPONSORS, ...SPONSORS];
-    $("#logoTrack").html(list.map(buildSponsorPill).join(""));
-  }
-
-  // ======================================================
-  // Scroll-follow ad
-  // ======================================================
-  function bindScrollAd() {
-    const DISMISS_KEY = "bkk_scroll_ad_dismissed";
-    let dismissed = localStorage.getItem(DISMISS_KEY) === "1";
-
-    const sponsor = pick(SPONSORS);
-    $("#scrollAdLink").attr("href", sponsor.url);
-
-    $("#closeScrollAd").on("click", function () {
-      $("#scrollAd").removeClass("show");
-      dismissed = true;
-      localStorage.setItem(DISMISS_KEY, "1");
-    });
-
-    const onScroll = () => {
-      if (dismissed) return;
-
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = docHeight > 0 ? scrollTop / docHeight : 0;
-
-      if (pct >= 0.3) $("#scrollAd").addClass("show");
-      else $("#scrollAd").removeClass("show");
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-  }
-
-  // ======================================================
-  // Top Search
-  // ======================================================
-  function bindTopSearch() {
-    $("#topSearch").on("input", function () {
-      state.q = ($(this).val() || "").toString();
-      page = 1;
-      renderAll();
-    });
-  }
-
-  // ======================================================
-  // Navbar Category filter
-  // ======================================================
-  function setActiveNav(cat) {
-    const c = cat || "ทั้งหมด";
-    const $links = $("nav a.nav-cat");
-    $links.removeClass("active");
-    $links.each(function () {
-      const linkCat = $(this).attr("data-cat") || "ทั้งหมด";
-      if (linkCat === c) $(this).addClass("active");
-      if (c === "ทั้งหมด" && $(this).text().includes("หน้าแรก")) $(this).addClass("active");
-    });
-  }
-
-  function bindNavbarCategories() {
-    setActiveNav(state.cat);
-
-    $("nav")
-      .off("click.navcat")
-      .on("click.navcat", "a.nav-cat", function (e) {
-        e.preventDefault();
-        const cat = $(this).attr("data-cat") || "ทั้งหมด";
-
-        state.cat = cat;
-        page = 1;
-
-        setActiveNav(cat);
-        renderAll();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-  }
-
-  // ======================================================
-  // Render all
-  // ======================================================
-  function renderAll() {
-    renderLatestAndMore();
-    renderPopular();
-    renderEditorsPicks();
-    renderInPictures();
-    renderWatchRail();
-    renderFooterAds();
-    renderTopicSections();
-  }
-
-  // ======================================================
   // Date header
   // ======================================================
   function renderHeaderDate() {
@@ -1002,19 +878,34 @@ $(function () {
   }
 
   // ======================================================
+  // Render all
+  // ======================================================
+  function renderAll() {
+    // DB sections
+    safeCall(() => loadSwiper());
+    safeCall(() => loadMustRead());
+    safeCall(() => loadLatestAndMore(false));
+    safeCall(() => loadPopular());
+
+    // Mock sections
+    safeCall(() => renderEditorsPicks());
+    safeCall(() => renderInPictures());
+    safeCall(() => renderWatchRail());
+    safeCall(() => renderFooterAds());
+    safeCall(() => renderTopicSections());
+
+    // ✅ Sponsor mock ด้านบน
+    safeCall(() => renderLogoMarquee());
+  }
+
+  // ======================================================
   // Init
   // ======================================================
   renderHeaderDate();
-  renderLogoMarquee();
-  bindScrollAd();
-
-  renderSwiper();
-  renderMustRead();
   bindTopSearch();
-
   bindNavbarCategories();
-  renderAll();
-
   bindAuth();
   renderAuthUI();
+
+  renderAll();
 });
