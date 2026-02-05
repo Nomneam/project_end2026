@@ -1,0 +1,183 @@
+@import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Kanit:wght@400;500;600;700&display=swap");
+
+:root {
+  --bkk-navy: #002d62;
+  --bkk-red: #ce1126;
+}
+
+body {
+  font-family: "Sarabun", sans-serif;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-kanit {
+  font-family: "Kanit", sans-serif;
+}
+
+.bg-navy-bkk {
+  background: var(--bkk-navy);
+}
+.text-navy-bkk {
+  color: var(--bkk-navy);
+}
+.text-red-bkk {
+  color: var(--bkk-red);
+}
+
+/* Helpers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+}
+
+/* Badge */
+.ad-badge {
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Buttons */
+.btn-page {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 13px;
+  transition: 0.2s;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-page:hover {
+  border-color: var(--bkk-navy);
+  color: var(--bkk-navy);
+}
+.btn-page.active {
+  background: var(--bkk-navy);
+  color: #fff;
+  border-color: var(--bkk-navy);
+}
+.btn-page:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Divider */
+.bbc-divider {
+  border-top: 2px solid #0f172a;
+  opacity: 0.55;
+}
+
+/* Sticky nav */
+.top-nav-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1040;
+}
+
+/* ===========================
+   รูปหลัก (อยากได้แบบรูปแรก)
+   =========================== */
+.article-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #0b1220;
+  overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
+}
+.article-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ===========================
+   เนื้อหาบทความ (ให้ดูอ่านง่าย)
+   =========================== */
+.article-content {
+  line-height: 1.95;
+  color: #111827;
+  font-size: 1.05rem; /* md default */
+}
+
+html.font-sm .article-content {
+  font-size: 0.98rem;
+}
+html.font-md .article-content {
+  font-size: 1.05rem;
+}
+html.font-lg .article-content {
+  font-size: 1.16rem;
+}
+
+.article-content p {
+  margin-bottom: 1.05rem;
+}
+.article-content a {
+  color: var(--bkk-navy);
+  font-weight: 800;
+  text-decoration: none;
+}
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+/* ===========================
+   รูปรอง (อยากได้ขนาดรูป 2 + จัดกึ่งกลาง)
+   =========================== */
+.figure-inline {
+  width: min(540px, 100%);
+  margin: 18px auto; /* ✅ กึ่งกลาง */
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.05);
+}
+
+.figure-inline .imgbox {
+  width: 100%;
+  aspect-ratio: 540 / 300; /* ✅ ล็อกสัดส่วนเหมือนรูป 2 */
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+.figure-inline img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ✅ ให้เต็มกรอบ */
+  display: block;
+}
+
+.figure-inline .caption {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #6b7280;
+  border-top: 1px solid #eef2f7;
+}
+
+/* little polish */
+article.bg-white {
+  border-color: #e5e7eb !important;
+}
