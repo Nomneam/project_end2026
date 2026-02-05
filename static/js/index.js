@@ -539,28 +539,34 @@ $(function () {
   // Popular
   // ======================================================
   function renderPopular(items) {
-    const html = (items || [])
-      .slice(0, POPULAR_COUNT)
-      .map((n, idx) => {
-        const url = buildNewsUrl(n.news_id);
-        const views24 = n.views_24h_after_publish ?? n.views_24h ?? 0;
+  // ❌ ตัดข่าวที่ view = 0 ออก
+  const filtered = (items || []).filter(n => (n.view_count || 0) > 0);
 
-        return `
-          <a href="${url}" class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white text-decoration-none text-dark">
-            <div class="popular-rank">${idx + 1}</div>
-            <div class="flex-grow-1 popular-body">
-              <div class="small text-muted mb-1">
-                ${escapeHtml(safeText(n.cat_name))} • ${escapeHtml(timeAgo(n.published_at))} • ${escapeHtml(String(views24))} วิว
-              </div>
-              <div class="fw-bold small line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
+  const html = filtered
+    .slice(0, POPULAR_COUNT)
+    .map((n, idx) => {
+      const url = `/news/${n.news_id}`;
+      return `
+        <a href="${url}" class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white text-decoration-none text-dark">
+          <div class="popular-rank">${idx + 1}</div>
+          <div class="flex-grow-1 popular-body">
+            <div class="small text-muted mb-1">
+              ${n.cat_name} • ${timeAgo(n.published_at)} • ${n.view_count} วิว
             </div>
-          </a>
-        `;
-      })
-      .join("");
+            <div class="fw-bold small line-clamp-2">
+              ${n.news_title}
+            </div>
+          </div>
+        </a>
+      `;
+    })
+    .join("");
 
-    $("#popular-list").html(html || `<div class="text-muted small">ยังไม่มีข้อมูลยอดนิยม</div>`);
-  }
+  $("#popular-list").html(
+    html || `<div class="text-muted small">ยังไม่มีข่าวยอดนิยมในช่วง 24 ชม.</div>`
+  );
+}
+
 
   function loadPopular() {
     setLoading($("#popular-list"));

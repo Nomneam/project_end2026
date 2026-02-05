@@ -240,16 +240,25 @@ img {
   Popular
 ====================================================== */
 .popular-rank {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;   /* ⭐ สำคัญ */
+  min-height: 36px;
+
+  border-radius: 12px;
   background: var(--bkk-red);
   color: #fff;
+
   font-weight: 900;
+  font-size: 14px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  flex-shrink: 0;    /* ⭐ ห้ามโดนบีบ */
 }
+
 .popular-body { min-width: 0; }
 
 /* ======================================================
