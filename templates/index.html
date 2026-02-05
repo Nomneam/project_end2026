@@ -26,7 +26,7 @@
       <div class="modal-card">
         <div class="modal-top d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center gap-2">
-            <span class="ad-badge" style="background: rgba(255, 255, 255, 0.18)">ACCOUNT</span>
+            <span class="ad-badge ad-badge-account">ACCOUNT</span>
             <span class="fw-bold">บัญชีผู้ใช้</span>
           </div>
           <button id="btnCloseAuth" class="btn btn-sm btn-light fw-bold">✕</button>
@@ -43,11 +43,23 @@
           <form id="loginForm" class="d-grid gap-3">
             <div>
               <label class="small fw-bold text-secondary">อีเมล</label>
-              <input id="loginEmail" class="form-input mt-1" type="email" placeholder="name@email.com" required />
+              <input
+                id="loginEmail"
+                class="form-input mt-1"
+                type="email"
+                placeholder="name@email.com"
+                required
+              />
             </div>
             <div>
               <label class="small fw-bold text-secondary">รหัสผ่าน</label>
-              <input id="loginPassword" class="form-input mt-1" type="password" placeholder="••••••••" required />
+              <input
+                id="loginPassword"
+                class="form-input mt-1"
+                type="password"
+                placeholder="••••••••"
+                required
+              />
             </div>
 
             <div class="d-flex align-items-center justify-content-between">
@@ -58,13 +70,7 @@
               <a href="#" class="small fw-bold text-red-bkk text-decoration-none">ลืมรหัสผ่าน?</a>
             </div>
 
-            <button
-              type="submit"
-              class="btn text-white fw-bold"
-              style="background: var(--bkk-red); border-radius: 12px; padding: 10px 12px"
-            >
-              เข้าสู่ระบบ
-            </button>
+            <button type="submit" class="btn btn-bkk-red">เข้าสู่ระบบ</button>
             <p class="small text-secondary mb-0">
               *สำหรับ mock: ใส่อีเมลอะไรก็ได้ ระบบจะ “จำลองล็อกอิน” และโชว์ชื่อที่มุมขวาบน
             </p>
@@ -95,17 +101,17 @@
               </div>
               <div class="col-md-6">
                 <label class="small fw-bold text-secondary">ยืนยันรหัสผ่าน</label>
-                <input id="regPassword2" class="form-input mt-1" type="password" placeholder="พิมพ์ซ้ำอีกครั้ง" required />
+                <input
+                  id="regPassword2"
+                  class="form-input mt-1"
+                  type="password"
+                  placeholder="พิมพ์ซ้ำอีกครั้ง"
+                  required
+                />
               </div>
             </div>
 
-            <button
-              type="submit"
-              class="btn text-white fw-bold"
-              style="background: var(--bkk-navy); border-radius: 12px; padding: 10px 12px"
-            >
-              สมัครสมาชิก
-            </button>
+            <button type="submit" class="btn btn-bkk-navy">สมัครสมาชิก</button>
             <p class="small text-secondary mb-0">
               *สำหรับ mock: สมัครแล้วจะเข้าสู่ระบบให้ทันที (เก็บไว้ใน localStorage)
             </p>
@@ -130,48 +136,26 @@
             </div>
           </div>
 
-          <div class="w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2">
-            <div class="position-relative flex-grow-1" style="max-width: 360px">
-              <input
-                id="topSearch"
-                type="text"
-                placeholder="ค้นหาข่าวบนเว็บไซต์..."
-                class="form-control"
-                style="border-radius: 12px; padding: 10px 42px 10px 14px"
-              />
-              <span class="position-absolute top-50 translate-middle-y" style="right: 14px; color: #9ca3af">⌕</span>
+          <div class="header-right w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2">
+            <div class="top-search-wrap position-relative flex-grow-1">
+              <input id="topSearch" type="text" placeholder="ค้นหาข่าวบนเว็บไซต์..." class="form-control top-search-input" />
+              <span class="top-search-icon">⌕</span>
             </div>
 
             <div id="authButtons" class="d-flex align-items-center gap-2">
-              <button id="btnOpenLogin" class="btn btn-outline-secondary fw-bold" style="border-radius: 12px">
-                เข้าสู่ระบบ
-              </button>
-              <button
-                id="btnOpenRegister"
-                class="btn fw-bold text-white"
-                style="background: var(--bkk-red); border-radius: 12px"
-              >
-                สมัครสมาชิก
-              </button>
+              <button id="btnOpenLogin" class="btn btn-outline-secondary fw-bold btn-pill">เข้าสู่ระบบ</button>
+              <button id="btnOpenRegister" class="btn fw-bold text-white btn-pill btn-register">สมัครสมาชิก</button>
             </div>
 
             <div id="userMenu" class="d-none align-items-center gap-2">
               <div class="d-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-2">
-                <div
-                  class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-                  style="width: 32px; height: 32px; background: var(--bkk-navy)"
-                  id="userAvatar"
-                >
-                  U
-                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white avatar-bkk" id="userAvatar">U</div>
                 <div class="lh-sm">
                   <div id="userName" class="fw-bold text-navy-bkk">User</div>
                   <div class="small text-muted">สมาชิก</div>
                 </div>
               </div>
-              <button id="btnLogout" class="btn btn-outline-secondary fw-bold" style="border-radius: 12px">
-                ออกจากระบบ
-              </button>
+              <button id="btnLogout" class="btn btn-outline-secondary fw-bold btn-pill">ออกจากระบบ</button>
             </div>
           </div>
         </div>
@@ -180,17 +164,46 @@
       <!-- Nav -->
       <nav class="bg-navy-bkk text-white top-nav-sticky">
         <div class="container-xl">
-          <div class="d-flex gap-4 py-3 overflow-auto no-scrollbar small fw-semibold">
-            <a href="#" class="nav-cat active" data-cat="ทั้งหมด">หน้าแรก</a>
-            <a href="#" class="nav-cat" data-cat="การเมือง">การเมือง</a>
-            <a href="#" class="nav-cat" data-cat="เศรษฐกิจ">เศรษฐกิจ</a>
-            <a href="#" class="nav-cat" data-cat="สังคม">สังคม</a>
-            <a href="#" class="nav-cat" data-cat="อาชญากรรม">อาชญากรรม</a>
-            <a href="#" class="nav-cat" data-cat="บันเทิง">บันเทิง</a>
-            <a href="#" class="nav-cat" data-cat="เทคโนโลยี">เทคโนโลยี</a>
-            <a href="#" class="nav-cat" data-cat="กีฬา">กีฬา</a>
-            <a href="#" class="nav-cat" data-cat="ไลฟ์สไตล์">ไลฟ์สไตล์</a>
-            <a href="#" class="nav-cat" data-cat="ดูดวง">ดูดวง</a>
+          <div class="nav-scroll d-flex gap-3 py-3 no-scrollbar small fw-semibold">
+            <a href="#" class="nav-cat active" data-cat="all" data-type="home">หน้าแรก</a>
+
+            {% for c in categories %}
+              {% if c.subs and c.subs|length > 0 %}
+                <div class="dropdown nav-dd">
+                  <a
+                    href="#"
+                    class="nav-cat dropdown-toggle"
+                    data-cat="{{ c.cat_id }}"
+                    data-type="cat"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-display="static"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+                  >
+                    {{ c.cat_name }}
+                  </a>
+
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    {% for s in c.subs %}
+                      <li>
+                        <a
+                          href="#"
+                          class="dropdown-item sub-cat"
+                          data-cat="{{ c.cat_id }}"
+                          data-subcat="{{ s.subcat_id }}"
+                          data-type="subcat"
+                        >
+                          {{ s.subcat_name }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% else %}
+                <a href="#" class="nav-cat" data-cat="{{ c.cat_id }}" data-type="cat">{{ c.cat_name }}</a>
+              {% endif %}
+            {% endfor %}
           </div>
         </div>
       </nav>
@@ -201,7 +214,7 @@
       <section class="mb-5">
         <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
-            <span class="ad-badge" style="background: rgba(0, 45, 98, 0.75)">ad</span>
+            <span class="ad-badge ad-badge-sponsor">ad</span>
             <span class="font-kanit fw-bold text-navy-bkk">สปอนเซอร์</span>
             <span class="small text-muted d-none d-sm-inline">คลิกโลโก้เพื่อไปยังเว็บไซต์พาร์ทเนอร์</span>
           </div>
@@ -224,9 +237,7 @@
 
         <div class="col-lg-4">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <h3 class="font-kanit fw-bold text-navy-bkk m-0 pb-1 border-bottom border-2" style="border-color: var(--bkk-red) !important">
-              ไม่ควรพลาด
-            </h3>
+            <h3 class="font-kanit fw-bold text-navy-bkk m-0 pb-1 border-bottom border-2 border-bkk-red">ไม่ควรพลาด</h3>
             <span class="small text-muted">อัปเดตล่าสุด 10 นาทีที่แล้ว</span>
           </div>
           <div id="must-read" class="d-grid gap-3"></div>
@@ -289,16 +300,14 @@
 
             <div class="feature-card">
               <div class="d-flex align-items-center gap-2 mb-2">
-                <span class="ad-badge" style="background: rgba(0, 45, 98, 0.8)">photo</span>
+                <span class="ad-badge ad-badge-photo">photo</span>
                 <span id="pictureHeroCat" class="mini-cat">—</span>
                 <span id="pictureHeroTime" class="small text-muted ms-auto">—</span>
               </div>
               <h3 id="pictureHeroTitle" class="font-kanit fw-black fs-4 text-navy-bkk m-0">—</h3>
               <p id="pictureHeroDesc" class="text-secondary small mt-2 line-clamp-3 mb-0">—</p>
               <div class="mt-3 d-flex align-items-center gap-2">
-                <button class="btn fw-bold text-white" style="background: var(--bkk-red); border-radius: 12px">
-                  อ่านต่อ
-                </button>
+                <button class="btn btn-bkk-red" type="button">อ่านต่อ</button>
                 <span class="small text-muted">Mock</span>
               </div>
             </div>
@@ -317,7 +326,7 @@
         <div class="rail">
           <div class="rail-head">
             <div class="d-flex align-items-center gap-2">
-              <span class="ad-badge" style="background: rgba(255, 255, 255, 0.14)">watch</span>
+              <span class="ad-badge ad-badge-watch">watch</span>
               <div class="font-kanit fw-black fs-5">วิดีโอแนะนำ</div>
             </div>
 
@@ -366,7 +375,7 @@
         <div class="footer-ad-wrap">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-3 flex-wrap">
             <div class="d-flex align-items-center gap-2">
-              <span class="ad-badge" style="background: rgba(0, 45, 98, 0.75)">ad</span>
+              <span class="ad-badge ad-badge-sponsor">ad</span>
               <div class="font-kanit fw-bold text-navy-bkk">โฆษณาแนะนำ</div>
               <div class="small text-muted d-none d-sm-block">รูปแนะนำ: 1200×450px</div>
             </div>
@@ -395,7 +404,7 @@
             <div class="display-6 fw-bold fst-italic mb-3">
               <span>BANGKOK</span><span class="text-red-bkk">TODAY</span>
             </div>
-            <p class="text-white-50 small mb-0" style="max-width: 520px">
+            <p class="text-white-50 small mb-0 footer-desc">
               สำนักข่าวสารที่ส่งตรงความจริงถึงหน้าจอคุณ ตลอด 24 ชั่วโมง ข่าวรวดเร็ว รอบด้าน ทันสถานการณ์
             </p>
           </div>
@@ -420,9 +429,7 @@
         </div>
       </div>
 
-      <div class="bg-black py-3 text-center small text-white-50">
-        © 2026 Bangkok Today. Powering by Bootstrap 5 + jQuery.
-      </div>
+      <div class="bg-black py-3 text-center small text-white-50">© 2026 Bangkok Today. Powering by Bootstrap 5 + jQuery.</div>
     </footer>
 
     <!-- Scroll Follow Ad -->
@@ -446,10 +453,8 @@
               href="#"
               target="_blank"
               rel="noopener noreferrer"
-              class="btn fw-bold text-white"
-              style="background: var(--bkk-red); border-radius: 12px"
-              >ไปที่เว็บไซต์</a
-            >
+              class="btn btn-bkk-red"
+            >ไปที่เว็บไซต์</a>
             <span class="small text-muted">mock</span>
           </div>
         </div>

@@ -18,11 +18,11 @@ $(function () {
     "ดูดวง",
   ];
 
-  const PAGE_SIZE = 12;           // ⭐ 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
-  const MAX_PAGES = 3;            // ⭐ 3 หน้า/หมวด
+  const PAGE_SIZE = 12; // ⭐ 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
+  const MAX_PAGES = 3; // ⭐ 3 หน้า/หมวด
   const MAX_ITEMS_PER_CAT = PAGE_SIZE * MAX_PAGES; // 36 ข่าว/หมวด
 
-  const LATEST_TOP_COUNT = 6;     // ข่าวล่าสุดโชว์ 6
+  const LATEST_TOP_COUNT = 6; // ข่าวล่าสุดโชว์ 6
   const POPULAR_COUNT = 7;
 
   // ======================================================
@@ -54,71 +54,132 @@ $(function () {
     "Bangkok Today",
   ];
 
-  const TIMES = [
-    "10 นาทีที่แล้ว",
-    "25 นาทีที่แล้ว",
-    "1 ชม. ที่แล้ว",
-    "2 ชม. ที่แล้ว",
-    "4 ชม. ที่แล้ว",
-    "เมื่อวานนี้",
-  ];
+  const TIMES = ["10 นาทีที่แล้ว", "25 นาทีที่แล้ว", "1 ชม. ที่แล้ว", "2 ชม. ที่แล้ว", "4 ชม. ที่แล้ว", "เมื่อวานนี้"];
 
   const TITLES_BY_CAT = {
-    "การเมือง": [
+    การเมือง: [
       "สภาถกเดือด! งบประมาณปี 2569 ประเด็นไหนประชาชนจับตา",
       "ครม. ถกมาตรการเร่งด่วน รับมือค่าครองชีพ-ค่าไฟรอบใหม่",
       "โผปรับ ครม. สะเทือนการเมือง? วิเคราะห์แรงกระเพื่อม",
       "ฝ่ายค้านยื่นญัตติซักฟอก ประเด็นร้อนมีอะไรบ้าง",
     ],
-    "เศรษฐกิจ": [
+    เศรษฐกิจ: [
       "SET แกว่งแรง นักลงทุนจับตาหุ้น AI-ชิป จ่อทำจุดสูงใหม่",
       "ทองพุ่งแรงต่อเนื่อง นักลงทุนแห่ซื้อสินทรัพย์ปลอดภัย",
       "เศรษฐกิจโลกชะลอ? นักวิเคราะห์คาดน้ำมันอ่อนตัวต่อเนื่อง",
       "ค่าเงินบาทแข็ง-อ่อนวันนี้ กระทบส่งออกแค่ไหน",
     ],
-    "สังคม": [
+    สังคม: [
       "สังคมจับตา: เคสหลอกลวงออนไลน์พุ่ง ตำรวจเร่งกวาดล้าง",
       "ชีวิตในเมือง: 7 วิธีรับมือฝุ่นและภูมิแพ้ในฤดูนี้",
       "รถไฟฟ้า-ถนนเส้นหลัก ปี 2569 โครงการไหนเสร็จก่อน",
       "ดราม่าบนโซเชียล: ประเด็นร้อนที่ถกกันทั้งวัน",
     ],
-    "อาชญากรรม": [
+    อาชญากรรม: [
       "อาชญากรรมข้ามชาติ: รวบแก๊งคอลเซ็นเตอร์ ยึดของกลางเพียบ",
       "แตกตื่นกลางดึก! เพลิงไหม้โกดังย่านชานเมือง เร่งอพยพ",
       "ตำรวจแถลงคดีดัง หลักฐานใหม่ชี้มุมมองเปลี่ยน",
       "เตือนภัย: มิจฉาชีพปลอมเป็นขนส่ง โทรหลอกเอา OTP",
     ],
-    "บันเทิง": [
+    บันเทิง: [
       "ดราม่าลิขสิทธิ์เพลงดัง: ค่าย-ศิลปินชี้แจงคนละมุม",
       "วงการบันเทิง: เปิดลิสต์หนังไทยทำเงินสูงสุดไตรมาสแรก",
       "เผยโฉมชุดประจำชาติ “สุวรรณมณี” พร้อมลุยเวทีโลก",
       "ไอดอลดังประกาศคัมแบ็ก แฟนคลับแห่ติดแฮชแท็ก",
     ],
-    "เทคโนโลยี": [
+    เทคโนโลยี: [
       "เปิดตัวมือถือรุ่นใหม่ กล้องเทพ-แบตอึด พร้อมฟีเจอร์ AI",
       "เทรนด์ทำงานปี 2026: Hybrid, AI, ทักษะที่บริษัทแย่งตัว",
       "รีวิวแว่น AR รุ่นใหม่ ใส่แล้วเหมือนหลุดไปโลกอนาคต",
       "เตือนภัยไซเบอร์: วิธีตั้งค่าความปลอดภัยบัญชีให้รอด",
     ],
-    "กีฬา": [
+    กีฬา: [
       "กีฬาไทย: สรุปผลลีกวันนี้ ทีมไหนฟอร์มแรงต่อเนื่อง",
       "ทีมชาติไทยเตรียมอุ่นเครื่อง ฟีฟ่าเดย์ มีนาคม ลุ้นดาวรุ่ง",
       "วิเคราะห์ก่อนเกม: แท็กติก-ตัวจริงที่คาดว่าจะลงสนาม",
       "ดราม่า VAR: จังหวะปัญหาที่ทำแฟนบอลเดือด",
     ],
-    "ไลฟ์สไตล์": [
+    ไลฟ์สไตล์: [
       "ไลฟ์สไตล์: คาเฟ่โทนแดง-น้ำเงินในกรุงเทพฯ ที่ห้ามพลาด",
       "สูตรส้มตำปูปลาร้าแซ่บนัว! ทำง่ายใน 10 นาที",
       "ทริคแต่งตัวโทนสีให้ดูแพง (แต่ไม่ต้องแพง)",
       "กินยังไงให้ไม่อ้วน: แนวทางง่ายๆที่ทำได้จริง",
     ],
-    "ดูดวง": [
-      "เช็คดวง 12 ราศี กุมภาพันธ์: งาน เงิน ความรัก ใครปังสุด",
-      "สีมงคลวันนี้: เสริมงาน-เงิน-ความรัก ตามวันเกิด",
-      "เลขเด็ด-วันดี: สายมูเตรียมจด!",
-      "ไพ่ทาโรต์รายสัปดาห์: ระวังเรื่องไหนเป็นพิเศษ",
-    ],
+    ดูดวง: ["เช็คดวง 12 ราศี กุมภาพันธ์: งาน เงิน ความรัก ใครปังสุด", "สีมงคลวันนี้: เสริมงาน-เงิน-ความรัก ตามวันเกิด", "เลขเด็ด-วันดี: สายมูเตรียมจด!", "ไพ่ทาโรต์รายสัปดาห์: ระวังเรื่องไหนเป็นพิเศษ"],
   };
+
+  // ================================
+  // FIX: Navbar dropdown (hover + ไม่โดน clip จาก overflow-x)
+  // (อันนี้จำเป็นต้อง set left/top แบบ runtime)
+  // ================================
+  (function initNavDropdownFix() {
+    const nav = document.querySelector(".top-nav-sticky");
+    if (!nav || !window.bootstrap) return;
+
+    const isDesktop = () => window.matchMedia("(min-width: 992px)").matches;
+
+    nav.querySelectorAll(".dropdown").forEach((dd) => {
+      const toggle = dd.querySelector('[data-bs-toggle="dropdown"]');
+      const menu = dd.querySelector(".dropdown-menu");
+      if (!toggle || !menu) return;
+
+      const inst = bootstrap.Dropdown.getOrCreateInstance(toggle, {
+        autoClose: "outside",
+      });
+
+      let hoverTimer = null;
+
+      function placeMenuFixed() {
+        const r = toggle.getBoundingClientRect();
+        menu.style.position = "fixed";
+        menu.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - menu.offsetWidth - 8))}px`;
+        menu.style.top = `${r.bottom + 6}px`;
+        menu.style.zIndex = "10000";
+      }
+
+      toggle.addEventListener("shown.bs.dropdown", () => {
+        if (!isDesktop()) return;
+        placeMenuFixed();
+      });
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!menu.classList.contains("show")) return;
+          if (!isDesktop()) return;
+          placeMenuFixed();
+        },
+        { passive: true }
+      );
+
+      window.addEventListener("resize", () => {
+        if (!menu.classList.contains("show")) return;
+        if (!isDesktop()) return;
+        placeMenuFixed();
+      });
+
+      dd.addEventListener("mouseenter", () => {
+        if (!isDesktop()) return;
+        clearTimeout(hoverTimer);
+        inst.show();
+      });
+
+      dd.addEventListener("mouseleave", () => {
+        if (!isDesktop()) return;
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => inst.hide(), 120);
+      });
+
+      menu.addEventListener("mouseenter", () => {
+        if (!isDesktop()) return;
+        clearTimeout(hoverTimer);
+      });
+      menu.addEventListener("mouseleave", () => {
+        if (!isDesktop()) return;
+        hoverTimer = setTimeout(() => inst.hide(), 120);
+      });
+    });
+  })();
 
   function buildMockNews() {
     const out = [];
@@ -132,8 +193,7 @@ $(function () {
           id: id++,
           cat,
           title: `${pick(titles)} #${i + 1}`,
-          excerpt:
-            "สรุปเนื้อหาแบบย่อเพื่อโชว์ภาพรวมหน้าเว็บ (mock) ในอนาคตจะดึงจากฐานข้อมูลจริง...",
+          excerpt: "สรุปเนื้อหาแบบย่อเพื่อโชว์ภาพรวมหน้าเว็บ (mock) ในอนาคตจะดึงจากฐานข้อมูลจริง...",
           imgId: rand(100, 320),
           dateText: "3 ก.พ. 2569",
           author: pick(AUTHORS),
@@ -150,24 +210,25 @@ $(function () {
 
   const ALL_NEWS = buildMockNews();
 
+  // ✅ เปลี่ยนจาก tagStyle (inline) -> tagClass
   const SLIDES = [
     {
       tag: "BREAKING NEWS",
-      tagStyle: `background:${getComputedStyle(document.documentElement).getPropertyValue("--bkk-red")}`,
+      tagClass: "slide-tag-breaking",
       title: "วิกฤตฝุ่นพิษ PM 2.5 วันนี้พุ่งสูง 10 เขต กทม. แนะประชาชนสวมแมสก์ N95",
       desc: "ศูนย์ข้อมูลคุณภาพอากาศแจ้งเตือนค่าฝุ่นเข้าขั้นสีแดง คาดอากาศนิ่งต่อเนื่องหลายวัน...",
       img: "https://images.unsplash.com/photo-1571366992791-2ad20fe25a04?auto=format&fit=crop&w=1400&q=80",
     },
     {
       tag: "ECONOMY",
-      tagStyle: `background:#2563eb`,
+      tagClass: "slide-tag-economy",
       title: "นักวิเคราะห์คาด SET Index ปีนี้มีลุ้นแตะ 1,600 จุด รับกระแสลงทุนกลุ่ม AI",
       desc: "หุ้นเทคฯ นำตลาด นักลงทุนต่างชาติกลับเข้ามา จับตานโยบายเศรษฐกิจดิจิทัลภาครัฐ...",
       img: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1400&q=80",
     },
     {
       tag: "SPORT",
-      tagStyle: `background:#059669`,
+      tagClass: "slide-tag-sport",
       title: "ทีมชาติไทยเตรียมประกาศรายชื่อ ฟีฟ่าเดย์ มีนาคม แฟนบอลรอลุ้นดาวรุ่ง",
       desc: "สมาคมฯ เดินหน้าวางแผนเกมอุ่นเครื่องเพื่อทดสอบระบบ ก่อนลุยทัวร์นาเมนต์สำคัญ...",
       img: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1400&q=80",
@@ -187,15 +248,16 @@ $(function () {
     { cat: "สังคม", title: "หลอกลวงออนไลน์พุ่ง: วิธีเช็คก่อนโอนเงิน ลดความเสี่ยง", img: 172 },
   ];
 
+  // ✅ เอา color inline ออก -> ใช้ class ตาม sponsorKey
   const SPONSORS = [
-    { name: "KBank", mark: "K", color: "#10b981", url: "https://www.kasikornbank.com", tag: "Banking" },
-    { name: "True", mark: "T", color: "#ef4444", url: "https://www.true.th", tag: "Telecom" },
-    { name: "AIS", mark: "A", color: "#22c55e", url: "https://www.ais.th", tag: "5G" },
-    { name: "PTT", mark: "P", color: "#2563eb", url: "https://www.pttplc.com", tag: "Energy" },
-    { name: "SCB", mark: "S", color: "#7c3aed", url: "https://www.scb.co.th", tag: "Finance" },
-    { name: "Lazada", mark: "L", color: "#f97316", url: "https://www.lazada.co.th", tag: "E-commerce" },
-    { name: "Shopee", mark: "S", color: "#fb7185", url: "https://shopee.co.th", tag: "E-commerce" },
-    { name: "Grab", mark: "G", color: "#16a34a", url: "https://www.grab.com/th", tag: "Delivery" },
+    { name: "KBank", key: "kbank", mark: "K", url: "https://www.kasikornbank.com", tag: "Banking" },
+    { name: "True", key: "true", mark: "T", url: "https://www.true.th", tag: "Telecom" },
+    { name: "AIS", key: "ais", mark: "A", url: "https://www.ais.th", tag: "5G" },
+    { name: "PTT", key: "ptt", mark: "P", url: "https://www.pttplc.com", tag: "Energy" },
+    { name: "SCB", key: "scb", mark: "S", url: "https://www.scb.co.th", tag: "Finance" },
+    { name: "Lazada", key: "lazada", mark: "L", url: "https://www.lazada.co.th", tag: "E-commerce" },
+    { name: "Shopee", key: "shopee", mark: "S", url: "https://shopee.co.th", tag: "E-commerce" },
+    { name: "Grab", key: "grab", mark: "G", url: "https://www.grab.com/th", tag: "Delivery" },
   ];
 
   const FOOTER_ADS = [
@@ -237,11 +299,7 @@ $(function () {
     const cat = (state.cat || "ทั้งหมด").trim();
     if (cat && cat !== "ทั้งหมด") items = items.filter((n) => n.cat === cat);
 
-    // ล่าสุดก่อน
     items.sort((a, b) => a.minutesAgo - b.minutesAgo);
-
-    // ⭐ จำกัดหมวดละ 3 หน้า (36 ข่าว)
-    // - ถ้า "ทั้งหมด" ก็ยังจำกัด 3 หน้าเช่นกัน เพื่อกันเลื่อนยาว (ตามแนวที่คุณตั้งไว้)
     items = items.slice(0, MAX_ITEMS_PER_CAT);
 
     return items;
@@ -271,26 +329,26 @@ $(function () {
   let mainSwiper = null;
 
   function renderSwiper() {
-    const html = SLIDES.map((s) => `
+    const html = SLIDES.map(
+      (s) => `
       <div class="swiper-slide position-relative">
-        <img src="${s.img}" class="w-100 h-100" style="object-fit:cover" alt="">
-        <div class="position-absolute top-0 start-0 w-100 h-100 news-gradient d-flex flex-column justify-content-end p-4 p-md-5 text-white">
-          <span class="small fw-bold px-2 py-1 rounded" style="${s.tagStyle}">${escapeHtml(s.tag)}</span>
-          <h2 class="font-kanit fw-bold mt-2" style="font-size: clamp(22px, 3vw, 38px); line-height:1.15">
+        <img src="${s.img}" class="hero-img" alt="">
+        <div class="hero-overlay news-gradient d-flex flex-column justify-content-end p-4 p-md-5 text-white">
+          <span class="slide-tag ${escapeHtml(s.tagClass)}">${escapeHtml(s.tag)}</span>
+          <h2 class="font-kanit fw-bold mt-2 hero-title">
             ${escapeHtml(s.title)}
           </h2>
-          <p class="text-white-75 mt-2 line-clamp-2" style="max-width: 720px">
+          <p class="text-white-75 mt-2 line-clamp-2 hero-desc">
             ${escapeHtml(s.desc)}
           </p>
           <div class="mt-3 d-flex align-items-center gap-3 flex-wrap">
-            <button class="btn fw-bold text-white" style="background: var(--bkk-red); border-radius: 12px">
-              อ่านต่อ
-            </button>
+            <button class="btn btn-bkk-red hero-cta" type="button">อ่านต่อ</button>
             <span class="small text-white-50">อัปเดต • 3 ก.พ. 2569</span>
           </div>
         </div>
       </div>
-    `).join("");
+    `
+    ).join("");
 
     $("#swiper-wrapper").html(html);
 
@@ -312,16 +370,17 @@ $(function () {
   // Must Read
   // ======================================================
   function renderMustRead() {
-    const html = MUST_READ.map((x, idx) => `
-      <div class="bg-white p-3 shadow-sm d-flex gap-3 border rounded-4 ${idx === 1 ? "border-start border-4" : ""}"
-           style="${idx === 1 ? "border-left-color: var(--bkk-navy) !important;" : ""}">
-        <img src="https://picsum.photos/id/${x.img}/120/120" class="rounded-3" style="width:96px;height:96px;object-fit:cover" alt="">
-        <div class="flex-grow-1" style="min-width: 0">
+    const html = MUST_READ.map(
+      (x, idx) => `
+      <div class="must-read-card bg-white p-3 shadow-sm d-flex gap-3 border rounded-4 ${idx === 1 ? "must-read-accent" : ""}">
+        <img src="https://picsum.photos/id/${x.img}/120/120" class="rounded-3 must-read-img" alt="">
+        <div class="flex-grow-1 must-read-body">
           <div class="fw-bold small line-clamp-2">${escapeHtml(x.title)}</div>
           <div class="small text-muted mt-1">${escapeHtml(x.cat)} • ${escapeHtml(x.time)}</div>
         </div>
       </div>
-    `).join("");
+    `
+    ).join("");
 
     $("#must-read").html(html);
   }
@@ -333,18 +392,20 @@ $(function () {
     const { pageItems } = getPageItems();
     const topItems = pageItems.slice(0, LATEST_TOP_COUNT);
 
-    const html = topItems.map((n) => `
+    const html = topItems
+      .map(
+        (n) => `
       <div class="col-md-6">
         <div class="bg-white rounded-4 overflow-hidden shadow-sm border h-100">
           <div class="position-relative">
-            <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100" style="height:180px;object-fit:cover" alt="">
+            <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100 latest-img" alt="">
             <div class="position-absolute top-0 start-0 p-3">
-              <span class="ad-badge" style="background: rgba(0,45,98,.75)">news</span>
+              <span class="ad-badge ad-badge-news">news</span>
             </div>
           </div>
-          <div class="p-3" style="border-top: 4px solid var(--bkk-navy)">
+          <div class="p-3 latest-body">
             <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase" style="font-size: 12px">${escapeHtml(n.cat)}</span>
+              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(n.cat)}</span>
               <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
             </div>
             <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(n.title)}</div>
@@ -353,7 +414,9 @@ $(function () {
           </div>
         </div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     $("#news-grid").html(html);
   }
@@ -392,29 +455,36 @@ $(function () {
 
     $("#more-pagination").html(html);
 
-    $("#btnPagePrev").off("click").on("click", function () {
-      if (page > 1) {
-        page--;
-        renderLatestAndMore(); // ⭐ ให้ "ข่าวล่าสุด" เปลี่ยนด้วย
-        document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
+    $("#btnPagePrev")
+      .off("click")
+      .on("click", function () {
+        if (page > 1) {
+          page--;
+          renderLatestAndMore();
+          document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
 
-    $("#btnPageNext").off("click").on("click", function () {
-      if (page < totalPages) {
-        page++;
-        renderLatestAndMore(); // ⭐ ให้ "ข่าวล่าสุด" เปลี่ยนด้วย
-        document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
+    $("#btnPageNext")
+      .off("click")
+      .on("click", function () {
+        if (page < totalPages) {
+          page++;
+          renderLatestAndMore();
+          document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
 
-    $("#more-pagination").find("button[data-page]").off("click").on("click", function () {
-      const p = parseInt($(this).attr("data-page"), 10);
-      if (!Number.isFinite(p)) return;
-      page = p;
-      renderLatestAndMore(); // ⭐ ให้ "ข่าวล่าสุด" เปลี่ยนด้วย
-      document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    $("#more-pagination")
+      .find("button[data-page]")
+      .off("click")
+      .on("click", function () {
+        const p = parseInt($(this).attr("data-page"), 10);
+        if (!Number.isFinite(p)) return;
+        page = p;
+        renderLatestAndMore();
+        document.getElementById("news-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
   }
 
   function renderMoreNews() {
@@ -423,18 +493,20 @@ $(function () {
     const moreItems = pageItems.slice(LATEST_TOP_COUNT);
     const total = itemsAll.length;
 
-    const html = moreItems.map((n) => `
+    const html = moreItems
+      .map(
+        (n) => `
       <div class="col-md-6 col-lg-4">
         <div class="bg-white rounded-4 overflow-hidden shadow-sm border h-100">
           <div class="position-relative">
-            <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100" style="height:160px;object-fit:cover" alt="">
+            <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100 more-img" alt="">
             <div class="position-absolute top-0 start-0 p-3">
-              <span class="ad-badge" style="background: rgba(0,45,98,.75)">news</span>
+              <span class="ad-badge ad-badge-news">news</span>
             </div>
           </div>
-          <div class="p-3" style="border-top: 4px solid var(--bkk-navy)">
+          <div class="p-3 latest-body">
             <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase" style="font-size: 12px">${escapeHtml(n.cat)}</span>
+              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(n.cat)}</span>
               <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
             </div>
             <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(n.title)}</div>
@@ -443,7 +515,9 @@ $(function () {
           </div>
         </div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     $("#more-news-grid").html(html || `<div class="text-muted small">ไม่มีข่าวเพิ่มเติมในหน้านี้</div>`);
 
@@ -451,7 +525,7 @@ $(function () {
     const to = Math.min(start + PAGE_SIZE, total);
     $("#more-pagination-info").text(
       `แสดง ${from} - ${to} จากทั้งหมด ${total} ข่าว • หน้า ${page} / ${totalPages}` +
-      (state.cat && state.cat !== "ทั้งหมด" ? ` • หมวด: ${state.cat} (มี 3 หน้า)` : ` • (รวม)`)
+        (state.cat && state.cat !== "ทั้งหมด" ? ` • หมวด: ${state.cat} (มี 3 หน้า)` : ` • (รวม)`)
     );
 
     renderMorePagination(totalPages);
@@ -466,22 +540,21 @@ $(function () {
   // Popular (ไม่กรองตามหมวด)
   // ======================================================
   function renderPopular() {
-    const top = [...getSearchOnlyNews()]
-      .sort((a, b) => b.popularScore - a.popularScore)
-      .slice(0, POPULAR_COUNT);
+    const top = [...getSearchOnlyNews()].sort((a, b) => b.popularScore - a.popularScore).slice(0, POPULAR_COUNT);
 
-    const html = top.map((n, idx) => `
+    const html = top
+      .map(
+        (n, idx) => `
       <div class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white">
-        <div class="fw-bold text-white d-flex align-items-center justify-content-center"
-             style="width: 32px; height: 32px; border-radius: 10px; background: var(--bkk-red)">
-          ${idx + 1}
-        </div>
-        <div style="min-width:0" class="flex-grow-1">
+        <div class="popular-rank">${idx + 1}</div>
+        <div class="flex-grow-1 popular-body">
           <div class="small text-muted mb-1">${escapeHtml(n.cat)} • ${escapeHtml(n.timeAgo)}</div>
           <div class="fw-bold small line-clamp-2">${escapeHtml(n.title)}</div>
         </div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     $("#popular-list").html(html);
   }
@@ -490,18 +563,20 @@ $(function () {
   // Editors Picks
   // ======================================================
   function renderEditorsPicks() {
-    const html = EDITOR_PICKS.map((p) => `
+    const html = EDITOR_PICKS.map(
+      (p) => `
       <div class="col-md-4">
         <div class="rounded-4 overflow-hidden border bg-white h-100">
-          <img src="https://picsum.photos/id/${p.img}/800/600" class="w-100" style="height:160px;object-fit:cover" alt="">
+          <img src="https://picsum.photos/id/${p.img}/800/600" class="w-100 editors-img" alt="">
           <div class="p-3">
-            <div class="text-red-bkk fw-bold" style="font-size: 12px">${escapeHtml(p.cat)}</div>
+            <div class="text-red-bkk fw-bold editors-cat">${escapeHtml(p.cat)}</div>
             <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(p.title)}</div>
             <div class="small text-muted mt-2">3 ก.พ. 2569 • แนะนำโดยกองบรรณาธิการ</div>
           </div>
         </div>
       </div>
-    `).join("");
+    `
+    ).join("");
 
     $("#editors-picks").html(html);
   }
@@ -528,18 +603,23 @@ $(function () {
 
   function renderTopicSections() {
     const items = getFilteredNews();
-    const cats = (state.cat && state.cat !== "ทั้งหมด") ? [state.cat] : CATEGORIES.slice(1);
+    const cats = state.cat && state.cat !== "ทั้งหมด" ? [state.cat] : CATEGORIES.slice(1);
 
-    const html = cats.map((cat) => {
-      const list = items.filter((x) => x.cat === cat).slice(0, 6);
+    const html = cats
+      .map((cat) => {
+        const list = items.filter((x) => x.cat === cat).slice(0, 6);
 
-      const grid = list.map((n) => `
-        <div class="col-md-6 col-lg-4">
-          ${buildMiniCard(n)}
-        </div>
-      `).join("");
+        const grid = list
+          .map(
+            (n) => `
+          <div class="col-md-6 col-lg-4">
+            ${buildMiniCard(n)}
+          </div>
+        `
+          )
+          .join("");
 
-      return `
+        return `
         <section>
           <div class="d-flex align-items-end justify-content-between gap-3 mb-2 flex-wrap">
             <div>
@@ -554,7 +634,8 @@ $(function () {
           </div>
         </section>
       `;
-    }).join("");
+      })
+      .join("");
 
     $("#topicSections").html(html);
   }
@@ -573,13 +654,15 @@ $(function () {
     $("#pictureHeroDesc").text(hero.excerpt);
 
     const minis = items.slice(1, 4);
-    const html = minis.map((n) => `
+    const html = minis
+      .map(
+        (n) => `
       <div class="col-md-4">
         <div class="bg-white rounded-4 border overflow-hidden h-100">
-          <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100" style="height:160px;object-fit:cover" alt="">
+          <img src="https://picsum.photos/id/${n.imgId}/900/520" class="w-100 picture-mini-img" alt="">
           <div class="p-3">
             <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase" style="font-size: 12px">${escapeHtml(n.cat)}</span>
+              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(n.cat)}</span>
               <span class="small text-muted">${escapeHtml(n.timeAgo)}</span>
             </div>
             <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(n.title)}</div>
@@ -587,7 +670,9 @@ $(function () {
           </div>
         </div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     $("#pictureMiniGrid").html(html);
   }
@@ -598,13 +683,12 @@ $(function () {
   let watchSwiper = null;
 
   function renderWatchRail() {
-    const items = [...getSearchOnlyNews()]
-      .sort((a, b) => b.trendingScore - a.trendingScore)
-      .slice(0, 10);
-
+    const items = [...getSearchOnlyNews()].sort((a, b) => b.trendingScore - a.trendingScore).slice(0, 10);
     const list = [...items, ...items];
 
-    const html = list.map((n) => `
+    const html = list
+      .map(
+        (n) => `
       <div class="swiper-slide">
         <div class="rail-card">
           <div class="rail-thumb">
@@ -618,7 +702,9 @@ $(function () {
           </div>
         </div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     $("#watchWrapper").html(html);
 
@@ -645,20 +731,24 @@ $(function () {
   function renderFooterAds() {
     const list = [...FOOTER_ADS, ...FOOTER_ADS];
 
-    const html = list.map((ad) => `
+    const html = list
+      .map(
+        (ad) => `
       <div class="swiper-slide">
         <a class="ad-banner" href="${ad.url}" target="_blank" rel="noopener noreferrer" aria-label="โฆษณา">
           <img src="${ad.img}" alt="">
           <div class="ad-meta">
-            <div style="min-width:0">
+            <div class="ad-meta-body">
               <div class="ad-title line-clamp-2">${escapeHtml(ad.title)}</div>
               <div class="ad-sub line-clamp-2">${escapeHtml(ad.sub)}</div>
             </div>
-            <span class="ad-badge" style="background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.18)">ad</span>
+            <span class="ad-badge ad-badge-ad">ad</span>
           </div>
         </a>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     $("#footerAdWrapper").html(html);
 
@@ -684,8 +774,11 @@ $(function () {
   const AUTH_KEY = "bkk_today_user";
 
   function getUser() {
-    try { return JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); }
-    catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+    } catch {
+      return null;
+    }
   }
   function setUser(user) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
@@ -697,7 +790,10 @@ $(function () {
   }
 
   function showAuthMsg(msg) {
-    if (!msg) { $("#authMsg").addClass("d-none").text(""); return; }
+    if (!msg) {
+      $("#authMsg").addClass("d-none").text("");
+      return;
+    }
     $("#authMsg").removeClass("d-none").text(msg);
   }
 
@@ -718,12 +814,12 @@ $(function () {
 
   function openAuthModal(mode) {
     $("#authModal").addClass("show");
-    $("body").css("overflow", "hidden");
+    $("body").addClass("no-scroll");
     setAuthTab(mode || "login");
   }
   function closeAuthModal() {
     $("#authModal").removeClass("show");
-    $("body").css("overflow", "");
+    $("body").removeClass("no-scroll");
     showAuthMsg("");
   }
 
@@ -794,8 +890,8 @@ $(function () {
   function buildSponsorPill(s) {
     return `
       <a class="sponsor-pill" href="${s.url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(s.name)}">
-        <span class="sponsor-mark" style="background:${s.color}">${escapeHtml(s.mark)}</span>
-        <span style="min-width:0">
+        <span class="sponsor-mark sponsor-${escapeHtml(s.key)}">${escapeHtml(s.mark)}</span>
+        <span class="sponsor-meta">
           <div class="sponsor-name">${escapeHtml(s.name)}</div>
           <div class="sponsor-sub">${escapeHtml(s.tag)}</div>
         </span>
@@ -867,24 +963,26 @@ $(function () {
   function bindNavbarCategories() {
     setActiveNav(state.cat);
 
-    $("nav").off("click.navcat").on("click.navcat", "a.nav-cat", function (e) {
-      e.preventDefault();
-      const cat = $(this).attr("data-cat") || "ทั้งหมด";
+    $("nav")
+      .off("click.navcat")
+      .on("click.navcat", "a.nav-cat", function (e) {
+        e.preventDefault();
+        const cat = $(this).attr("data-cat") || "ทั้งหมด";
 
-      state.cat = cat;
-      page = 1;
+        state.cat = cat;
+        page = 1;
 
-      setActiveNav(cat);
-      renderAll();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+        setActiveNav(cat);
+        renderAll();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
   }
 
   // ======================================================
   // Render all
   // ======================================================
   function renderAll() {
-    renderLatestAndMore(); // ⭐ ข่าวล่าสุด + ข่าวเพิ่มเติม เปลี่ยนพร้อมกัน
+    renderLatestAndMore();
     renderPopular();
     renderEditorsPicks();
     renderInPictures();
@@ -898,9 +996,9 @@ $(function () {
   // ======================================================
   function renderHeaderDate() {
     const d = new Date();
-    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     $("#dayName").text(days[d.getDay()]);
-    $("#dayDate").text(d.toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" }));
+    $("#dayDate").text(d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
   }
 
   // ======================================================
