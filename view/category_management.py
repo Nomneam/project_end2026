@@ -150,17 +150,78 @@ def update_category():
     finally:
         conn.close()
 
-# --- 3. ลบหมวดหมู่หลัก (Soft Delete) ---
-@category_management_bp.route('/delete-category', methods=['POST'])
-def delete_category():
-    cat_id = request.form.get('cat_id')
+# --- 2. ลบประเภทย่อย (Soft Delete) ---
+@category_management_bp.route('/delete-subcategory', methods=['POST'])
+def delete_subcategory():
     user = session.get("user")
+    subcat_id = request.form.get('subcat_id')
+
+    if not user or not user.get("id"):
+        return jsonify({"success": False, "message": "กรุณาเข้าสู่ระบบ"}), 401
+
+    if not subcat_id:
+        return jsonify({"success": False, "message": "ไม่พบรหัสประเภทย่อย"}), 400
+
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE news_category SET del_flg = 1, updated_at = %s, updated_by = %s WHERE cat_id = %s", (datetime.now(), user.get('id'), cat_id))
-            cursor.execute("UPDATE news_subcategory SET del_flg = 1 WHERE cat_id = %s", (cat_id,))
+            cursor.execute("""
+                UPDATE news_subcategory 
+                SET del_flg = 1,
+                    is_active = 0,
+                    updated_at = %s,
+                    updated_by = %s
+                WHERE subcat_id = %s
+            """, (datetime.now(), user.get('id'), subcat_id))
+
         conn.commit()
         return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        conn.close()
+
+
+# --- 3. ลบหมวดหมู่หลัก (Soft Delete) ---
+@category_management_bp.route('/delete-category', methods=['POST'])
+def delete_category():
+    user = session.get("user")
+    cat_id = request.form.get('cat_id')
+
+    if not user or not user.get("id"):
+        return jsonify({"success": False, "message": "กรุณาเข้าสู่ระบบ"}), 401
+
+    if not cat_id:
+        return jsonify({"success": False, "message": "ไม่พบรหัสหมวดหมู่"}), 400
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            # Soft delete หมวดหมู่หลัก
+            cursor.execute("""
+                UPDATE news_category 
+                SET del_flg = 1, 
+                    is_active = 0,
+                    updated_at = %s, 
+                    updated_by = %s 
+                WHERE cat_id = %s
+            """, (datetime.now(), user.get('id'), cat_id))
+
+            # Soft delete ประเภทย่อยทั้งหมดในหมวดนั้น
+            cursor.execute("""
+                UPDATE news_subcategory 
+                SET del_flg = 1,
+                    is_active = 0,
+                    updated_at = %s,
+                    updated_by = %s
+                WHERE cat_id = %s
+            """, (datetime.now(), user.get('id'), cat_id))
+
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
     finally:
         conn.close()
