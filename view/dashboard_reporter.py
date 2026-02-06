@@ -11,8 +11,13 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 dashboard_reporter_bp = Blueprint("dashboard_reporter", __name__)
 
-# ---------------- Upload config ----------------
-UPLOAD_DIR = os.path.join("static", "uploads", "news")
+# ======================================================
+# Upload config (แยก cover / sub) ✅ เก็บลงโปรเจค + เก็บ DB เป็น path แบบ relative
+# ======================================================
+BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
+COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
+SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
+
 ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
 
 
@@ -23,14 +28,39 @@ def allowed_file(filename: str) -> bool:
     return ext in ALLOWED_EXT
 
 
-def save_image(file_storage):
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+def save_image(file_storage, kind: str = "cover"):
+    """
+    เซฟรูปลง:
+      - static/uploads/news/cover/   (kind=cover)
+      - static/uploads/news/sub/     (kind=sub)
+
+    คืนค่า path สำหรับเก็บลง DB:
+      - uploads/news/cover/uuid.ext
+      - uploads/news/sub/uuid.ext
+
+    ✅ ไม่คืนค่าแบบ /static/... เพื่อให้หน้าอ่านข่าวใช้ url_for('static', filename=...) ได้ถูก
+    """
+    if not file_storage or not getattr(file_storage, "filename", ""):
+        return None
+
     filename = secure_filename(file_storage.filename)
+    if not allowed_file(filename):
+        return None
+
+    kind = (kind or "cover").lower().strip()
+    if kind not in ("cover", "sub"):
+        kind = "cover"
+
+    target_dir = COVER_DIR if kind == "cover" else SUB_DIR
+    os.makedirs(target_dir, exist_ok=True)
+
     ext = filename.rsplit(".", 1)[1].lower()
     new_name = f"{uuid.uuid4().hex}.{ext}"
-    full_path = os.path.join(UPLOAD_DIR, new_name)
+    full_path = os.path.join(target_dir, new_name)
     file_storage.save(full_path)
-    return f"/static/uploads/news/{new_name}"
+
+    # ✅ เก็บ DB แบบ relative (ห้ามมี /static/)
+    return f"uploads/news/{kind}/{new_name}"
 
 
 def safe_int(v, default=None):
@@ -51,6 +81,7 @@ def connect_db():
         port=int(os.environ.get("PORT") or 3306),
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=True,
+        charset="utf8mb4",
     )
 
 
@@ -318,7 +349,7 @@ def reporter_soft_delete(news_id):
         conn.close()
 
 
-# ---------------- Detail (สำคัญ: ต้องมี cat_id/subcat_id) ----------------
+# ---------------- Detail (ต้องมี cat_id/subcat_id + ส่งรูปเดิมกลับไป) ----------------
 @dashboard_reporter_bp.route("/reporter/news/detail/<int:news_id>", methods=["GET"])
 def reporter_news_detail(news_id):
     user = require_reporter()
@@ -364,6 +395,16 @@ def reporter_news_detail(news_id):
             if not row:
                 return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์ดู"}), 404
 
+            # ให้แน่ใจว่า sub_images เป็น list ได้เสมอ (ฝั่งหน้าแก้ไขจะได้จัดการง่าย)
+            raw = row.get("sub_images")
+            try:
+                arr = json.loads(raw) if raw else []
+                if not isinstance(arr, list):
+                    arr = []
+            except Exception:
+                arr = []
+            row["sub_images"] = arr
+
             return jsonify({"ok": True, "data": row}), 200
     finally:
         conn.close()
@@ -398,7 +439,7 @@ def reporter_subcategories():
         conn.close()
 
 
-# ---------------- Update (รองรับรูป) ----------------
+# ---------------- Update (รองรับรูป + จำกัดรูปรอง 2 รูป + บันทึกเหมือนตอนเพิ่ม) ----------------
 @dashboard_reporter_bp.route("/reporter/news/update/<int:news_id>", methods=["POST"])
 def reporter_news_update(news_id):
     user = require_reporter()
@@ -424,8 +465,10 @@ def reporter_news_update(news_id):
     if is_featured not in (0, 1):
         is_featured = 0
 
+    # ชื่อไฟล์จากฟอร์มหน้า dashboard (ของคุณใช้ cover_image/sub_images)
     cover_file = request.files.get("cover_image")
     sub_files = request.files.getlist("sub_images")
+
     remove_cover = (request.form.get("remove_cover") or "0").strip() == "1"
     remove_subs = (request.form.get("remove_subs") or "0").strip() == "1"
 
@@ -444,33 +487,43 @@ def reporter_news_update(news_id):
             if not old:
                 return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์แก้ไข"}), 404
 
-            new_cover = old.get("cover_image")
-            old_sub_raw = old.get("sub_images")
-
+            # ---------- cover ----------
+            old_cover = (old.get("cover_image") or "").strip()
             if remove_cover:
-                new_cover = None
-            elif cover_file and cover_file.filename:
-                if not allowed_file(cover_file.filename):
-                    return jsonify({"ok": False, "message": "ไฟล์รูปปกไม่รองรับ"}), 400
-                new_cover = save_image(cover_file)
+                final_cover = None
+            else:
+                if cover_file and cover_file.filename:
+                    new_cover = save_image(cover_file, "cover")
+                    if not new_cover:
+                        return jsonify({"ok": False, "message": "ไฟล์รูปปกไม่รองรับ"}), 400
+                    final_cover = new_cover
+                else:
+                    final_cover = old_cover  # ไม่อัปโหลดใหม่ -> คงเดิม
+
+            # ---------- sub images ----------
+            old_sub_raw = old.get("sub_images")
+            try:
+                old_subs = json.loads(old_sub_raw) if old_sub_raw else []
+                if not isinstance(old_subs, list):
+                    old_subs = []
+            except Exception:
+                old_subs = []
 
             if remove_subs:
-                new_subs = []
-            elif sub_files and any(f and f.filename for f in sub_files):
-                new_subs = []
-                for f in sub_files:
-                    if not f or not f.filename:
-                        continue
-                    if not allowed_file(f.filename):
-                        return jsonify({"ok": False, "message": "มีไฟล์รูปรองที่ไม่รองรับ"}), 400
-                    new_subs.append(save_image(f))
+                final_subs = []
             else:
-                try:
-                    new_subs = json.loads(old_sub_raw) if old_sub_raw else []
-                    if not isinstance(new_subs, list):
-                        new_subs = []
-                except Exception:
+                picked = [f for f in (sub_files or []) if f and f.filename]
+                if picked:
+                    picked = picked[:2]  # ✅ จำกัด 2 รูป
                     new_subs = []
+                    for f in picked:
+                        p = save_image(f, "sub")
+                        if not p:
+                            return jsonify({"ok": False, "message": "มีไฟล์รูปรองที่ไม่รองรับ"}), 400
+                        new_subs.append(p)
+                    final_subs = new_subs
+                else:
+                    final_subs = old_subs  # ไม่อัปโหลดใหม่ -> คงเดิม
 
             cursor.execute(
                 """
@@ -501,8 +554,8 @@ def reporter_news_update(news_id):
                     subcat_id,
                     is_featured,
                     status,
-                    new_cover,
-                    json.dumps(new_subs, ensure_ascii=False),
+                    final_cover,
+                    json.dumps(final_subs, ensure_ascii=False),
                     video_url,
                     user_id,
                     status,

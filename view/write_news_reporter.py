@@ -2,9 +2,10 @@ from flask import Blueprint, request, session, render_template, redirect, url_fo
 from dotenv import load_dotenv
 import os
 import json
-import base64
+import uuid
 import pymysql
 import pymysql.cursors
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -21,8 +22,14 @@ def connect_db():
         autocommit=False
     )
 
-ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
-ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
+# ======================================================
+# Upload config (แยก cover / sub)
+# ======================================================
+BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
+COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
+SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
+
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}  # จะเอา gif เพิ่มก็ได้
 
 def allowed_file(filename: str) -> bool:
     if not filename or "." not in filename:
@@ -30,32 +37,38 @@ def allowed_file(filename: str) -> bool:
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXT
 
-def file_to_data_uri(file_storage):
+def save_image(file_storage, kind: str = "cover"):
     """
-    เก็บเป็น Data URI: data:image/...;base64,XXXX
-    เอาไปแสดงผลได้ทันที <img src="...">
+    เซฟรูปลง:
+      - static/uploads/news/cover/   (kind=cover)
+      - static/uploads/news/sub/     (kind=sub)
+
+    คืนค่า path ที่เก็บลง DB:
+      - uploads/news/cover/uuid.ext
+      - uploads/news/sub/uuid.ext
     """
     if not file_storage or not file_storage.filename:
         return None
 
-    if not allowed_file(file_storage.filename):
+    filename = secure_filename(file_storage.filename)
+    if not allowed_file(filename):
         return None
 
-    mime = (file_storage.mimetype or "").lower()
-    if mime not in ALLOWED_MIME:
-        return None
+    # เลือกโฟลเดอร์ตามชนิด
+    kind = (kind or "cover").lower().strip()
+    if kind not in ("cover", "sub"):
+        kind = "cover"
 
-    try:
-        raw = file_storage.read()
-        if not raw:
-            return None
-        b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:{mime};base64,{b64}"
-    finally:
-        try:
-            file_storage.seek(0)
-        except Exception:
-            pass
+    target_dir = COVER_DIR if kind == "cover" else SUB_DIR
+    os.makedirs(target_dir, exist_ok=True)
+
+    ext = filename.rsplit(".", 1)[1].lower()
+    new_name = f"{uuid.uuid4().hex}.{ext}"
+    full_path = os.path.join(target_dir, new_name)
+    file_storage.save(full_path)
+
+    # ✅ เก็บ DB แบบ relative path (ห้ามใส่ /static/)
+    return f"uploads/news/{kind}/{new_name}"
 
 # ======================================================
 # 1) GET เปิดหน้าเขียนข่าว
@@ -70,24 +83,24 @@ def reporter_news_create():
         return "Forbidden", 403
 
     conn = connect_db()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT cat_id, cat_name
-        FROM news_category
-        WHERE is_active = 1 AND del_flg = 0
-        ORDER BY cat_id ASC
-    """)
-    categories = cur.fetchall()
-    cur.close()
-    conn.close()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT cat_id, cat_name
+                FROM news_category
+                WHERE is_active = 1 AND del_flg = 0
+                ORDER BY cat_id ASC
+            """)
+            categories = cur.fetchall()
+    finally:
+        conn.close()
 
     return render_template("reporter/reporter-write-news.html", categories=categories)
 
-
 # ======================================================
-# 2) POST บันทึกข่าว (Base64 ลง DB)
-#    - cover_image: LONGTEXT (data uri)
-#    - sub_images : LONGTEXT (json list of data uri)
+# 2) POST บันทึกข่าว (✅ เซฟไฟล์ + เก็บ path ลง DB)
+#    - cover_image: VARCHAR (uploads/news/cover/xxx.webp)
+#    - sub_images : LONGTEXT (json list of uploads/news/sub/xxx.webp)
 # ======================================================
 @write_news_reporter_bp.route("/reporter/write_news", methods=["POST"])
 def reporter_news_create_post():
@@ -97,7 +110,6 @@ def reporter_news_create_post():
     if user.get("role_id") != 2:
         return jsonify(ok=False, message="forbidden"), 403
 
-    # --- fields from form (ตรงกับ HTML) ---
     news_title = (request.form.get("title") or "").strip()
     news_content = (request.form.get("content") or "").strip()
 
@@ -108,7 +120,7 @@ def reporter_news_create_post():
     is_featured = 1 if news_type == "featured" else 0
 
     submit_action = (request.form.get("submit_action") or "publish").strip().lower()
-    status = "draft" if submit_action == "draft" else "publish"  # enum ใน DB
+    status = "draft" if submit_action == "draft" else "publish"
 
     if not news_title or not news_content or cat_id <= 0 or subcat_id <= 0:
         return jsonify(ok=False, message="กรุณากรอกข้อมูลให้ครบ"), 400
@@ -120,19 +132,19 @@ def reporter_news_create_post():
     if not main_image or not main_image.filename:
         return jsonify(ok=False, message="กรุณาเลือกรูปหลัก"), 400
 
-    # ✅ main -> data uri
-    cover_data_uri = file_to_data_uri(main_image)
-    if not cover_data_uri:
+    # ✅ main -> cover path
+    cover_path = save_image(main_image, "cover")
+    if not cover_path:
         return jsonify(ok=False, message="ไฟล์รูปหลักไม่ถูกต้อง (รองรับ png/jpg/jpeg/webp)"), 400
 
-    # ✅ subs -> list of data uri
+    # ✅ subs -> list of sub path
     sub_list = []
-    for f in sub_images:
+    for f in (sub_images or []):
         if not f or not f.filename:
             continue
-        data_uri = file_to_data_uri(f)
-        if data_uri:
-            sub_list.append(data_uri)
+        p = save_image(f, "sub")
+        if p:
+            sub_list.append(p)
 
     sub_images_json = json.dumps(sub_list, ensure_ascii=False)
 
@@ -141,29 +153,28 @@ def reporter_news_create_post():
 
     conn = connect_db()
     try:
-        cur = conn.cursor()
-        # ✅ สำคัญ: ใช้ชื่อคอลัมน์ให้ตรง DB ของคุณ (จากรูป HeidiSQL)
-        cur.execute("""
-            INSERT INTO news
-              (cat_id, subcat_id, news_title, is_featured,
-               news_content, cover_image, sub_images,
-               video_url, status, published_at,
-               created_by, updated_by, del_flg)
-            VALUES
-              (%s, %s, %s, %s,
-               %s, %s, %s,
-               NULL, %s, IF(%s='publish', CURRENT_TIMESTAMP, NULL),
-               %s, %s, 0)
-        """, (
-            cat_id, subcat_id, news_title, is_featured,
-            news_content, cover_data_uri, sub_images_json,
-            status, status,
-            created_by, updated_by
-        ))
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO news
+                  (cat_id, subcat_id, news_title, is_featured,
+                   news_content, cover_image, sub_images,
+                   video_url, status, published_at,
+                   created_by, updated_by, del_flg)
+                VALUES
+                  (%s, %s, %s, %s,
+                   %s, %s, %s,
+                   NULL, %s, IF(%s='publish', CURRENT_TIMESTAMP, NULL),
+                   %s, %s, 0)
+            """, (
+                cat_id, subcat_id, news_title, is_featured,
+                news_content, cover_path, sub_images_json,
+                status, status,
+                created_by, updated_by
+            ))
 
-        news_id = cur.lastrowid
+            news_id = cur.lastrowid
+
         conn.commit()
-
         return jsonify(ok=True, message="บันทึกข่าวสำเร็จ", data={"news_id": news_id, "status": status})
 
     except Exception as e:
@@ -172,7 +183,6 @@ def reporter_news_create_post():
 
     finally:
         conn.close()
-
 
 # ======================================================
 # 3) API ดึงประเภทย่อย
@@ -190,17 +200,18 @@ def api_news_subcategories():
         return jsonify(ok=False, message="cat_id required"), 400
 
     conn = connect_db()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT subcat_id, subcat_name
-        FROM news_subcategory
-        WHERE cat_id = %s
-          AND is_active = 1
-          AND del_flg = 0
-        ORDER BY subcat_id ASC
-    """, (cat_id,))
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT subcat_id, subcat_name
+                FROM news_subcategory
+                WHERE cat_id = %s
+                  AND is_active = 1
+                  AND del_flg = 0
+                ORDER BY subcat_id ASC
+            """, (cat_id,))
+            rows = cur.fetchall()
+    finally:
+        conn.close()
 
     return jsonify(ok=True, data=rows)

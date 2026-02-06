@@ -79,6 +79,23 @@ $(function () {
     }
   }
 
+  // ✅ แปลง cover_image ที่เป็น path ใน DB -> URL ที่ browser โหลดได้
+  // DB เก็บ: uploads/news/cover/xxx.webp
+  // หน้าเว็บต้องใช้: /static/uploads/news/cover/xxx.webp
+  function coverUrl(path) {
+    const p = String(path || "").trim();
+    if (!p) return "https://picsum.photos/seed/bkktoday/1400/800"; // fallback (กันรูปหาย)
+
+    // รองรับกรณีพิเศษ: ถ้าเป็น data uri หรือ url เต็ม
+    if (p.startsWith("data:image")) return p;
+    if (p.startsWith("http://") || p.startsWith("https://")) return p;
+
+    // กันกรณีมีคนเผลอเก็บ /static/... หรือ static/...
+    let clean = p.replace(/^\/+/, "");
+    clean = clean.replace(/^static\//, "");
+    return "/static/" + clean;
+  }
+
   // ======================================================
   // State (ใช้กับการกรองข่าว)
   // ======================================================
@@ -172,7 +189,7 @@ $(function () {
         const tag = safeText(s.cat_name || "HOT");
         const title = safeText(s.news_title);
         const desc = safeText(s.excerpt || "");
-        const img = safeText(s.cover_image || "");
+        const img = coverUrl(s.cover_image || "");
         const url = buildNewsUrl(s.news_id);
 
         return `
@@ -231,11 +248,12 @@ $(function () {
       .slice(0, MUST_READ_COUNT)
       .map((x, idx) => {
         const url = buildNewsUrl(x.news_id);
+        const img = coverUrl(x.cover_image || "");
         return `
           <a href="${url}" class="must-read-card bg-white p-3 shadow-sm d-flex gap-3 border rounded-4 text-decoration-none text-dark ${
             idx === 1 ? "must-read-accent" : ""
           }">
-            <img src="${escapeHtml(x.cover_image || "")}" class="rounded-3 must-read-img" alt="">
+            <img src="${escapeHtml(img)}" class="rounded-3 must-read-img" alt="">
             <div class="flex-grow-1 must-read-body">
               <div class="fw-bold small line-clamp-2">${escapeHtml(safeText(x.news_title))}</div>
               <div class="small text-muted mt-1">${escapeHtml(safeText(x.cat_name))} • ${escapeHtml(timeAgo(x.published_at))}</div>
@@ -271,11 +289,12 @@ $(function () {
     const html = topItems
       .map((n) => {
         const url = buildNewsUrl(n.news_id);
+        const img = coverUrl(n.cover_image || "");
         return `
           <div class="col-md-6">
             <a href="${url}" class="bg-white rounded-4 overflow-hidden shadow-sm border h-100 d-block text-decoration-none text-dark">
               <div class="position-relative">
-                <img src="${escapeHtml(n.cover_image || "")}" class="w-100 latest-img" alt="">
+                <img src="${escapeHtml(img)}" class="w-100 latest-img" alt="">
                 <div class="position-absolute top-0 start-0 p-3">
                   <span class="ad-badge ad-badge-news">news</span>
                 </div>
@@ -358,11 +377,12 @@ $(function () {
     const html = moreItems
       .map((n) => {
         const url = buildNewsUrl(n.news_id);
+        const img = coverUrl(n.cover_image || "");
         return `
           <div class="col-md-6 col-lg-4">
             <a href="${url}" class="bg-white rounded-4 overflow-hidden shadow-sm border h-100 d-block text-decoration-none text-dark">
               <div class="position-relative">
-                <img src="${escapeHtml(n.cover_image || "")}" class="w-100 more-img" alt="">
+                <img src="${escapeHtml(img)}" class="w-100 more-img" alt="">
                 <div class="position-absolute top-0 start-0 p-3">
                   <span class="ad-badge ad-badge-news">news</span>
                 </div>
@@ -431,12 +451,13 @@ $(function () {
   // Popular
   // ======================================================
   function renderPopular(items) {
+    // ✅ ตอนนี้ API จะส่ง view_count มาแล้ว (แก้ฝั่ง Python ให้)
     const filtered = (items || []).filter((n) => (n.view_count || 0) > 0);
 
     const html = filtered
       .slice(0, POPULAR_COUNT)
       .map((n, idx) => {
-        const url = `/news/${n.news_id}`;
+        const url = buildNewsUrl(n.news_id);
         return `
           <a href="${url}" class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white text-decoration-none text-dark">
             <div class="popular-rank">${idx + 1}</div>

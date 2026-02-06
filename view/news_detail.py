@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, abort, session, request
+from flask import Blueprint, render_template, abort, session, request, url_for
 import pymysql
 import os
+import json
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -87,6 +88,88 @@ def safe_int(x, default=0):
     except Exception:
         return default
 
+def normalize_img_url(path: str) -> str:
+    """รองรับทั้ง http(s) และ path ใน static เช่น uploads/news/xxx.webp"""
+    p = (path or "").strip()
+    if not p:
+        return ""
+    if p.startswith("http://") or p.startswith("https://"):
+        return p
+    # เก็บใน DB แบบ "uploads/news/xxx.webp" -> url_for static
+    return url_for("static", filename=p)
+
+def parse_sub_images(raw) -> list[str]:
+    """sub_images เป็น JSON list ของ path (string)"""
+    if not raw:
+        return []
+    try:
+        arr = json.loads(raw)
+        if not isinstance(arr, list):
+            return []
+        # เอาเฉพาะ string ที่ไม่ว่าง
+        out = []
+        for x in arr:
+            if isinstance(x, str) and x.strip():
+                out.append(x.strip())
+        return out
+    except Exception:
+        return []
+
+def build_inline_figure(img_url: str, idx: int) -> str:
+    # ใส่ class เผื่อคุณไปแต่ง css ต่อใน news_detail.css
+    return f"""
+      <figure class="article-inline-img my-3">
+        <img src="{img_url}" alt="sub-image-{idx}" class="w-100 rounded-4 shadow-sm border" loading="lazy">
+      </figure>
+    """.strip()
+
+def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
+    """
+    แทรกรูปรองสูงสุด 2 รูป:
+    - ถ้ามี </p> จะใส่หลังย่อหน้าแรกและย่อหน้าที่สอง
+    - ถ้าไม่มี </p> จะต่อท้ายเนื้อหา
+    """
+    content = (html or "").strip()
+    if not img_urls:
+        return content
+
+    # จำกัด 2 รูปตามที่คุยกัน
+    img_urls = img_urls[:2]
+    figures = [build_inline_figure(u, i + 1) for i, u in enumerate(img_urls)]
+
+    lower = content.lower()
+    if "</p>" not in lower:
+        # ไม่มีพารากราฟ -> ต่อท้าย
+        return content + "\n" + "\n".join(figures)
+
+    # แทรกหลัง </p> ครั้งที่ 1 และ 2 (ถ้ามี)
+    out = content
+    insert_positions = [1, 2]  # หลังย่อหน้าแรก, หลังย่อหน้าที่สอง
+    for idx, fig in enumerate(figures):
+        nth = insert_positions[idx] if idx < len(insert_positions) else insert_positions[-1]
+        out = insert_after_nth_p(out, fig, nth)
+
+    return out
+
+def insert_after_nth_p(html: str, insert_html: str, n: int) -> str:
+    """insert หลังแท็ก </p> ครั้งที่ n (นับจาก 1). ถ้าไม่พอ -> ต่อท้าย"""
+    if n <= 0:
+        return html + "\n" + insert_html
+
+    needle = "</p>"
+    start = 0
+    count = 0
+    while True:
+        pos = html.lower().find(needle, start)
+        if pos == -1:
+            # ไม่เจอครบ -> ต่อท้าย
+            return html + "\n" + insert_html
+        count += 1
+        end_pos = pos + len(needle)
+        if count == n:
+            return html[:end_pos] + "\n" + insert_html + "\n" + html[end_pos:]
+        start = end_pos
+
 @news_detail_bp.get("/news/<int:news_id>")
 def news_detail(news_id: int):
     user_id = session.get("user_id")  # มี login ค่อยได้ค่า ไม่มีก็ None
@@ -97,7 +180,7 @@ def news_detail(news_id: int):
         categories = load_nav_categories(conn)
 
         with conn.cursor() as cur:
-            # 1) Article (ตัด employee ออก)
+            # 1) Article (เพิ่ม sub_images)
             cur.execute(
                 """
                 SELECT
@@ -105,6 +188,7 @@ def news_detail(news_id: int):
                     n.news_title,
                     n.news_content,
                     n.cover_image,
+                    n.sub_images,
                     n.view_count,
                     n.published_at,
                     n.created_at,
@@ -150,7 +234,22 @@ def news_detail(news_id: int):
             article["date_text"] = format_th_date(base_dt)
             article["time_ago"] = time_ago(base_dt)
             article["category_name"] = safe_str(article.get("category_name"), "news")
+
+            # ✅ normalize cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
             article["cover_image"] = safe_str(article.get("cover_image"), "")
+
+            # ✅ แทรกรูปรอง 2 รูปเข้าไปในเนื้อหา
+            raw_sub = article.get("sub_images")
+            sub_list = parse_sub_images(raw_sub)  # list[path]
+            sub_urls = [normalize_img_url(p) for p in sub_list if p][:2]
+
+            # ถ้าเนื้อหาที่เก็บเป็น plain text ไม่ใช่ HTML -> แปลงให้เป็น <p> ง่าย ๆ
+            content = safe_str(article.get("news_content"), "")
+            if content and ("</p>" not in content.lower() and "<p" not in content.lower() and "<br" not in content.lower()):
+                # ทำเป็นพารากราฟเดียวแบบง่าย ๆ
+                content = "<p>" + content.replace("\n", "<br>") + "</p>"
+
+            article["news_content"] = inject_sub_images_into_content(content, sub_urls)
 
             # 5) Hot 24 hours
             cur.execute(
@@ -192,7 +291,7 @@ def news_detail(news_id: int):
                   AND (n.del_flg IS NULL OR n.del_flg = 0)
                   AND n.news_id <> %s
                   AND n.cat_id = (SELECT cat_id FROM news WHERE news_id = %s LIMIT 1)
-                ORDER BY n.published_at DESC
+                ORDER BY n.published_at DESC, n.news_id DESC
                 LIMIT 4
                 """,
                 (news_id, news_id),

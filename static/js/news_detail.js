@@ -2,7 +2,6 @@
 $(function () {
   // ======================================================
   // Header date (เหมือน index)
-  // index ใช้ #dayName + #dayDate
   // ======================================================
   const now = new Date();
   setHeaderDate(now);
@@ -150,7 +149,6 @@ $(function () {
   function setHeaderDate(d) {
     const $dayName = $("#dayName");
     const $dayDate = $("#dayDate");
-
     if (!$dayName.length || !$dayDate.length) return;
 
     const daysTH = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
@@ -159,13 +157,17 @@ $(function () {
       "July","August","September","October","November","December"
     ];
 
-    // ให้เข้ากับสไตล์ index เดิม แต่เป็นไทยวัน + อังกฤษเดือนตามของคุณได้
     $dayName.text(daysTH[d.getDay()]);
     $dayDate.text(`${d.getDate()} ${monthsEN[d.getMonth()]} ${d.getFullYear()}`);
   }
 
   function toast(msg) {
-    // ถ้าคุณมี Swal ก็เปลี่ยนเป็น Swal.fire ได้
+    // ถ้ามี Swal ก็เปลี่ยนเป็น Swal.fire ได้
+    try {
+      if (window.Swal && typeof window.Swal.fire === "function") {
+        return window.Swal.fire({ icon: "success", title: msg, timer: 1400, showConfirmButton: false });
+      }
+    } catch (_) {}
     alert("✅ " + msg);
   }
 });
