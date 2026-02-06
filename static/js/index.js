@@ -4,7 +4,7 @@ $(function () {
   // Config
   // ======================================================
   const PAGE_SIZE = 12; // 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
-  const MAX_PAGES = 3; // จำกัด 3 หน้า/หมวด (ยังคงไว้ เผื่อคุณใช้ใน API)
+  const MAX_PAGES = 3; // เผื่อคุณใช้ใน API
   const LATEST_TOP_COUNT = 6; // ข่าวล่าสุดโชว์ 6
   const POPULAR_COUNT = 7; // ยอดนิยมโชว์ 7
   const SLIDE_COUNT = 3; // สไลด์โชว์ 3
@@ -80,7 +80,7 @@ $(function () {
   }
 
   // ======================================================
-  // State
+  // State (ใช้กับการกรองข่าว)
   // ======================================================
   let page = 1;
   let state = {
@@ -91,130 +91,23 @@ $(function () {
   };
 
   // ======================================================
-  // Navbar Active
+  // รับ event จาก navbar.js
   // ======================================================
-  function setActiveNavFromState() {
-    const $navLinks = $("nav a.nav-cat, nav a.sub-cat");
-    $navLinks.removeClass("active");
+  window.addEventListener("bkk:nav-change", (e) => {
+    const s = e.detail || {};
+    state.type = s.type || "home";
+    state.cat_id = s.cat_id || null;
+    state.subcat_id = s.subcat_id || null;
 
-    if (state.type === "home") {
-      $(`nav a.nav-cat[data-type="home"]`).addClass("active");
-      return;
-    }
+    page = 1;
+    renderAll();
+  });
 
-    if (state.type === "cat" && state.cat_id) {
-      $(`nav a.nav-cat[data-type="cat"][data-cat="${state.cat_id}"]`).addClass("active");
-      return;
-    }
-
-    if (state.type === "subcat" && state.cat_id && state.subcat_id) {
-      $(`nav a.nav-cat[data-type="cat"][data-cat="${state.cat_id}"]`).addClass("active");
-      $(`nav a.sub-cat[data-type="subcat"][data-cat="${state.cat_id}"][data-subcat="${state.subcat_id}"]`).addClass(
-        "active"
-      );
-    }
-  }
-
-  function bindNavbarCategories() {
-    setActiveNavFromState();
-
-    $("nav")
-      .off("click.nav")
-      .on("click.nav", "a.nav-cat, a.sub-cat", function (e) {
-        e.preventDefault();
-
-        const $a = $(this);
-        const type = ($a.attr("data-type") || "home").toString();
-
-        if (type === "home") {
-          state.type = "home";
-          state.cat_id = null;
-          state.subcat_id = null;
-        } else if (type === "cat") {
-          state.type = "cat";
-          state.cat_id = $a.attr("data-cat") || null;
-          state.subcat_id = null;
-        } else if (type === "subcat") {
-          state.type = "subcat";
-          state.cat_id = $a.attr("data-cat") || null;
-          state.subcat_id = $a.attr("data-subcat") || null;
-        }
-
-        page = 1;
-        setActiveNavFromState();
-        renderAll();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-  }
-
-  // ======================================================
-  // FIX: Navbar dropdown hover + ไม่โดน clip
-  // ======================================================
-  (function initNavDropdownFix() {
-    const nav = document.querySelector(".top-nav-sticky");
-    if (!nav || !window.bootstrap) return;
-
-    const isDesktop = () => window.matchMedia("(min-width: 992px)").matches;
-
-    nav.querySelectorAll(".dropdown").forEach((dd) => {
-      const toggle = dd.querySelector('[data-bs-toggle="dropdown"]');
-      const menu = dd.querySelector(".dropdown-menu");
-      if (!toggle || !menu) return;
-
-      const inst = bootstrap.Dropdown.getOrCreateInstance(toggle, { autoClose: "outside" });
-      let hoverTimer = null;
-
-      function placeMenuFixed() {
-        const r = toggle.getBoundingClientRect();
-        menu.style.position = "fixed";
-        menu.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - menu.offsetWidth - 8))}px`;
-        menu.style.top = `${r.bottom + 6}px`;
-        menu.style.zIndex = "10000";
-      }
-
-      toggle.addEventListener("shown.bs.dropdown", () => {
-        if (!isDesktop()) return;
-        placeMenuFixed();
-      });
-
-      window.addEventListener(
-        "scroll",
-        () => {
-          if (!menu.classList.contains("show")) return;
-          if (!isDesktop()) return;
-          placeMenuFixed();
-        },
-        { passive: true }
-      );
-
-      window.addEventListener("resize", () => {
-        if (!menu.classList.contains("show")) return;
-        if (!isDesktop()) return;
-        placeMenuFixed();
-      });
-
-      dd.addEventListener("mouseenter", () => {
-        if (!isDesktop()) return;
-        clearTimeout(hoverTimer);
-        inst.show();
-      });
-
-      dd.addEventListener("mouseleave", () => {
-        if (!isDesktop()) return;
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(() => inst.hide(), 120);
-      });
-
-      menu.addEventListener("mouseenter", () => {
-        if (!isDesktop()) return;
-        clearTimeout(hoverTimer);
-      });
-      menu.addEventListener("mouseleave", () => {
-        if (!isDesktop()) return;
-        hoverTimer = setTimeout(() => inst.hide(), 120);
-      });
-    });
-  })();
+  window.addEventListener("bkk:search", (e) => {
+    state.q = (e.detail?.q || "").toString();
+    page = 1;
+    renderAll();
+  });
 
   // ======================================================
   // API params helper
@@ -236,7 +129,7 @@ $(function () {
   }
 
   // ======================================================
-  // Sponsor marquee (MOCK) ✅
+  // Sponsor marquee (MOCK)
   // ======================================================
   const SPONSORS = [
     { name: "KBank", key: "kbank", mark: "K", url: "https://www.kasikornbank.com", tag: "Banking" },
@@ -263,8 +156,8 @@ $(function () {
 
   function renderLogoMarquee() {
     const $track = $("#logoTrack");
-    if (!$track.length) return; // ✅ ถ้าไม่มีใน HTML ก็ไม่ทำอะไร
-    const list = [...SPONSORS, ...SPONSORS]; // ✅ ทำซ้ำให้ marquee ลื่น
+    if (!$track.length) return;
+    const list = [...SPONSORS, ...SPONSORS];
     $track.html(list.map(buildSponsorPill).join(""));
   }
 
@@ -282,7 +175,6 @@ $(function () {
         const img = safeText(s.cover_image || "");
         const url = buildNewsUrl(s.news_id);
 
-        // ✅ รูปใหญ่แค่ไหนก็ไม่ล้นกรอบ เพราะ CSS hero-img ให้ height:100% + object-fit
         return `
           <div class="swiper-slide position-relative">
             <a href="${url}" class="d-block text-decoration-none">
@@ -325,7 +217,9 @@ $(function () {
         renderSwiperFromItems(res.items || []);
       })
       .catch((err) => {
-        $("#swiper-wrapper").html(`<div class="p-4 text-danger small">โหลดสไลด์ไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`);
+        $("#swiper-wrapper").html(
+          `<div class="p-4 text-danger small">โหลดสไลด์ไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`
+        );
       });
   }
 
@@ -362,7 +256,9 @@ $(function () {
         renderMustRead(res.items || []);
       })
       .catch((err) => {
-        $("#must-read").html(`<div class="text-danger small">โหลดไม่ควรพลาดไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`);
+        $("#must-read").html(
+          `<div class="text-danger small">โหลดไม่ควรพลาดไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`
+        );
       });
   }
 
@@ -427,23 +323,19 @@ $(function () {
 
     $("#more-pagination").html(html);
 
-    $("#btnPagePrev")
-      .off("click")
-      .on("click", function () {
-        if (page > 1) {
-          page--;
-          loadLatestAndMore(true);
-        }
-      });
+    $("#btnPagePrev").off("click").on("click", function () {
+      if (page > 1) {
+        page--;
+        loadLatestAndMore(true);
+      }
+    });
 
-    $("#btnPageNext")
-      .off("click")
-      .on("click", function () {
-        if (page < totalPages) {
-          page++;
-          loadLatestAndMore(true);
-        }
-      });
+    $("#btnPageNext").off("click").on("click", function () {
+      if (page < totalPages) {
+        page++;
+        loadLatestAndMore(true);
+      }
+    });
 
     $("#more-pagination")
       .find("button[data-page]")
@@ -539,34 +431,30 @@ $(function () {
   // Popular
   // ======================================================
   function renderPopular(items) {
-  // ❌ ตัดข่าวที่ view = 0 ออก
-  const filtered = (items || []).filter(n => (n.view_count || 0) > 0);
+    const filtered = (items || []).filter((n) => (n.view_count || 0) > 0);
 
-  const html = filtered
-    .slice(0, POPULAR_COUNT)
-    .map((n, idx) => {
-      const url = `/news/${n.news_id}`;
-      return `
-        <a href="${url}" class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white text-decoration-none text-dark">
-          <div class="popular-rank">${idx + 1}</div>
-          <div class="flex-grow-1 popular-body">
-            <div class="small text-muted mb-1">
-              ${n.cat_name} • ${timeAgo(n.published_at)} • ${n.view_count} วิว
+    const html = filtered
+      .slice(0, POPULAR_COUNT)
+      .map((n, idx) => {
+        const url = `/news/${n.news_id}`;
+        return `
+          <a href="${url}" class="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white text-decoration-none text-dark">
+            <div class="popular-rank">${idx + 1}</div>
+            <div class="flex-grow-1 popular-body">
+              <div class="small text-muted mb-1">
+                ${escapeHtml(n.cat_name)} • ${escapeHtml(timeAgo(n.published_at))} • ${escapeHtml(n.view_count)} วิว
+              </div>
+              <div class="fw-bold small line-clamp-2">
+                ${escapeHtml(n.news_title)}
+              </div>
             </div>
-            <div class="fw-bold small line-clamp-2">
-              ${n.news_title}
-            </div>
-          </div>
-        </a>
-      `;
-    })
-    .join("");
+          </a>
+        `;
+      })
+      .join("");
 
-  $("#popular-list").html(
-    html || `<div class="text-muted small">ยังไม่มีข่าวยอดนิยมในช่วง 24 ชม.</div>`
-  );
-}
-
+    $("#popular-list").html(html || `<div class="text-muted small">ยังไม่มีข่าวยอดนิยมในช่วง 24 ชม.</div>`);
+  }
 
   function loadPopular() {
     setLoading($("#popular-list"));
@@ -581,7 +469,7 @@ $(function () {
   }
 
   // ======================================================
-  // MOCK sections (เดิม)
+  // MOCK sections
   // ======================================================
   const EDITOR_PICKS = [
     { cat: "ไลฟ์สไตล์", title: "7 วิธีรับมือฝุ่นและภูมิแพ้ในเมือง แบบไม่พังสุขภาพ", img: 166 },
@@ -747,143 +635,6 @@ $(function () {
   }
 
   // ======================================================
-  // Top Search
-  // ======================================================
-  function bindTopSearch() {
-    $("#topSearch").on("input", function () {
-      state.q = ($(this).val() || "").toString();
-      page = 1;
-      renderAll();
-    });
-  }
-
-  // ======================================================
-  // Auth (Mock)
-  // ======================================================
-  const AUTH_KEY = "bkk_today_user";
-
-  function getUser() {
-    try {
-      return JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-    } catch {
-      return null;
-    }
-  }
-  function setUser(user) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-    renderAuthUI();
-  }
-  function clearUser() {
-    localStorage.removeItem(AUTH_KEY);
-    renderAuthUI();
-  }
-
-  function showAuthMsg(msg) {
-    if (!msg) {
-      $("#authMsg").addClass("d-none").text("");
-      return;
-    }
-    $("#authMsg").removeClass("d-none").text(msg);
-  }
-
-  function setAuthTab(tab) {
-    if (tab === "register") {
-      $("#tabLogin").removeClass("active");
-      $("#tabRegister").addClass("active");
-      $("#loginForm").addClass("d-none");
-      $("#registerForm").removeClass("d-none");
-    } else {
-      $("#tabRegister").removeClass("active");
-      $("#tabLogin").addClass("active");
-      $("#registerForm").addClass("d-none");
-      $("#loginForm").removeClass("d-none");
-    }
-    showAuthMsg("");
-  }
-
-  function openAuthModal(mode) {
-    $("#authModal").addClass("show");
-    $("body").addClass("no-scroll");
-    setAuthTab(mode || "login");
-  }
-  function closeAuthModal() {
-    $("#authModal").removeClass("show");
-    $("body").removeClass("no-scroll");
-    showAuthMsg("");
-  }
-
-  function renderAuthUI() {
-    const user = getUser();
-    if (user) {
-      $("#authButtons").addClass("d-none");
-      $("#userMenu").removeClass("d-none").addClass("d-flex");
-      $("#userName").text(user.name || "Member");
-
-      const ch = (user.name || "U").trim().slice(0, 1).toUpperCase();
-      $("#userAvatar").text(ch || "U");
-    } else {
-      $("#userMenu").addClass("d-none").removeClass("d-flex");
-      $("#authButtons").removeClass("d-none");
-      $("#userAvatar").text("U");
-    }
-  }
-
-  function bindAuth() {
-    $("#btnOpenLogin").on("click", () => openAuthModal("login"));
-    $("#btnOpenRegister").on("click", () => openAuthModal("register"));
-    $("#btnCloseAuth").on("click", closeAuthModal);
-
-    $("#authModal").on("click", function (e) {
-      if (e.target.id === "authModal") closeAuthModal();
-    });
-    $(document).on("keydown", function (e) {
-      if (e.key === "Escape") closeAuthModal();
-    });
-
-    $("#tabLogin").on("click", () => setAuthTab("login"));
-    $("#tabRegister").on("click", () => setAuthTab("register"));
-
-    $("#btnLogout").on("click", () => clearUser());
-
-    $("#loginForm").on("submit", function (e) {
-      e.preventDefault();
-      const email = $("#loginEmail").val().trim();
-      const pwd = $("#loginPassword").val().trim();
-      if (!email || !pwd) return showAuthMsg("กรุณากรอกอีเมลและรหัสผ่าน");
-
-      const name = email.split("@")[0].slice(0, 12);
-      setUser({ name, email });
-      closeAuthModal();
-    });
-
-    $("#registerForm").on("submit", function (e) {
-      e.preventDefault();
-      const first = $("#regFirst").val().trim();
-      const last = $("#regLast").val().trim();
-      const email = $("#regEmail").val().trim();
-      const p1 = $("#regPassword").val().trim();
-      const p2 = $("#regPassword2").val().trim();
-
-      if (!first || !last || !email || !p1 || !p2) return showAuthMsg("กรุณากรอกข้อมูลให้ครบ");
-      if (p1.length < 6) return showAuthMsg("รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร");
-      if (p1 !== p2) return showAuthMsg("รหัสผ่านไม่ตรงกัน");
-
-      setUser({ name: `${first} ${last}`, email });
-      closeAuthModal();
-    });
-  }
-
-  // ======================================================
-  // Date header
-  // ======================================================
-  function renderHeaderDate() {
-    const d = new Date();
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    $("#dayName").text(days[d.getDay()]);
-    $("#dayDate").text(d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
-  }
-
-  // ======================================================
   // Render all
   // ======================================================
   function renderAll() {
@@ -900,18 +651,12 @@ $(function () {
     safeCall(() => renderFooterAds());
     safeCall(() => renderTopicSections());
 
-    // ✅ Sponsor mock ด้านบน
+    // Sponsor
     safeCall(() => renderLogoMarquee());
   }
 
   // ======================================================
-  // Init
+  // Init (index only)
   // ======================================================
-  renderHeaderDate();
-  bindTopSearch();
-  bindNavbarCategories();
-  bindAuth();
-  renderAuthUI();
-
   renderAll();
 });

@@ -19,6 +19,7 @@ from view.user_role import user_role_bp
 from view.category_management import category_management_bp
 from view.news_management import news_management_bp
 from view.index import index_bp
+from view.news_detail import news_detail_bp
 
 
 
@@ -36,6 +37,7 @@ app.register_blueprint(user_role_bp)
 app.register_blueprint(category_management_bp)
 app.register_blueprint(news_management_bp)
 app.register_blueprint(index_bp)
+app.register_blueprint(news_detail_bp)
 
 @app.route('/')
 def home():

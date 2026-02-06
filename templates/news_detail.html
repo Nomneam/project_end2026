@@ -1,171 +1,62 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" class="font-md">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>บางกอกทูเดย์ | อ่านข่าว</title>
 
-    <!-- Bootstrap 5 -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+    <meta name="news-id" content="{{ article.news_id }}">
+    <meta name="news-title" content="{{ article.news_title }}">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="news_detail.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/news_detail.css') }}" />
   </head>
 
-  <body>
-    <!-- Header (ธีมเดียวกับ index) -->
-    <header class="bg-white border-bottom">
-      <div class="container-xl py-3">
-        <div
-          class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3"
-        >
-          <div class="d-flex align-items-center gap-3">
-            <a href="#" class="text-decoration-none">
-              <div class="display-6 fw-bold fst-italic m-0">
-                <span class="text-navy-bkk">BANGKOK</span
-                ><span class="text-red-bkk">TODAY</span>
-              </div>
-            </a>
-            <div class="d-none d-sm-block border-start ps-3">
-              <div class="text-uppercase small fw-bold text-secondary">NEWS</div>
-              <div class="small text-muted" id="todayText">—</div>
-            </div>
-          </div>
-
-          <div
-            class="w-100 w-md-auto d-flex align-items-center justify-content-end gap-2"
-          >
-            <div class="position-relative" style="max-width: 360px; width: 100%">
-              <input
-                id="topSearch"
-                type="text"
-                placeholder="ค้นหาข่าวบนเว็บไซต์..."
-                class="form-control"
-                style="border-radius: 12px; padding: 10px 42px 10px 14px"
-              />
-              <span
-                class="position-absolute top-50 translate-middle-y"
-                style="right: 14px; color: #9ca3af"
-                >⌕</span
-              >
-            </div>
-
-            <a
-              href="#"
-              class="btn fw-bold text-white d-none d-md-inline-flex"
-              style="background: var(--bkk-red); border-radius: 12px"
-              >กลับหน้าแรก</a
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- Nav -->
-      <nav class="bg-navy-bkk text-white top-nav-sticky">
-        <div class="container-xl">
-          <div
-            class="d-flex gap-4 py-3 overflow-auto no-scrollbar small fw-semibold"
-          >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >หน้าแรก</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >การเมือง</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >เศรษฐกิจ</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >สังคม</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >อาชญากรรม</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >บันเทิง</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >เทคโนโลยี</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >กีฬา</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >ไลฟ์สไตล์</a
-            >
-            <a href="#" class="text-white text-decoration-none opacity-75"
-              >ดูดวง</a
-            >
-          </div>
-        </div>
-      </nav>
-    </header>
+  <body data-index-url="{{ url_for('index.index_news') }}">
+    {% include "partials/navbar.html" %}
 
     <main class="container-xl py-4">
       <div class="row g-4">
-        <!-- Article -->
         <div class="col-12 col-lg-8">
-          <article class="bg-white border rounded-4 shadow-sm overflow-hidden">
-            <!-- Cover (รูปหลัก 16:9) -->
+          <article class="article-card">
             <div class="article-cover">
-              <img id="coverImg" alt="cover" />
+              <img
+                src="{% if article.cover_image and article.cover_image.startswith('http') %}{{ article.cover_image }}{% elif article.cover_image %}{{ url_for('static', filename=article.cover_image) }}{% else %}https://picsum.photos/seed/bkktoday/1400/800{% endif %}"
+                alt="cover"
+              />
             </div>
 
             <div class="p-3 p-md-4">
-              <!-- Meta -->
               <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <span class="ad-badge" style="background: rgba(0,45,98,.75)"
-                  >news</span
-                >
-                <span
-                  id="catName"
-                  class="text-red-bkk fw-bold text-uppercase"
-                  style="font-size: 12px"
-                  >—</span
-                >
-                <span class="small text-muted ms-auto" id="timeAgo">—</span>
+                <span class="ad-badge badge-navy">news</span>
+                <span class="text-red-bkk fw-bold text-uppercase cat-name">
+                  {{ article.category_name }}
+                </span>
+                <span class="small text-muted ms-auto">{{ article.time_ago }}</span>
               </div>
 
-              <h1
-                id="title"
-                class="font-kanit fw-bold text-navy-bkk mb-3"
-                style="font-size: clamp(22px, 2.5vw, 34px); line-height: 1.18"
-              >
-                —
+              <h1 class="font-kanit fw-bold text-navy-bkk mb-2 article-title">
+                {{ article.news_title }}
               </h1>
 
-              <div
-                class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"
-              >
+              <div class="meta-row mb-3">
                 <div class="small text-muted">
-                  <span id="dateText">—</span>
+                  <span>{{ article.date_text }}</span>
                   <span class="mx-1">•</span>
-                  โดย <span id="author">—</span>
+                  เข้าชม <span class="fw-bold">{{ article.view_count }}</span>
                 </div>
 
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <button class="btn-page" type="button" id="btnShare">
-                    แชร์
-                  </button>
-                  <button class="btn-page" type="button" id="btnSave">
-                    บันทึก
-                  </button>
+                  <button class="btn-page" type="button" id="btnShare">แชร์</button>
+                  <button class="btn-page" type="button" id="btnSave">บันทึก</button>
 
                   <div class="d-flex align-items-center gap-2 ms-md-2">
                     <span class="small text-muted">ขนาดตัวอักษร</span>
                     <div class="d-flex align-items-center gap-2">
-                      <button class="btn-page js-font" data-font="sm" type="button">
-                        -ก
-                      </button>
-                      <button class="btn-page js-font active" data-font="md" type="button">
-                        ก
-                      </button>
-                      <button class="btn-page js-font" data-font="lg" type="button">
-                        ก+
-                      </button>
+                      <button class="btn-page js-font" data-font="sm" type="button">-ก</button>
+                      <button class="btn-page js-font active" data-font="md" type="button">ก</button>
+                      <button class="btn-page js-font" data-font="lg" type="button">ก+</button>
                     </div>
                   </div>
                 </div>
@@ -173,44 +64,77 @@
 
               <div class="bbc-divider my-3"></div>
 
-              <!-- Content area -->
-              <div id="content" class="article-content"></div>
+              <div id="content" class="article-content">
+                {{ article.news_content | safe }}
+              </div>
 
-              <!-- Tags -->
               <div class="mt-4 d-flex flex-wrap gap-2" id="tags"></div>
             </div>
           </article>
 
-          <!-- Related -->
           <section class="mt-4">
-            <div
-              class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2"
-            >
+            <div class="section-head">
               <h3 class="font-kanit fw-bold text-navy-bkk m-0">ข่าวที่เกี่ยวข้อง</h3>
-              <a href="#" class="fw-bold small text-red-bkk text-decoration-none"
-                >ดูทั้งหมด ></a
-              >
+              <a href="{{ url_for('index.index_news') }}" class="fw-bold small text-red-bkk text-decoration-none">กลับหน้าแรก ></a>
             </div>
-            <div class="row g-3" id="relatedGrid"></div>
+
+            <div class="row g-3" id="relatedGrid">
+              {% for n in related %}
+              <div class="col-md-6">
+                <a class="text-decoration-none text-reset" href="{{ url_for('news_detail.news_detail', news_id=n.news_id) }}">
+                  <div class="rel-card h-100">
+                    <div class="rel-img">
+                      <img
+                        src="{% if n.cover_image and n.cover_image.startswith('http') %}{{ n.cover_image }}{% elif n.cover_image %}{{ url_for('static', filename=n.cover_image) }}{% else %}https://picsum.photos/seed/rel{{ n.news_id }}/900/520{% endif %}"
+                        alt=""
+                      />
+                      <div class="rel-badge">
+                        <span class="ad-badge badge-navy">news</span>
+                      </div>
+                    </div>
+
+                    <div class="p-3 rel-body">
+                      <div class="d-flex align-items-center justify-content-between gap-2">
+                        <span class="text-red-bkk fw-bold text-uppercase cat-name">{{ n.category_name }}</span>
+                        <span class="small text-muted">{{ n.time_ago }}</span>
+                      </div>
+                      <div class="fw-bold mt-1 line-clamp-2">{{ n.news_title }}</div>
+                      <div class="small text-muted mt-3">คลิกเพื่ออ่านต่อ</div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              {% endfor %}
+            </div>
           </section>
         </div>
 
-        <!-- Sidebar -->
         <aside class="col-12 col-lg-4">
-          <div class="position-sticky" style="top: 84px">
+          <div class="position-sticky sidebar-sticky">
             <div class="bg-white p-4 shadow-sm rounded-4 border">
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <h3 class="font-kanit fw-bold text-navy-bkk m-0">ข่าวเด่น</h3>
                 <span class="small text-muted">24 ชม.</span>
               </div>
-              <div class="d-grid gap-2" id="hotList"></div>
+
+              <div class="d-grid gap-2" id="hotList">
+                {% for h in hot %}
+                <a class="text-decoration-none text-reset" href="{{ url_for('news_detail.news_detail', news_id=h.news_id) }}">
+                  <div class="hot-item">
+                    <div class="hot-rank">{{ loop.index }}</div>
+                    <div class="hot-text">
+                      <div class="small text-muted mb-1">{{ h.category_name }} • {{ h.time_ago }}</div>
+                      <div class="fw-bold small line-clamp-2">{{ h.news_title }}</div>
+                    </div>
+                  </div>
+                </a>
+                {% endfor %}
+              </div>
             </div>
 
             <div class="mt-3 bg-white p-4 shadow-sm rounded-4 border">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="ad-badge" style="background: rgba(0,45,98,.75)"
-                  >ad</span
-                >
+                <span class="ad-badge badge-navy">ad</span>
                 <span class="small text-muted">พื้นที่โฆษณา</span>
               </div>
               <div class="ratio ratio-16x9 bg-light rounded-4"></div>
@@ -220,20 +144,15 @@
       </div>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-navy-bkk text-white mt-5">
       <div class="container-xl py-4">
-        <div class="small text-white-50">
-          © 2026 Bangkok Today. Theme matched with Index (Bootstrap 5 + jQuery).
-        </div>
+        <div class="small text-white-50">© 2026 Bangkok Today.</div>
       </div>
     </footer>
 
-    <!-- jQuery + Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Custom JS -->
-    <script src="news_detail.js"></script>
+    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/news_detail.js') }}"></script>
   </body>
 </html>
