@@ -2,12 +2,17 @@ from flask import Blueprint, render_template, abort, session, request, url_for
 import pymysql
 import os
 import json
+import re
 from dotenv import load_dotenv
 from datetime import datetime
+from markupsafe import escape
 
 load_dotenv()
 
 news_detail_bp = Blueprint("news_detail", __name__)
+
+# ✅ จำกัดรูปรองสูงสุด
+MAX_INLINE_IMAGES = 5
 
 def connect_db():
     return pymysql.connect(
@@ -95,7 +100,6 @@ def normalize_img_url(path: str) -> str:
         return ""
     if p.startswith("http://") or p.startswith("https://"):
         return p
-    # เก็บใน DB แบบ "uploads/news/xxx.webp" -> url_for static
     return url_for("static", filename=p)
 
 def parse_sub_images(raw) -> list[str]:
@@ -106,7 +110,6 @@ def parse_sub_images(raw) -> list[str]:
         arr = json.loads(raw)
         if not isinstance(arr, list):
             return []
-        # เอาเฉพาะ string ที่ไม่ว่าง
         out = []
         for x in arr:
             if isinstance(x, str) and x.strip():
@@ -115,41 +118,61 @@ def parse_sub_images(raw) -> list[str]:
     except Exception:
         return []
 
+# ---------------------------
+# ✅ แปลง plain text ให้เป็นหลาย <p>
+# ---------------------------
+def text_to_paragraph_html(text: str) -> str:
+    """
+    แปลง plain text -> HTML หลาย <p>
+    - แยกพารากราฟด้วยบรรทัดว่าง (เว้น 1 บรรทัดขึ้นไป)
+    - ใน 1 พารากราฟ ถ้ามีขึ้นบรรทัดใหม่ให้เป็น <br>
+    - escape กัน XSS
+    """
+    t = (text or "").strip()
+    if not t:
+        return ""
+
+    t = t.replace("\r\n", "\n").replace("\r", "\n")
+    parts = re.split(r"\n\s*\n+", t)
+
+    out = []
+    for p in parts:
+        p = p.strip()
+        if not p:
+            continue
+        safe = escape(p).replace("\n", "<br>")
+        out.append(f"<p>{safe}</p>")
+    return "\n".join(out)
+
+def ensure_html_has_paragraphs(content: str) -> str:
+    """
+    ถ้า content เป็น HTML อยู่แล้ว (มี <p> หรือมี tag ชัดเจน) ก็คืนเดิม
+    ถ้าเป็น plain text ให้แปลงเป็นหลาย <p>
+    """
+    c = (content or "").strip()
+    if not c:
+        return ""
+
+    lower = c.lower()
+
+    if "<p" in lower or "</p>" in lower:
+        return c
+
+    # มี tag อื่น ๆ ถือว่าเป็น HTML (ไม่ไปแตะ)
+    if re.search(r"<[a-z][\s>]", lower):
+        return c
+
+    return text_to_paragraph_html(c)
+
+# ---------------------------
+# Insert image inline helpers
+# ---------------------------
 def build_inline_figure(img_url: str, idx: int) -> str:
-    # ใส่ class เผื่อคุณไปแต่ง css ต่อใน news_detail.css
     return f"""
       <figure class="article-inline-img my-3">
         <img src="{img_url}" alt="sub-image-{idx}" class="w-100 rounded-4 shadow-sm border" loading="lazy">
       </figure>
     """.strip()
-
-def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
-    """
-    แทรกรูปรองสูงสุด 2 รูป:
-    - ถ้ามี </p> จะใส่หลังย่อหน้าแรกและย่อหน้าที่สอง
-    - ถ้าไม่มี </p> จะต่อท้ายเนื้อหา
-    """
-    content = (html or "").strip()
-    if not img_urls:
-        return content
-
-    # จำกัด 2 รูปตามที่คุยกัน
-    img_urls = img_urls[:2]
-    figures = [build_inline_figure(u, i + 1) for i, u in enumerate(img_urls)]
-
-    lower = content.lower()
-    if "</p>" not in lower:
-        # ไม่มีพารากราฟ -> ต่อท้าย
-        return content + "\n" + "\n".join(figures)
-
-    # แทรกหลัง </p> ครั้งที่ 1 และ 2 (ถ้ามี)
-    out = content
-    insert_positions = [1, 2]  # หลังย่อหน้าแรก, หลังย่อหน้าที่สอง
-    for idx, fig in enumerate(figures):
-        nth = insert_positions[idx] if idx < len(insert_positions) else insert_positions[-1]
-        out = insert_after_nth_p(out, fig, nth)
-
-    return out
 
 def insert_after_nth_p(html: str, insert_html: str, n: int) -> str:
     """insert หลังแท็ก </p> ครั้งที่ n (นับจาก 1). ถ้าไม่พอ -> ต่อท้าย"""
@@ -159,10 +182,11 @@ def insert_after_nth_p(html: str, insert_html: str, n: int) -> str:
     needle = "</p>"
     start = 0
     count = 0
+    lower = html.lower()
+
     while True:
-        pos = html.lower().find(needle, start)
+        pos = lower.find(needle, start)
         if pos == -1:
-            # ไม่เจอครบ -> ต่อท้าย
             return html + "\n" + insert_html
         count += 1
         end_pos = pos + len(needle)
@@ -170,6 +194,60 @@ def insert_after_nth_p(html: str, insert_html: str, n: int) -> str:
             return html[:end_pos] + "\n" + insert_html + "\n" + html[end_pos:]
         start = end_pos
 
+def insert_after_nth_br(html: str, insert_html: str, n: int) -> str:
+    """insert หลัง <br> ครั้งที่ n (รองรับ <br>, <br/>, <br />). ถ้าไม่พอ -> ต่อท้าย"""
+    if n <= 0:
+        return html + "\n" + insert_html
+
+    pattern = re.compile(r"<br\s*/?>", re.IGNORECASE)
+    matches = list(pattern.finditer(html))
+    if len(matches) < n:
+        return html + "\n" + insert_html
+    pos = matches[n - 1].end()
+    return html[:pos] + "\n" + insert_html + "\n" + html[pos:]
+
+def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
+    """
+    ✅ แทรกรูปรองสูงสุด MAX_INLINE_IMAGES รูป (ค่าเริ่มต้น 5)
+    - ถ้ามี </p> -> แทรกแบบกระจายทุก ๆ 2 ย่อหน้า (หลัง p2, p4, p6, ...)
+    - ถ้าไม่มี </p> แต่มี <br> -> แทรกแบบกระจายหลัง br (4, 10, 16, 22, 28)
+    - ถ้าไม่มีเลย -> ต่อท้ายทั้งหมด
+    """
+    content = (html or "").strip()
+    if not img_urls:
+        return content
+
+    # 🔒 ล็อกจำนวนสูงสุด
+    img_urls = img_urls[:MAX_INLINE_IMAGES]
+
+    lower = content.lower()
+
+    # 1) มี </p> -> กระจายรูปหลังทุก ๆ 2 ย่อหน้า
+    if "</p>" in lower:
+        out = content
+        for i, url in enumerate(img_urls):
+            fig = build_inline_figure(url, i + 1)
+            paragraph_index = (i + 1) * 2   # รูป1หลังp2, รูป2หลังp4, ...
+            out = insert_after_nth_p(out, fig, paragraph_index)
+        return out
+
+    # 2) มี <br> -> กระจายหลัง br (ปรับได้ตามชอบ)
+    if "<br" in lower:
+        out = content
+        br_slots = [4, 10, 16, 22, 28]  # รองรับถึง 5 รูป
+        for i, url in enumerate(img_urls):
+            fig = build_inline_figure(url, i + 1)
+            nth = br_slots[i] if i < len(br_slots) else br_slots[-1]
+            out = insert_after_nth_br(out, fig, nth)
+        return out
+
+    # 3) ไม่เจออะไรเลย -> ต่อท้าย
+    figures = [build_inline_figure(u, i + 1) for i, u in enumerate(img_urls)]
+    return content + "\n" + "\n".join(figures)
+
+# ---------------------------
+# Route
+# ---------------------------
 @news_detail_bp.get("/news/<int:news_id>")
 def news_detail(news_id: int):
     user_id = session.get("user_id")  # มี login ค่อยได้ค่า ไม่มีก็ None
@@ -235,20 +313,19 @@ def news_detail(news_id: int):
             article["time_ago"] = time_ago(base_dt)
             article["category_name"] = safe_str(article.get("category_name"), "news")
 
-            # ✅ normalize cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
+            # ✅ cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
             article["cover_image"] = safe_str(article.get("cover_image"), "")
 
-            # ✅ แทรกรูปรอง 2 รูปเข้าไปในเนื้อหา
+            # ✅ เตรียมรูปรอง (จำกัด 5 รูป)
             raw_sub = article.get("sub_images")
-            sub_list = parse_sub_images(raw_sub)  # list[path]
-            sub_urls = [normalize_img_url(p) for p in sub_list if p][:2]
+            sub_list = parse_sub_images(raw_sub)
+            sub_urls = [normalize_img_url(p) for p in sub_list if p][:MAX_INLINE_IMAGES]
 
-            # ถ้าเนื้อหาที่เก็บเป็น plain text ไม่ใช่ HTML -> แปลงให้เป็น <p> ง่าย ๆ
+            # ✅ ทำให้ content เป็นหลาย <p> ก่อน (ถ้าเป็น plain text)
             content = safe_str(article.get("news_content"), "")
-            if content and ("</p>" not in content.lower() and "<p" not in content.lower() and "<br" not in content.lower()):
-                # ทำเป็นพารากราฟเดียวแบบง่าย ๆ
-                content = "<p>" + content.replace("\n", "<br>") + "</p>"
+            content = ensure_html_has_paragraphs(content)
 
+            # ✅ แทรกรูปรองลงในเนื้อหา
             article["news_content"] = inject_sub_images_into_content(content, sub_urls)
 
             # 5) Hot 24 hours

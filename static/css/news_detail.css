@@ -255,3 +255,15 @@ html.font-lg .article-content { font-size: 1.16rem; }
   background: var(--bkk-red);
 }
 .hot-text { min-width: 0; flex: 1; }
+
+.article-inline-img {
+  margin: 18px 0;
+}
+
+.article-inline-img img {
+  width: 100%;
+  display: block;
+  border-radius: 18px;
+  max-height: 620px;
+  object-fit: cover;
+}
