@@ -1,24 +1,30 @@
-{% extends "layout/reporter-layout.html" %}
-{% block title %}เขียนข่าว{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/reporter-write-news.css') }}" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-{% endblock %}
-
-{% block content %}
+{% extends "layout/reporter-layout.html" %} {% block title %}เขียนข่าว{%
+endblock %} {% block head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/reporter-write-news.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/style.css') }}"
+/>
+{% endblock %} {% block content %}
 <div class="main-content">
   <!-- Title Bar -->
   <div class="page-title">
     <div>
       <h2 class="fw-bold">Write News</h2>
-      <div class="text-muted">สร้างบทความข่าวใหม่ พร้อมจัดหมวดหมู่และรูปภาพ</div>
+      <div class="text-muted">
+        สร้างบทความข่าวใหม่ พร้อมจัดหมวดหมู่และรูปภาพ
+      </div>
     </div>
   </div>
 
   <div class="card soft-card shadow-sm mt-3">
     <div class="card-header py-3">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div
+        class="d-flex align-items-center justify-content-between flex-wrap gap-2"
+      >
         <div class="fw-semibold">
           <i class="bi bi-file-earmark-text me-2"></i>เขียนบทความข่าวใหม่
         </div>
@@ -35,7 +41,12 @@
         novalidate
       >
         <!-- ใช้กำหนด draft/publish -->
-        <input type="hidden" name="submit_action" id="submitAction" value="publish" />
+        <input
+          type="hidden"
+          name="submit_action"
+          id="submitAction"
+          value="publish"
+        />
 
         <!-- SECTION: Basic info -->
         <div class="mb-4">
@@ -51,28 +62,42 @@
                 name="title"
                 placeholder="เช่น: เปิดตัวโครงการใหม่ในกรุงเทพฯ"
                 required
-                maxlength="160"
               />
-              <div class="d-flex justify-content-between mt-1">
-                <div class="counter"><span id="titleCount">0</span>/160</div>
-              </div>
               <div class="invalid-feedback">กรุณากรอกหัวข้อข่าว</div>
             </div>
 
             <div class="col-lg-4">
-              <label class="form-label"><b>ประเภทข่าว</b> <span class="text-danger">*</span></label>
+              <label class="form-label"
+                ><b>ประเภทข่าว</b> <span class="text-danger">*</span></label
+              >
               <div class="p-3 rounded-3 border bg-light">
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="newsType" id="regularNews" value="regular" checked required />
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="newsType"
+                    id="regularNews"
+                    value="regular"
+                    checked
+                    required
+                  />
                   <label class="form-check-label" for="regularNews">
                     ข่าวทั่วไป <span class="text-muted small">(ปกติ)</span>
                   </label>
                 </div>
 
                 <div class="form-check mt-2">
-                  <input class="form-check-input" type="radio" name="newsType" id="featuredNews" value="featured" required />
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="newsType"
+                    id="featuredNews"
+                    value="featured"
+                    required
+                  />
                   <label class="form-check-label" for="featuredNews">
-                    ข่าวยอดฮิต <span class="text-muted small">(แสดงเด่น/โปรโมท)</span>
+                    ข่าวยอดฮิต
+                    <span class="text-muted small">(แสดงเด่น/โปรโมท)</span>
                   </label>
                 </div>
               </div>
@@ -90,7 +115,12 @@
               <label for="mainCategory" class="form-label">
                 <b>ประเภทข่าวหลัก</b> <span class="text-danger">*</span>
               </label>
-              <select class="form-select" id="mainCategory" name="cat_id" required>
+              <select
+                class="form-select"
+                id="mainCategory"
+                name="cat_id"
+                required
+              >
                 <option value="" selected disabled>เลือกประเภทข่าวหลัก</option>
                 {% for c in categories %}
                 <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
@@ -101,14 +131,23 @@
 
             <div class="col-md-6">
               <label for="subCategory" class="form-label">
-                <b>ประเภทย่อย</b> <span class="text-danger">*</span>
+                <b>ประเภทย่อย</b> <span class="text-muted small">(ถ้ามี)</span>
               </label>
-              <select class="form-select" id="subCategory" name="subcat_id" required disabled>
-                <option value="" selected disabled>เลือกประเภทย่อย</option>
+
+              <!-- ✅ เอา required ออก เพื่อให้หมวดที่ไม่มีย่อยลงข่าวได้ -->
+              <select
+                class="form-select"
+                id="subCategory"
+                name="subcat_id"
+                disabled
+              >
+                <option value="" selected>— ไม่มีประเภทย่อย —</option>
               </select>
-              <div class="form-text" id="subcatHint">กรุณาเลือกประเภทข่าวหลักก่อน</div>
-              <div class="invalid-feedback">กรุณาเลือกประเภทย่อย</div>
-              
+
+              <!-- ✅ hint จะถูก JS เปลี่ยนข้อความให้ -->
+              <div class="form-text" id="subcatHint">
+                ถ้าหมวดนี้ไม่มีประเภทย่อย สามารถลงข่าวได้เลย
+              </div>
             </div>
           </div>
         </div>
@@ -118,7 +157,9 @@
         <!-- SECTION: Content -->
         <div class="mb-4">
           <div class="mb-3">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div
+              class="d-flex align-items-center justify-content-between flex-wrap gap-2"
+            >
               <label for="newsContent" class="form-label mb-0">
                 <b>เนื้อหาข่าว</b> <span class="text-danger">*</span>
               </label>
@@ -148,20 +189,37 @@
             <div class="col-lg-6">
               <div class="dropzone">
                 <div class="d-flex align-items-center justify-content-between">
-                  <label for="mainImage" class="form-label mb-1">รูปหลัก <span class="text-danger">*</span></label>
+                  <label for="mainImage" class="form-label mb-1"
+                    >รูปหลัก <span class="text-danger">*</span></label
+                  >
                 </div>
 
-                <input type="file" class="form-control" id="mainImage" name="main_image" accept="image/*" required />
+                <input
+                  type="file"
+                  class="form-control"
+                  id="mainImage"
+                  name="main_image"
+                  accept="image/*"
+                  required
+                />
                 <div class="invalid-feedback">กรุณาเลือกรูปหลัก</div>
 
-                <div class="mt-3 d-flex align-items-start gap-3" id="mainImagePreviewWrap" style="display: none">
+                <div
+                  class="mt-3 d-flex align-items-start gap-3"
+                  id="mainImagePreviewWrap"
+                  style="display: none"
+                >
                   <div class="preview-540x360">
                     <img id="mainImagePreview" />
                   </div>
 
                   <div class="small text-muted">
                     <div class="fw-semibold">พรีวิวรูปหลัก</div>
-                    <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="btnRemoveMainImage">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger mt-1"
+                      id="btnRemoveMainImage"
+                    >
                       <i class="bi bi-trash me-1"></i>ลบรูป
                     </button>
                   </div>
@@ -172,11 +230,25 @@
             <div class="col-lg-6">
               <div class="dropzone">
                 <div class="d-flex align-items-center justify-content-between">
-                  <label for="subImages" class="form-label mb-1">รูปรอง (เลือกได้หลายรูป)</label>
-                  <span class="text-muted small"><i class="bi bi-images me-1"></i>ได้หลายไฟล์</span>
+                  <label for="subImages" class="form-label mb-1"
+                    >รูปรอง (เลือกได้หลายรูป)</label
+                  >
+                  <span class="text-muted small"
+                    ><i class="bi bi-images me-1"></i>สูงสุด 5 รูป</span
+                  >
                 </div>
 
-                <input type="file" class="form-control" id="subImages" name="sub_images" multiple accept="image/*" />
+                <input
+                  type="file"
+                  class="form-control"
+                  id="subImages"
+                  name="sub_images"
+                  multiple
+                  accept="image/*"
+                />
+                <div class="form-text">
+                  ระบบจะรับรูปรองได้ไม่เกิน 5 รูป (ถ้าเลือกเกินจะตัดให้เอง)
+                </div>
                 <div class="mt-3" id="subImagesPreview"></div>
               </div>
             </div>
@@ -185,13 +257,20 @@
 
         <!-- Sticky Actions -->
         <div class="sticky-actions mt-4">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div
+            class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+          >
             <div class="text-muted small">
-              <i class="bi bi-shield-check me-1"></i>ระบบจะตรวจสอบข้อมูลที่จำเป็นก่อนเผยแพร่
+              <i class="bi bi-shield-check me-1"></i
+              >ระบบจะตรวจสอบข้อมูลที่จำเป็นก่อนเผยแพร่
             </div>
 
             <div class="d-flex gap-2">
-              <button type="button" class="btn btn-outline-secondary" id="btnSaveDraft">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                id="btnSaveDraft"
+              >
                 <i class="bi bi-save2 me-1"></i>บันทึกฉบับร่าง
               </button>
 
@@ -205,9 +284,7 @@
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/common.js') }}"></script>
 <script src="{{ url_for('static', filename='js/reporter-write-news.js') }}"></script>
 {% endblock %}

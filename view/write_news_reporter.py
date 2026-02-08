@@ -11,15 +11,18 @@ load_dotenv()
 
 write_news_reporter_bp = Blueprint("write_news_reporter", __name__)
 
+MAX_SUB_IMAGES = 5
+
 def connect_db():
     return pymysql.connect(
         host=os.environ.get("HOST"),
         user=os.environ.get("USER"),
         password=os.environ.get("PASSWORD"),
         database=os.environ.get("DB"),
-        port=int(os.environ.get("PORT")),
+        port=int(os.environ.get("PORT") or 3306),
         cursorclass=pymysql.cursors.DictCursor,
-        autocommit=False
+        autocommit=False,
+        charset="utf8mb4",
     )
 
 # ======================================================
@@ -29,7 +32,7 @@ BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
 COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
 SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
 
-ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}  # จะเอา gif เพิ่มก็ได้
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
 
 def allowed_file(filename: str) -> bool:
     if not filename or "." not in filename:
@@ -54,7 +57,6 @@ def save_image(file_storage, kind: str = "cover"):
     if not allowed_file(filename):
         return None
 
-    # เลือกโฟลเดอร์ตามชนิด
     kind = (kind or "cover").lower().strip()
     if kind not in ("cover", "sub"):
         kind = "cover"
@@ -67,7 +69,6 @@ def save_image(file_storage, kind: str = "cover"):
     full_path = os.path.join(target_dir, new_name)
     file_storage.save(full_path)
 
-    # ✅ เก็บ DB แบบ relative path (ห้ามใส่ /static/)
     return f"uploads/news/{kind}/{new_name}"
 
 # ======================================================
@@ -91,14 +92,14 @@ def reporter_news_create():
                 WHERE is_active = 1 AND del_flg = 0
                 ORDER BY cat_id ASC
             """)
-            categories = cur.fetchall()
+            categories = cur.fetchall() or []
     finally:
         conn.close()
 
     return render_template("reporter/reporter-write-news.html", categories=categories)
 
 # ======================================================
-# 2) POST บันทึกข่าว (✅ เซฟไฟล์ + เก็บ path ลง DB)
+# 2) POST บันทึกข่าว
 #    - cover_image: VARCHAR (uploads/news/cover/xxx.webp)
 #    - sub_images : LONGTEXT (json list of uploads/news/sub/xxx.webp)
 # ======================================================
@@ -114,7 +115,17 @@ def reporter_news_create_post():
     news_content = (request.form.get("content") or "").strip()
 
     cat_id = int(request.form.get("cat_id") or 0)
-    subcat_id = int(request.form.get("subcat_id") or 0)
+
+    # ✅ subcat_id ไม่บังคับ: ถ้าไม่มี/0 ให้เป็น None (ลง DB เป็น NULL)
+    raw_subcat = (request.form.get("subcat_id") or "").strip()
+    subcat_id = None
+    try:
+        if raw_subcat:
+            v = int(raw_subcat)
+            if v > 0:
+                subcat_id = v
+    except Exception:
+        subcat_id = None
 
     news_type = (request.form.get("newsType") or "regular").strip()
     is_featured = 1 if news_type == "featured" else 0
@@ -122,7 +133,8 @@ def reporter_news_create_post():
     submit_action = (request.form.get("submit_action") or "publish").strip().lower()
     status = "draft" if submit_action == "draft" else "publish"
 
-    if not news_title or not news_content or cat_id <= 0 or subcat_id <= 0:
+    # ✅ validate (ไม่บังคับ subcat)
+    if not news_title or not news_content or cat_id <= 0:
         return jsonify(ok=False, message="กรุณากรอกข้อมูลให้ครบ"), 400
 
     # --- images ---
@@ -132,14 +144,13 @@ def reporter_news_create_post():
     if not main_image or not main_image.filename:
         return jsonify(ok=False, message="กรุณาเลือกรูปหลัก"), 400
 
-    # ✅ main -> cover path
     cover_path = save_image(main_image, "cover")
     if not cover_path:
         return jsonify(ok=False, message="ไฟล์รูปหลักไม่ถูกต้อง (รองรับ png/jpg/jpeg/webp)"), 400
 
-    # ✅ subs -> list of sub path
+    # ✅ subs -> list of sub path (จำกัดสูงสุด 5 รูป)
     sub_list = []
-    for f in (sub_images or []):
+    for f in (sub_images or [])[:MAX_SUB_IMAGES]:
         if not f or not f.filename:
             continue
         p = save_image(f, "sub")
@@ -210,7 +221,7 @@ def api_news_subcategories():
                   AND del_flg = 0
                 ORDER BY subcat_id ASC
             """, (cat_id,))
-            rows = cur.fetchall()
+            rows = cur.fetchall() or []
     finally:
         conn.close()
 
