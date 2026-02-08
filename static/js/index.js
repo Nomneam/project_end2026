@@ -3,12 +3,12 @@ $(function () {
   // ======================================================
   // Config
   // ======================================================
-  const PAGE_SIZE = 12; // 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
-  const MAX_PAGES = 3; // เผื่อคุณใช้ใน API
-  const LATEST_TOP_COUNT = 6; // ข่าวล่าสุดโชว์ 6
-  const POPULAR_COUNT = 7; // ยอดนิยมโชว์ 7
-  const SLIDE_COUNT = 3; // สไลด์โชว์ 3
-  const MUST_READ_COUNT = 4; // ไม่ควรพลาดโชว์ 4
+  const PAGE_SIZE = 12;        // 12 ข่าว/หน้า (6 ล่าสุด + 6 เพิ่มเติม)
+  const MAX_PAGES = 3;         // เผื่อคุณใช้ใน API
+  const LATEST_TOP_COUNT = 6;  // ข่าวล่าสุดโชว์ 6
+  const POPULAR_COUNT = 7;     // ยอดนิยมโชว์ 7
+  const SLIDE_COUNT = 3;       // สไลด์โชว์ 3
+  const MUST_READ_COUNT = 4;   // ไม่ควรพลาดโชว์ 4
 
   // ======================================================
   // Utils
@@ -84,7 +84,7 @@ $(function () {
   // หน้าเว็บต้องใช้: /static/uploads/news/cover/xxx.webp
   function coverUrl(path) {
     const p = String(path || "").trim();
-    if (!p) return "https://picsum.photos/seed/bkktoday/1400/800"; // fallback (กันรูปหาย)
+    if (!p) return "https://picsum.photos/seed/bkktoday/1400/800"; // fallback กันรูปหาย
 
     // รองรับกรณีพิเศษ: ถ้าเป็น data uri หรือ url เต็ม
     if (p.startsWith("data:image")) return p;
@@ -97,29 +97,30 @@ $(function () {
   }
 
   // ======================================================
-  // State (ใช้กับการกรองข่าว)
+  // State (✅ ล็อกหน้า index เป็น HOME เสมอ ไม่เปลี่ยนตามหมวด)
   // ======================================================
   let page = 1;
   let state = {
     q: "",
-    type: "home", // home | cat | subcat
-    cat_id: null,
-    subcat_id: null,
+    type: "home",     // ✅ index จะเป็น home ตลอด
+    cat_id: null,     // ✅ ไม่ใช้ใน index แล้ว
+    subcat_id: null,  // ✅ ไม่ใช้ใน index แล้ว
   };
 
   // ======================================================
-  // รับ event จาก navbar.js
+  // ✅ หน้า index ไม่ฟังการเปลี่ยนหมวดจาก navbar.js แล้ว
+  // (คุณจะไปทำหน้าใหม่สำหรับหมวดข่าวทีหลัง)
   // ======================================================
-  window.addEventListener("bkk:nav-change", (e) => {
-    const s = e.detail || {};
-    state.type = s.type || "home";
-    state.cat_id = s.cat_id || null;
-    state.subcat_id = s.subcat_id || null;
+  // window.addEventListener("bkk:nav-change", (e) => {
+  //   const s = e.detail || {};
+  //   state.type = s.type || "home";
+  //   state.cat_id = s.cat_id || null;
+  //   state.subcat_id = s.subcat_id || null;
+  //   page = 1;
+  //   renderAll();
+  // });
 
-    page = 1;
-    renderAll();
-  });
-
+  // ✅ ค้นหายังใช้ได้ (ถ้าไม่อยากให้ค้นหาเปลี่ยนข่าวใน index ด้วย ก็คอมเมนต์บล็อกนี้ได้)
   window.addEventListener("bkk:search", (e) => {
     state.q = (e.detail?.q || "").toString();
     page = 1;
@@ -127,22 +128,15 @@ $(function () {
   });
 
   // ======================================================
-  // API params helper
+  // API params helper (✅ ตัด cat/subcat ออก ไม่ให้ index กรองตามหมวด)
   // ======================================================
   function buildListParams() {
-    const params = {
+    return {
       page,
       page_size: PAGE_SIZE,
       q: (state.q || "").trim(),
+      // ✅ ไม่มี cat_id / subcat_id ในหน้า index
     };
-
-    if (state.type === "cat" && state.cat_id) params.cat_id = state.cat_id;
-    if (state.type === "subcat" && state.cat_id && state.subcat_id) {
-      params.cat_id = state.cat_id;
-      params.subcat_id = state.subcat_id;
-    }
-
-    return params;
   }
 
   // ======================================================
@@ -404,12 +398,8 @@ $(function () {
 
     $("#more-news-grid").html(html || `<div class="text-muted small">ไม่มีข่าวเพิ่มเติมในหน้านี้</div>`);
 
-    const label =
-      state.type === "home"
-        ? "รวม"
-        : state.type === "cat"
-        ? `หมวด: ${state.cat_id}`
-        : `หมวด: ${state.cat_id} / ย่อย: ${state.subcat_id}`;
+    // ✅ หน้า index เป็น home เสมอ
+    const label = "หน้าแรก";
 
     $("#more-pagination-info").text(`แสดง ${from} - ${to} จากทั้งหมด ${total} ข่าว • หน้า ${page} / ${totalPages} • ${label}`);
     renderMorePagination(totalPages);
@@ -451,7 +441,6 @@ $(function () {
   // Popular
   // ======================================================
   function renderPopular(items) {
-    // ✅ ตอนนี้ API จะส่ง view_count มาแล้ว (แก้ฝั่ง Python ให้)
     const filtered = (items || []).filter((n) => (n.view_count || 0) > 0);
 
     const html = filtered
