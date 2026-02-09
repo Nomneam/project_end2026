@@ -8,9 +8,9 @@ load_dotenv()
 
 page_cat_bp = Blueprint("page_cat", __name__)
 
-# ==================================================
+# =============================
 # DB
-# ==================================================
+# =============================
 def connect_db():
     return pymysql.connect(
         host=os.environ.get("HOST"),
@@ -18,31 +18,42 @@ def connect_db():
         password=os.environ.get("PASSWORD"),
         database=os.environ.get("DB"),
         port=int(os.environ.get("PORT", 3306)),
-        cursorclass=pymysql.cursors.DictCursor
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True,
+        charset="utf8mb4",
     )
 
-# ==================================================
+# =============================
 # PAGE
-# ==================================================
+# =============================
 @page_cat_bp.route("/page_category")
 def page_category():
+    cat_id = request.args.get("cat_id")
+    subcat_id = request.args.get("subcat_id")
+
+    if not cat_id:
+        abort(400, "cat_id is required")
+
     categories = load_nav_categories()
+
     return render_template(
         "page_category.html",
-        categories=categories
+        categories=categories,
+        cat_id=cat_id,
+        subcat_id=subcat_id
     )
 
-# ==================================================
+# =============================
 # API
-# ==================================================
+# =============================
 @page_cat_bp.route("/api/page_category")
 def api_page_category():
-    cat = request.args.get("cat")
-    sub = request.args.get("sub")
+    cat_id = request.args.get("cat_id")
+    subcat_id = request.args.get("subcat_id")
     page = int(request.args.get("page", 1))
 
-    if not cat:
-        abort(400, "category is required")
+    if not cat_id:
+        abort(400, "cat_id is required")
 
     PAGE_SIZE = 15
     offset = (page - 1) * PAGE_SIZE
@@ -50,75 +61,99 @@ def api_page_category():
     conn = connect_db()
 
     with conn.cursor() as cur:
-        # ------------------------------------------
-        # ข่าวในหมวด
-        # ------------------------------------------
+        # -------------------------
+        # category name
+        # -------------------------
+        cur.execute(
+            "SELECT cat_name FROM news_category WHERE cat_id=%s",
+            [cat_id]
+        )
+        cat_row = cur.fetchone()
+        category_name = cat_row["cat_name"] if cat_row else ""
+
+        # -------------------------
+        # sub category name (ถ้ามี)
+        # -------------------------
+        subcat_name = None
+        if subcat_id:
+            cur.execute(
+                "SELECT subcat_name FROM news_subcategory WHERE subcat_id=%s",
+                [subcat_id]
+            )
+            row = cur.fetchone()
+            if row:
+                subcat_name = row["subcat_name"]
+
+        # -------------------------
+        # news list
+        # -------------------------
         sql = """
         SELECT
-            n.id,
-            n.title,
-            n.summary,
+            n.news_id,
+            n.news_title AS title,
+            LEFT(n.news_content, 200) AS summary,
             n.cover_image,
             n.created_at,
-            s.slug AS sub_slug,
-            s.name AS sub_name,
-            c.name AS category_name
+            s.subcat_id,
+            s.subcat_name
         FROM news n
-        JOIN news_subcategory s ON n.subcategory_id = s.id
-        JOIN news_category c ON s.category_id = c.id
-        WHERE c.slug = %s
+        JOIN news_subcategory s ON n.subcat_id = s.subcat_id
+        WHERE n.cat_id = %s
+          AND n.status = 'publish'
+          AND n.del_flg = 0
         """
-        params = [cat]
+        params = [cat_id]
 
-        if sub:
-            sql += " AND s.slug = %s"
-            params.append(sub)
+        if subcat_id:
+            sql += " AND n.subcat_id = %s"
+            params.append(subcat_id)
 
-        sql += """
-        ORDER BY n.created_at DESC
-        LIMIT %s OFFSET %s
-        """
+        sql += " ORDER BY n.created_at DESC LIMIT %s OFFSET %s"
         params.extend([PAGE_SIZE, offset])
 
         cur.execute(sql, params)
         items = cur.fetchall()
 
-        # ------------------------------------------
-        # COUNT
-        # ------------------------------------------
+        # -------------------------
+        # count
+        # -------------------------
         count_sql = """
         SELECT COUNT(*) AS total
         FROM news n
-        JOIN news_subcategory s ON n.subcategory_id = s.id
-        JOIN news_category c ON s.category_id = c.id
-        WHERE c.slug = %s
+        WHERE n.cat_id = %s
+          AND n.status = 'publish'
+          AND n.del_flg = 0
         """
-        count_params = [cat]
+        count_params = [cat_id]
 
-        if sub:
-            count_sql += " AND s.slug = %s"
-            count_params.append(sub)
+        if subcat_id:
+            count_sql += " AND n.subcat_id = %s"
+            count_params.append(subcat_id)
 
         cur.execute(count_sql, count_params)
         total = cur.fetchone()["total"]
 
-        # ------------------------------------------
-        # SUB CATEGORIES
-        # ------------------------------------------
-        cur.execute("""
-            SELECT slug, name
-            FROM news_subcategory s
-            JOIN news_category c ON s.category_id = c.id
-            WHERE c.slug = %s
-            ORDER BY name
-        """, [cat])
+        # -------------------------
+        # sub categories
+        # -------------------------
+        cur.execute(
+            """
+            SELECT subcat_id, subcat_name
+            FROM news_subcategory
+            WHERE cat_id=%s
+            ORDER BY subcat_name
+            """,
+            [cat_id]
+        )
         subs = cur.fetchall()
 
     conn.close()
 
     return jsonify({
-        "category": cat,
-        "category_name": items[0]["category_name"] if items else "",
+        "cat_id": cat_id,
+        "category_name": category_name,
+        "subcat_id": subcat_id,
+        "subcat_name": subcat_name,
         "items": items,
         "subs": subs,
         "total": total,

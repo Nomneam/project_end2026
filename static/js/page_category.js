@@ -1,25 +1,14 @@
 (() => {
-  /* =========================
-   * CONFIG
-   * ========================= */
-  const MAIN = {
-    name: "ทั่วไทย",
-    subs: [
-      { id: "latest", name: "ล่าสุด" },
-      { id: "south", name: "ใต้" },
-      { id: "bkk", name: "กทม." },
-      { id: "north", name: "เหนือ" },
-      { id: "central", name: "กลาง" },
-      { id: "isan", name: "อีสาน" },
-      { id: "east", name: "ตะวันออก" },
-      { id: "local-econ", name: "เศรษฐกิจท้องถิ่น" },
-    ],
-  };
-
   const state = {
-    sub: null,
+    cat_id: window.PAGE_STATE.cat_id,
+    subcat_id: window.PAGE_STATE.subcat_id || null,
     page: 1,
-    pageSize: 15, // ⭐ 15 ข่าว / หน้า
+    pageSize: 15,
+    total: 0,
+    categoryName: "",
+    subcatName: "",
+    subs: [],
+    items: [],
   };
 
   const el = {
@@ -30,185 +19,115 @@
     bcSubWrap: document.getElementById("bcSubWrap"),
     bcSub: document.getElementById("bcSub"),
     subChips: document.getElementById("subChips"),
-    moreSubChips: document.getElementById("moreSubChips"),
     resultInfo: document.getElementById("resultInfo"),
     newsGrid: document.getElementById("newsGrid"),
     pagination: document.getElementById("pagination"),
     pageInfo: document.getElementById("pageInfo"),
   };
 
-  const NEWS = makeMockNews();
+  loadData();
 
-  initFromUrl();
-  renderAll();
+  async function loadData(scrollTop = false) {
+    const params = new URLSearchParams({
+      cat_id: state.cat_id,
+      page: state.page,
+    });
 
-  /* =========================
-   * URL
-   * ========================= */
-  function initFromUrl() {
-    const u = new URL(window.location.href);
-    state.sub = u.searchParams.get("sub");
-    state.page = parseInt(u.searchParams.get("page") || "1", 10);
+    if (state.subcat_id) {
+      params.append("subcat_id", state.subcat_id);
+    }
+
+    const res = await fetch(`/api/page_category?${params}`);
+    const data = await res.json();
+
+    state.items = data.items;
+    state.subs = data.subs;
+    state.total = data.total;
+    state.pageSize = data.pageSize;
+    state.categoryName = data.category_name;
+    state.subcatName = data.subcat_name;
+
+    renderAll();
+
+    if (scrollTop) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
-  function syncUrl() {
-    const u = new URL(window.location.href);
-    state.sub ? u.searchParams.set("sub", state.sub) : u.searchParams.delete("sub");
-    u.searchParams.set("page", state.page);
-    window.history.replaceState({}, "", u.toString());
-  }
+  function renderAll() {
+    el.mainTitle.textContent = state.subcatName || state.categoryName;
+    el.bcMain.textContent = state.categoryName;
 
-  /* =========================
-   * RENDER
-   * ========================= */
-  function renderAll(scrollTop = false) {
-    el.mainTitle.textContent = MAIN.name;
-    el.bcMain.textContent = MAIN.name;
-
-    if (state.sub) {
-      const sn = getSubName(state.sub);
-      el.bcSub.textContent = sn;
-      el.subTitle.textContent = sn;
+    if (state.subcat_id) {
+      el.bcSub.textContent = state.subcatName;
+      el.subTitle.textContent = state.subcatName;
       el.bcSubWrap.classList.remove("d-none");
       el.subTitleWrap.classList.remove("d-none");
-      el.moreSubChips.classList.remove("d-none");
     } else {
       el.bcSubWrap.classList.add("d-none");
       el.subTitleWrap.classList.add("d-none");
-      el.moreSubChips.classList.add("d-none");
     }
 
     renderChips();
-
-    const rows = state.sub ? NEWS.filter(n => n.subId === state.sub) : NEWS.slice();
-    el.resultInfo.textContent = `พบ ${rows.length.toLocaleString("th-TH")} ข่าว`;
-
-    const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
-    state.page = Math.min(state.page, totalPages);
-
-    const start = (state.page - 1) * state.pageSize;
-    renderGrid(rows.slice(start, start + state.pageSize));
-    renderPagination(totalPages);
-
-    if (scrollTop) window.scrollTo({ top: 0, behavior: "smooth" });
+    renderGrid();
+    el.resultInfo.textContent = `พบ ${state.total.toLocaleString()} ข่าว`;
   }
 
   function renderChips() {
     el.subChips.innerHTML = "";
-    el.moreSubChips.innerHTML = "";
 
-    MAIN.subs.forEach(s => {
-      const b = document.createElement("button");
-      b.className = "cat-chip" + (state.sub === s.id ? " active-red" : "");
-      b.textContent = s.name;
-      b.onclick = () => {
-        state.sub = s.id;
+    state.subs.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className =
+        "cat-chip" + (state.subcat_id == s.subcat_id ? " active-red" : "");
+      btn.textContent = s.subcat_name;
+
+      btn.onclick = () => {
+        state.subcat_id = s.subcat_id;
         state.page = 1;
-        syncUrl();
-        renderAll(true);
+        updateUrl();
+        loadData(true);
       };
-      el.subChips.appendChild(b);
+
+      el.subChips.appendChild(btn);
     });
   }
 
-  /* =========================
-   * NEWS CARD (เหมือนหน้า index)
-   * ========================= */
-  function renderGrid(items) {
+  function renderGrid() {
     el.newsGrid.innerHTML = "";
 
-    items.forEach(n => {
-      el.newsGrid.insertAdjacentHTML("beforeend", `
+    if (!state.items.length) {
+      el.newsGrid.innerHTML =
+        `<div class="text-center text-muted py-5">ไม่พบข่าว</div>`;
+      return;
+    }
+
+    state.items.forEach(n => {
+      el.newsGrid.insertAdjacentHTML(
+        "beforeend",
+        `
         <div class="col-md-6 col-xl-4">
           <article class="cat-card h-100">
-            <div class="position-relative">
-              <img class="cat-card-img" src="${n.cover}" alt="">
-              <span class="position-absolute top-0 start-0 m-2 badge rounded-pill bg-primary">
-                NEWS
-              </span>
-            </div>
-
+            <img class="cat-card-img"
+              src="${n.cover_image || "/static/img/no-image.jpg"}">
             <div class="cat-card-body">
-              <div class="cat-tag-row">
-                <span class="cat-tag">${getSubName(n.subId)}</span>
-              </div>
-
-              <h3 class="cat-card-title line-clamp-2">${n.title}</h3>
-              <p class="cat-card-desc line-clamp-3">${n.desc}</p>
-
-              <div class="cat-meta">
-                <span>${fmtDateTH(n.createdAt)}</span>
-                <span class="dot"></span>
-                <span>${timeAgo(n.createdAt)}</span>
-              </div>
+              <span class="cat-tag">${n.subcat_name}</span>
+              <h3 class="cat-card-title">${n.title}</h3>
+              <p class="cat-card-desc">${n.summary || ""}</p>
             </div>
           </article>
         </div>
-      `);
+        `
+      );
     });
   }
 
-  function renderPagination(totalPages) {
-    el.pagination.innerHTML = "";
-    el.pageInfo.textContent = `หน้า ${state.page} / ${totalPages}`;
-
-    if (totalPages <= 1) return;
-
-    const btn = (t, p) => {
-      const b = document.createElement("button");
-      b.className = "btn-page" + (p === state.page ? " active" : "");
-      b.textContent = t;
-      b.onclick = () => {
-        state.page = p;
-        syncUrl();
-        renderAll(true);
-      };
-      return b;
-    };
-
-    if (state.page > 1) el.pagination.appendChild(btn("◀", state.page - 1));
-    for (let i = 1; i <= totalPages; i++) el.pagination.appendChild(btn(i, i));
-    if (state.page < totalPages) el.pagination.appendChild(btn("▶", state.page + 1));
-  }
-
-  /* =========================
-   * HELPERS
-   * ========================= */
-  function getSubName(id) {
-    return MAIN.subs.find(s => s.id === id)?.name || "ข่าว";
-  }
-
-  function fmtDateTH(d) {
-    const date = new Date(d);
-    return date.toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }
-
-  function timeAgo(d) {
-    const diff = Math.floor((Date.now() - new Date(d)) / 1000);
-    if (diff < 60) return `${diff} วินาทีที่แล้ว`;
-    if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`;
-    return `${Math.floor(diff / 86400)} วันที่แล้ว`;
-  }
-
-  /* =========================
-   * MOCK DATA
-   * ========================= */
-  function makeMockNews() {
-    return Array.from({ length: 48 }).map((_, i) => {
-      const hoursAgo = Math.floor(Math.random() * 72);
-      return {
-        id: i,
-        subId: MAIN.subs[i % MAIN.subs.length].id,
-        title: `ข่าวตัวอย่างลำดับที่ ${i + 1}`,
-        desc: "สรุปข่าวแบบ mock สำหรับออกแบบ UI ให้เหมือนหน้า index มากที่สุด",
-        cover: `https://picsum.photos/600/400?random=${i + 20}`,
-        createdAt: Date.now() - hoursAgo * 3600 * 1000,
-      };
-    });
+  function updateUrl() {
+    const u = new URL(window.location.href);
+    u.searchParams.set("cat_id", state.cat_id);
+    state.subcat_id
+      ? u.searchParams.set("subcat_id", state.subcat_id)
+      : u.searchParams.delete("subcat_id");
+    window.history.replaceState({}, "", u);
   }
 })();

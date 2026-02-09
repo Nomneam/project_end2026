@@ -182,7 +182,7 @@ button::-moz-focus-inner {
 .top-nav-sticky {
   position: sticky;
   top: 0;
-  z-index: 9999;
+  z-index: 10;
 }
 .top-nav-sticky .nav-scroll {
   overflow-x: auto;
@@ -207,7 +207,7 @@ button::-moz-focus-inner {
 
 /* Dropdown menu */
 .top-nav-sticky .dropdown-menu {
-  z-index: 10000 !important;
+  z-index: 20 !important;
   background: rgba(0, 45, 98, 0.98) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 18px 60px rgba(2, 6, 23, 0.28);
@@ -280,4 +280,13 @@ button::-moz-focus-inner {
 .top-nav-sticky .dropdown-item:active {
   background: rgba(206, 17, 38, 0.28) !important;
   color: #fff !important;
+}
+
+
+/* ===============================
+  FIX: Navbar stacking context (สำคัญมาก)
+=============================== */
+header {
+  position: relative;
+  z-index: 2000;
 }
