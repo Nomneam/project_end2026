@@ -21,6 +21,7 @@ from view.news_management import news_management_bp
 from view.index import index_bp
 from view.news_detail import news_detail_bp
 from view.page_category import page_cat_bp
+from view.navbar import load_nav_categories
 
 
 
@@ -44,6 +45,12 @@ app.register_blueprint(page_cat_bp)
 @app.route('/')
 def home():
     return "Hello, World!"
+
+@app.context_processor
+def inject_navbar():
+    return {
+        "categories": load_nav_categories()
+    }
 
 if __name__ == '__main__':
     app.run(debug=True)

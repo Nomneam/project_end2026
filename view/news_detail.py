@@ -7,12 +7,16 @@ from dotenv import load_dotenv
 from datetime import datetime
 from markupsafe import escape
 
+# ✅ ใช้ navbar กลาง (ที่คุณสร้างไว้แล้ว)
+from view.navbar import load_nav_categories
+
 load_dotenv()
 
 news_detail_bp = Blueprint("news_detail", __name__)
 
 # ✅ จำกัดรูปรองสูงสุด
 MAX_INLINE_IMAGES = 5
+
 
 def connect_db():
     return pymysql.connect(
@@ -26,49 +30,18 @@ def connect_db():
         charset="utf8mb4",
     )
 
-# ---------------------------
-# Navbar loader (เหมือน index)
-# ---------------------------
-def load_nav_categories(conn):
-    with conn.cursor() as cur:
-        cur.execute("""
-            SELECT cat_id, cat_name
-            FROM news_category
-            WHERE is_active=1 AND del_flg=0
-            ORDER BY cat_id ASC
-        """)
-        cats = cur.fetchall() or []
-
-        cur.execute("""
-            SELECT subcat_id, cat_id, subcat_name
-            FROM news_subcategory
-            WHERE is_active=1 AND del_flg=0
-            ORDER BY cat_id ASC, subcat_id ASC
-        """)
-        subs = cur.fetchall() or []
-
-    sub_map = {}
-    for s in subs:
-        sub_map.setdefault(s["cat_id"], []).append(s)
-
-    categories = []
-    for c in cats:
-        categories.append({
-            "cat_id": c["cat_id"],
-            "cat_name": c["cat_name"],
-            "subs": sub_map.get(c["cat_id"], [])
-        })
-    return categories
 
 # ---------------------------
 # Helpers: Thai date + time ago
 # ---------------------------
 TH_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
 
+
 def format_th_date(dt):
     if not dt:
         return "—"
-    return f"{dt.day} {TH_MONTHS[dt.month-1]} {dt.year + 543}"
+    return f"{dt.day} {TH_MONTHS[dt.month - 1]} {dt.year + 543}"
+
 
 def time_ago(dt):
     if not dt:
@@ -83,15 +56,18 @@ def time_ago(dt):
         return f"{sec // 3600} ชม. ที่แล้ว"
     return f"{sec // 86400} วันที่แล้ว"
 
+
 def safe_str(x, default="—"):
     s = (x or "").strip() if isinstance(x, str) else x
     return s if s else default
+
 
 def safe_int(x, default=0):
     try:
         return int(x)
     except Exception:
         return default
+
 
 def normalize_img_url(path: str) -> str:
     """รองรับทั้ง http(s) และ path ใน static เช่น uploads/news/xxx.webp"""
@@ -101,6 +77,7 @@ def normalize_img_url(path: str) -> str:
     if p.startswith("http://") or p.startswith("https://"):
         return p
     return url_for("static", filename=p)
+
 
 def parse_sub_images(raw) -> list[str]:
     """sub_images เป็น JSON list ของ path (string)"""
@@ -117,6 +94,7 @@ def parse_sub_images(raw) -> list[str]:
         return out
     except Exception:
         return []
+
 
 # ---------------------------
 # ✅ แปลง plain text ให้เป็นหลาย <p>
@@ -144,6 +122,7 @@ def text_to_paragraph_html(text: str) -> str:
         out.append(f"<p>{safe}</p>")
     return "\n".join(out)
 
+
 def ensure_html_has_paragraphs(content: str) -> str:
     """
     ถ้า content เป็น HTML อยู่แล้ว (มี <p> หรือมี tag ชัดเจน) ก็คืนเดิม
@@ -164,6 +143,7 @@ def ensure_html_has_paragraphs(content: str) -> str:
 
     return text_to_paragraph_html(c)
 
+
 # ---------------------------
 # Insert image inline helpers
 # ---------------------------
@@ -173,6 +153,7 @@ def build_inline_figure(img_url: str, idx: int) -> str:
         <img src="{img_url}" alt="sub-image-{idx}" class="w-100 rounded-4 shadow-sm border" loading="lazy">
       </figure>
     """.strip()
+
 
 def insert_after_nth_p(html: str, insert_html: str, n: int) -> str:
     """insert หลังแท็ก </p> ครั้งที่ n (นับจาก 1). ถ้าไม่พอ -> ต่อท้าย"""
@@ -194,6 +175,7 @@ def insert_after_nth_p(html: str, insert_html: str, n: int) -> str:
             return html[:end_pos] + "\n" + insert_html + "\n" + html[end_pos:]
         start = end_pos
 
+
 def insert_after_nth_br(html: str, insert_html: str, n: int) -> str:
     """insert หลัง <br> ครั้งที่ n (รองรับ <br>, <br/>, <br />). ถ้าไม่พอ -> ต่อท้าย"""
     if n <= 0:
@@ -205,6 +187,7 @@ def insert_after_nth_br(html: str, insert_html: str, n: int) -> str:
         return html + "\n" + insert_html
     pos = matches[n - 1].end()
     return html[:pos] + "\n" + insert_html + "\n" + html[pos:]
+
 
 def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
     """
@@ -219,7 +202,6 @@ def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
 
     # 🔒 ล็อกจำนวนสูงสุด
     img_urls = img_urls[:MAX_INLINE_IMAGES]
-
     lower = content.lower()
 
     # 1) มี </p> -> กระจายรูปหลังทุก ๆ 2 ย่อหน้า
@@ -227,7 +209,7 @@ def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
         out = content
         for i, url in enumerate(img_urls):
             fig = build_inline_figure(url, i + 1)
-            paragraph_index = (i + 1) * 2   # รูป1หลังp2, รูป2หลังp4, ...
+            paragraph_index = (i + 1) * 2  # รูป1หลังp2, รูป2หลังp4, ...
             out = insert_after_nth_p(out, fig, paragraph_index)
         return out
 
@@ -245,6 +227,7 @@ def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
     figures = [build_inline_figure(u, i + 1) for i, u in enumerate(img_urls)]
     return content + "\n" + "\n".join(figures)
 
+
 # ---------------------------
 # Route
 # ---------------------------
@@ -255,7 +238,8 @@ def news_detail(news_id: int):
 
     conn = connect_db()
     try:
-        categories = load_nav_categories(conn)
+        # ✅ ใช้ categories จากไฟล์กลาง navbar.py
+        categories = load_nav_categories()
 
         with conn.cursor() as cur:
             # 1) Article (เพิ่ม sub_images)
