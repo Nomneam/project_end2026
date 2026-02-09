@@ -20,6 +20,7 @@ from view.category_management import category_management_bp
 from view.news_management import news_management_bp
 from view.index import index_bp
 from view.news_detail import news_detail_bp
+from view.page_category import page_cat_bp
 
 
 
@@ -38,6 +39,7 @@ app.register_blueprint(category_management_bp)
 app.register_blueprint(news_management_bp)
 app.register_blueprint(index_bp)
 app.register_blueprint(news_detail_bp)
+app.register_blueprint(page_cat_bp)
 
 @app.route('/')
 def home():

@@ -21,12 +21,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
 
     <!-- ✅ CSS หน้า Category -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/category.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/page_category.css') }}" />
   </head>
 
   <body>
     <!-- ✅ Navbar (ตามโค้ดคุณ) -->
-    {% include "partials/navbar_index.html" %}
+    {% include "partials/navbar.html" %}
 
     <!-- =========================
       CATEGORY PAGE (Mock UI)
@@ -164,6 +164,6 @@
     <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
 
     <!-- ✅ JS Category (mock) -->
-    <script src="{{ url_for('static', filename='js/category.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/page_category.js') }}"></script>
   </body>
 </html>

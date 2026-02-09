@@ -18,41 +18,106 @@ $(function () {
   }
 
   // ----------------------
+  // ✅ Helper: อ่าน query จาก URL เพื่อทำ active ให้ถูก
+  // ----------------------
+  function readStateFromUrl() {
+    const url = new URL(window.location.href);
+    const cat = url.searchParams.get("cat_id");
+    const sub = url.searchParams.get("subcat_id");
+
+    if (sub && cat) {
+      navState.type = "subcat";
+      navState.cat_id = cat;
+      navState.subcat_id = sub;
+      return;
+    }
+    if (cat) {
+      navState.type = "cat";
+      navState.cat_id = cat;
+      navState.subcat_id = null;
+      return;
+    }
+
+    navState.type = "home";
+    navState.cat_id = null;
+    navState.subcat_id = null;
+  }
+
+  // ----------------------
   // Navbar Active
   // ----------------------
   function setActiveNav() {
     const $navLinks = $("nav a.nav-cat, nav a.sub-cat");
     $navLinks.removeClass("active");
 
+    // ✅ หน้าแรก: ถ้า path เป็นหน้า index หรือไม่มี query cat_id/subcat_id
     if (navState.type === "home") {
       $(`nav a.nav-cat[data-type="home"]`).addClass("active");
       return;
     }
+
+    // ✅ หมวดหลัก
     if (navState.type === "cat" && navState.cat_id) {
       $(`nav a.nav-cat[data-type="cat"][data-cat="${navState.cat_id}"]`).addClass("active");
       return;
     }
+
+    // ✅ หมวดย่อย
     if (navState.type === "subcat" && navState.cat_id && navState.subcat_id) {
       $(`nav a.nav-cat[data-type="cat"][data-cat="${navState.cat_id}"]`).addClass("active");
-      $(`nav a.sub-cat[data-type="subcat"][data-cat="${navState.cat_id}"][data-subcat="${navState.subcat_id}"]`).addClass("active");
+      $(
+        `nav a.sub-cat[data-type="subcat"][data-cat="${navState.cat_id}"][data-subcat="${navState.subcat_id}"]`
+      ).addClass("active");
     }
   }
 
+  // ----------------------
+  // ✅ Click behavior (สำคัญ)
+  // - ถ้า href เป็น URL จริง => ปล่อยให้ไปหน้าใหม่ตาม link
+  // - ถ้า href เป็น # => preventDefault แล้วค่อย emit (กรณี dropdown toggle)
+  // ----------------------
   function bindNavbarCategories() {
+    // set active จาก URL ทุกครั้งที่โหลดหน้า
+    readStateFromUrl();
     setActiveNav();
 
     $("nav")
       .off("click.nav")
       .on("click.nav", "a.nav-cat, a.sub-cat", function (e) {
-        // ปล่อยให้ลิงก์ที่มี href จริงทำงานได้ (เช่น url_for พร้อม query)
-        // แต่ถ้าคุณต้องการ AJAX ทั้งหมด ค่อย preventDefault
-        // ตอนนี้: ถ้า href เป็น # เท่านั้นค่อยกัน
-        const href = ($(this).attr("href") || "").trim();
-        if (href === "#" || href === "") e.preventDefault();
-
         const $a = $(this);
+        const href = ($a.attr("href") || "").trim();
         const type = ($a.attr("data-type") || "home").toString();
 
+        // ✅ กรณีเป็น dropdown toggle (href="#") ให้กันไว้
+        if (href === "#" || href === "") {
+          e.preventDefault();
+
+          // อัปเดต state เฉยๆ เพื่อ active (แต่ไม่เปลี่ยนหน้า)
+          if (type === "home") {
+            navState.type = "home";
+            navState.cat_id = null;
+            navState.subcat_id = null;
+          } else if (type === "cat") {
+            navState.type = "cat";
+            navState.cat_id = $a.attr("data-cat") || null;
+            navState.subcat_id = null;
+          } else if (type === "subcat") {
+            navState.type = "subcat";
+            navState.cat_id = $a.attr("data-cat") || null;
+            navState.subcat_id = $a.attr("data-subcat") || null;
+          }
+
+          setActiveNav();
+
+          // ✅ จะ emit หรือไม่ emit ก็ได้
+          // แนะนำ: emit เฉพาะกรณี href="#" (ไม่ใช่ลิงก์จริง)
+          emit("bkk:nav-change", { ...navState });
+          return;
+        }
+
+        // ✅ ถ้าเป็นลิงก์จริง: ปล่อยให้ browser ไปตาม href
+        // (ไม่ต้อง emit ไม่ต้อง scrollTo ไม่ต้อง prevent)
+        // แต่เราทำ active ชั่วคราวให้เห็นทันทีได้
         if (type === "home") {
           navState.type = "home";
           navState.cat_id = null;
@@ -66,15 +131,12 @@ $(function () {
           navState.cat_id = $a.attr("data-cat") || null;
           navState.subcat_id = $a.attr("data-subcat") || null;
         }
-
         setActiveNav();
-        emit("bkk:nav-change", { ...navState });
-        window.scrollTo({ top: 0, behavior: "smooth" });
       });
   }
 
   // ----------------------
-  // Dropdown fix
+  // Dropdown fix (เดิม)
   // ----------------------
   (function initNavDropdownFix() {
     const nav = document.querySelector(".top-nav-sticky");
@@ -219,7 +281,6 @@ $(function () {
 
   function renderAuthUI() {
     const user = getUser();
-
     const $authButtons = $("#authButtons");
     const $userMenu = $("#userMenu");
     if (!$authButtons.length || !$userMenu.length) return;
@@ -239,11 +300,9 @@ $(function () {
   }
 
   function bindAuth() {
-    // ปุ่มเปิด
     $("#btnOpenLogin").off("click.auth").on("click.auth", () => openAuthModal("login"));
     $("#btnOpenRegister").off("click.auth").on("click.auth", () => openAuthModal("register"));
 
-    // ปิด
     $("#btnCloseAuth").off("click.auth").on("click.auth", closeAuthModal);
 
     $("#authModal")
@@ -258,14 +317,11 @@ $(function () {
         if (e.key === "Escape") closeAuthModal();
       });
 
-    // tabs
     $("#tabLogin").off("click.auth").on("click.auth", () => setAuthTab("login"));
     $("#tabRegister").off("click.auth").on("click.auth", () => setAuthTab("register"));
 
-    // logout
     $("#btnLogout").off("click.auth").on("click.auth", () => clearUser());
 
-    // login
     $("#loginForm")
       .off("submit.auth")
       .on("submit.auth", function (e) {
@@ -279,7 +335,6 @@ $(function () {
         closeAuthModal();
       });
 
-    // register
     $("#registerForm")
       .off("submit.auth")
       .on("submit.auth", function (e) {

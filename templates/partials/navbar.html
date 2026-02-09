@@ -1,9 +1,8 @@
 <!-- templates/partials/navbar_index.html -->
 <header class="bg-white border-bottom">
   <div class="container-xl py-3">
-    <div
-      class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3"
-    >
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+      <!-- Logo -->
       <div class="d-flex align-items-center gap-3">
         <a href="{{ url_for('index.index_news') }}" class="text-decoration-none">
           <div class="display-6 fw-bold fst-italic m-0">
@@ -11,13 +10,14 @@
           </div>
         </a>
 
-        <!-- ✅ Date block (เหมือนแบบเดิม) -->
+        <!-- Date -->
         <div class="d-none d-sm-block border-start ps-3">
           <div class="text-uppercase small fw-bold text-secondary" id="dayName">—</div>
           <div class="small text-muted" id="dayDate">—</div>
         </div>
       </div>
 
+      <!-- Right -->
       <div class="header-right w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2">
         <!-- Search -->
         <div class="top-search-wrap position-relative flex-grow-1" style="max-width: 360px; width: 100%">
@@ -30,31 +30,22 @@
           <span class="top-search-icon">⌕</span>
         </div>
 
-        <!-- ✅ Auth buttons -->
+        <!-- Auth buttons -->
         <div id="authButtons" class="d-flex align-items-center gap-2">
-          <button id="btnOpenLogin" class="btn btn-outline-secondary fw-bold btn-pill">
-            เข้าสู่ระบบ
-          </button>
-          <button id="btnOpenRegister" class="btn fw-bold text-white btn-pill btn-register">
-            สมัครสมาชิก
-          </button>
+          <button id="btnOpenLogin" class="btn btn-outline-secondary fw-bold btn-pill">เข้าสู่ระบบ</button>
+          <button id="btnOpenRegister" class="btn fw-bold text-white btn-pill btn-register">สมัครสมาชิก</button>
         </div>
 
-        <!-- ✅ Logged-in menu -->
+        <!-- Logged-in menu -->
         <div id="userMenu" class="d-none align-items-center gap-2">
           <div class="d-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-2">
-            <div
-              class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white avatar-bkk"
-              id="userAvatar"
-            >U</div>
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white avatar-bkk" id="userAvatar">U</div>
             <div class="lh-sm">
               <div id="userName" class="fw-bold text-navy-bkk">User</div>
               <div class="small text-muted">สมาชิก</div>
             </div>
           </div>
-          <button id="btnLogout" class="btn btn-outline-secondary fw-bold btn-pill">
-            ออกจากระบบ
-          </button>
+          <button id="btnLogout" class="btn btn-outline-secondary fw-bold btn-pill">ออกจากระบบ</button>
         </div>
       </div>
     </div>
@@ -64,34 +55,43 @@
   <nav class="bg-navy-bkk text-white top-nav-sticky">
     <div class="container-xl">
       <div class="nav-scroll d-flex gap-3 py-3 no-scrollbar small fw-semibold">
-        <a href="{{ url_for('index.index_news') }}" class="nav-cat" data-cat="all" data-type="home">หน้าแรก</a>
+        <!-- Home -->
+        <a href="{{ url_for('index.index_news') }}" class="nav-cat" data-type="home">หน้าแรก</a>
 
         {% for c in categories %}
           {% if c.subs and c.subs|length > 0 %}
-            <div class="dropdown nav-dd">
+            <!-- ✅ Split dropdown: กดชื่อหมวดไปหน้า /page_category ได้ + กดลูกศรเปิดเมนูย่อย -->
+            <div class="dropdown nav-dd d-inline-flex align-items-center">
+              <!-- ✅ MAIN CATEGORY LINK (กดแล้วไปหน้าใหม่) -->
               <a
-                href="#"
-                class="nav-cat dropdown-toggle"
-                data-cat="{{ c.cat_id }}"
+                href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}"
+                class="nav-cat"
                 data-type="cat"
-                role="button"
+                data-cat="{{ c.cat_id }}"
+              >
+                {{ c.cat_name }}
+              </a>
+
+              <!-- ✅ DROPDOWN TOGGLE BUTTON (ไว้เปิดเมนู) -->
+              <button
+                class="nav-dd-toggle dropdown-toggle dropdown-toggle-split"
+                type="button"
                 data-bs-toggle="dropdown"
                 data-bs-display="static"
                 data-bs-auto-close="outside"
                 aria-expanded="false"
-              >
-                {{ c.cat_name }}
-              </a>
+                aria-label="เปิดหัวข้อย่อย {{ c.cat_name }}"
+              ></button>
 
               <ul class="dropdown-menu dropdown-menu-dark">
                 {% for s in c.subs %}
                   <li>
                     <a
-                      href="{{ url_for('index.index_news') }}?cat_id={{ c.cat_id }}&subcat_id={{ s.subcat_id }}"
+                      href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}&subcat_id={{ s.subcat_id }}"
                       class="dropdown-item sub-cat"
+                      data-type="subcat"
                       data-cat="{{ c.cat_id }}"
                       data-subcat="{{ s.subcat_id }}"
-                      data-type="subcat"
                     >
                       {{ s.subcat_name }}
                     </a>
@@ -100,11 +100,12 @@
               </ul>
             </div>
           {% else %}
+            <!-- Category only -->
             <a
-              href="{{ url_for('index.index_news') }}?cat_id={{ c.cat_id }}"
+              href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}"
               class="nav-cat"
-              data-cat="{{ c.cat_id }}"
               data-type="cat"
+              data-cat="{{ c.cat_id }}"
             >
               {{ c.cat_name }}
             </a>
@@ -114,7 +115,7 @@
     </div>
   </nav>
 
-  <!-- ✅ Auth Modal (ย้ายมาไว้ใน partial เพื่อให้ทุกหน้ามี) -->
+  <!-- Auth Modal -->
   <div id="authModal" class="modal-backdrop-custom" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-top d-flex align-items-center justify-content-between">

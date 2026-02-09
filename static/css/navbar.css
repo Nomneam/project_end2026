@@ -6,6 +6,9 @@
   --bkk-red: #ce1126;
 }
 
+/* ===============================
+  Base
+=============================== */
 body {
   font-family: "Sarabun", sans-serif;
 }
@@ -21,7 +24,47 @@ body {
 /* No-scroll while modal open */
 .no-scroll { overflow: hidden !important; }
 
-/* Header search */
+/* ===============================
+  🚫 REMOVE focus ring / outline (ยกชุด)
+  - ทำให้ "วง/กรอบ" ตอนคลิกหายจริง
+=============================== */
+a:focus,
+a:active,
+button:focus,
+button:active,
+input:focus,
+input:active,
+textarea:focus,
+textarea:active,
+select:focus,
+select:active,
+.form-control:focus,
+.form-select:focus,
+.btn:focus,
+.btn:active,
+.dropdown-toggle:focus,
+.dropdown-toggle:active,
+.dropdown-item:focus,
+.dropdown-item:active,
+.nav-cat:focus,
+.nav-cat:active,
+.sub-cat:focus,
+.sub-cat:active,
+.nav-dd-toggle:focus,
+.nav-dd-toggle:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* กันกรณี browser บางตัวใช้ outline แบบพิเศษ */
+a::-moz-focus-inner,
+button::-moz-focus-inner {
+  border: 0 !important;
+}
+
+/* ===============================
+  Header search
+=============================== */
 .header-right { width: 100%; }
 .top-search-wrap { max-width: 360px; }
 .top-search-input {
@@ -34,13 +77,18 @@ body {
   right: 14px;
   transform: translateY(-50%);
   color: #9ca3af;
+  pointer-events: none;
 }
 
-/* Buttons */
+/* ===============================
+  Buttons
+=============================== */
 .btn-pill { border-radius: 12px !important; }
 .btn-register { background: var(--bkk-red) !important; }
 
-/* Badge (ใช้กับ modal header) */
+/* ===============================
+  Badge (ใช้กับ modal header)
+=============================== */
 .ad-badge {
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
@@ -55,7 +103,9 @@ body {
 }
 .ad-badge-account { background: rgba(255, 255, 255, 0.18); }
 
-/* Modal (custom) - Auth */
+/* ===============================
+  Modal (custom) - Auth
+=============================== */
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
@@ -67,6 +117,7 @@ body {
   z-index: 1055;
 }
 .modal-backdrop-custom.show { display: flex; }
+
 .modal-card {
   width: min(520px, 100%);
   background: #fff;
@@ -80,6 +131,7 @@ body {
   color: #fff;
   padding: 14px 16px;
 }
+
 .tab-btn {
   padding: 8px 12px;
   border-radius: 12px;
@@ -92,6 +144,7 @@ body {
   transition: 0.2s;
 }
 .tab-btn.active { background: var(--bkk-navy); color: #fff; border-color: var(--bkk-navy); }
+
 .form-input {
   width: 100%;
   border: 1px solid #e5e7eb;
@@ -101,9 +154,10 @@ body {
   outline: none;
 }
 .form-input:focus {
-  box-shadow: 0 0 0 3px rgba(206, 17, 38, 0.18);
   border-color: #fca5a5;
+  box-shadow: none !important; /* กันวง */
 }
+
 .btn-bkk-red {
   background: var(--bkk-red) !important;
   border-radius: 12px !important;
@@ -122,7 +176,9 @@ body {
 }
 .avatar-bkk { width: 32px; height: 32px; background: var(--bkk-navy); }
 
-/* Sticky nav + Dropdown */
+/* ===============================
+  Sticky nav + Dropdown
+=============================== */
 .top-nav-sticky {
   position: sticky;
   top: 0;
@@ -135,6 +191,7 @@ body {
 }
 .top-nav-sticky .container-xl { overflow: visible !important; }
 
+/* Nav link */
 .nav-cat {
   color: #fff;
   text-decoration: none;
@@ -148,6 +205,7 @@ body {
 .nav-cat.active { opacity: 1; border-bottom-color: var(--bkk-red); }
 .nav-dd { display: inline-flex; align-items: center; }
 
+/* Dropdown menu */
 .top-nav-sticky .dropdown-menu {
   z-index: 10000 !important;
   background: rgba(0, 45, 98, 0.98) !important;
@@ -169,19 +227,25 @@ body {
   transform: translateY(0) scale(1);
   transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.top-nav-sticky .dropdown-toggle::after { border-top-color: rgba(255, 255, 255, 0.8); }
+
+/* Dropdown items */
 .top-nav-sticky .dropdown-item {
   color: rgba(255, 255, 255, 0.92) !important;
   border-radius: 10px;
   font-weight: 800;
   padding: 10px 12px;
 }
-.top-nav-sticky .dropdown-item:hover,
-.top-nav-sticky .dropdown-item:focus {
+.top-nav-sticky .dropdown-item:hover {
   background: rgba(206, 17, 38, 0.22) !important;
   color: #fff !important;
 }
 
+/* dropdown arrow default */
+.top-nav-sticky .dropdown-toggle::after {
+  border-top-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Desktop hover open */
 @media (min-width: 992px) {
   .top-nav-sticky .nav-dd:hover > .dropdown-menu {
     display: block;
@@ -189,5 +253,31 @@ body {
     visibility: visible;
     transform: translateY(0) scale(1);
   }
-  .top-nav-sticky .nav-dd > .nav-cat.dropdown-toggle::after { transform: translateY(1px); }
+}
+
+/* ===============================
+  Split dropdown toggle (ลูกศรข้างหมวด)
+=============================== */
+.nav-dd-toggle {
+  border: none !important;
+  background: transparent !important;
+  color: #fff;
+  opacity: 0.8;
+  padding: 0 6px;
+  margin-left: -4px;
+  line-height: 1;
+  box-shadow: none !important; /* กันวง */
+}
+.nav-dd-toggle:hover { opacity: 1; }
+.nav-dd-toggle.dropdown-toggle::after {
+  margin-left: 6px;
+  border-top-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ===============================
+  Small polish
+=============================== */
+.top-nav-sticky .dropdown-item:active {
+  background: rgba(206, 17, 38, 0.28) !important;
+  color: #fff !important;
 }
