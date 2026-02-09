@@ -5,32 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>บางกอกทูเดย์ | หมวดข่าว</title>
 
-    <!-- Bootstrap 5 -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
 
-    <!-- Bootstrap Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-
-    <!-- ✅ CSS กลาง Navbar -->
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
-
-    <!-- ✅ CSS หน้า Category -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/page_category.css') }}" />
   </head>
 
   <body>
-    <!-- ✅ Navbar (ตามโค้ดคุณ) -->
     {% include "partials/navbar.html" %}
 
-    <!-- =========================
-      CATEGORY PAGE (Mock UI)
-    ========================== -->
     <main class="container-xl py-4">
       <!-- HERO -->
       <section class="cat-hero mb-4">
@@ -39,12 +25,11 @@
         <div class="cat-hero-inner">
           <!-- Breadcrumb -->
           <div class="cat-breadcrumb">
-            <a href="{{ url_for('index.index_news') }}" class="cat-bc-link" title="หน้าแรก">
+            <a href="{{ url_for('index.index_news') }}" class="cat-bc-link">
               <i class="bi bi-house-door"></i>
             </a>
             <span class="cat-bc-sep">›</span>
             <span class="cat-bc-link">ข่าว</span>
-
             <span class="cat-bc-sep">›</span>
             <span class="cat-bc-current" id="bcMain">—</span>
 
@@ -54,14 +39,14 @@
             </span>
           </div>
 
-          <!-- Main title centered -->
+          <!-- Title -->
           <h1 class="cat-title font-kanit text-center m-0">
             <span class="cat-title-line"></span>
             <span id="mainTitle">—</span>
             <span class="cat-title-line"></span>
           </h1>
 
-          <!-- Sub title big -->
+          <!-- Subtitle -->
           <div class="cat-subtitle-wrap d-none" id="subTitleWrap">
             <div class="cat-sub-badge">หัวข้อย่อย</div>
             <div class="cat-subtitle font-kanit" id="subTitle">—</div>
@@ -70,100 +55,39 @@
           <!-- Sub chips -->
           <div class="cat-chips mt-3" id="subChips"></div>
 
-          <!-- Extra chips when in sub -->
-          <div class="cat-chips cat-chips-secondary mt-2 d-none" id="moreSubChips"></div>
-
-          <!-- Result + Search only (❌ ไม่มีปุ่มล้าง/กลับหน้าหลัก/ไม่มี dropdown sort) -->
+          <!-- Result -->
           <div class="cat-tools mt-3">
             <div class="cat-result small text-muted" id="resultInfo">—</div>
-
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <div class="cat-search">
-                <i class="bi bi-search"></i>
-                <input id="searchInput" type="text" placeholder="ค้นหาในหมวดนี้..." />
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      <!-- Content -->
-      <section class="row g-4">
-        <div class="col-lg-8">
-          <div class="row g-3" id="newsGrid"></div>
+      <!-- CONTENT -->
+      <section>
+        <div class="row g-3" id="newsGrid"></div>
 
-          <div class="d-flex align-items-center justify-content-between gap-3 mt-3 flex-wrap">
-            <div class="small text-muted" id="pageInfo">—</div>
-            <div class="d-flex align-items-center gap-2" id="pagination"></div>
-          </div>
+        <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+          <div class="small text-muted" id="pageInfo">—</div>
+          <div class="d-flex gap-1" id="pagination"></div>
         </div>
-
-        <aside class="col-lg-4">
-          <div class="cat-panel mb-3">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <h3 class="font-kanit fw-bold text-navy-bkk m-0">ไฮไลต์ในหมวดนี้</h3>
-              <span class="cat-pill-hot">HOT</span>
-            </div>
-            <div class="d-grid gap-2" id="hotList"></div>
-          </div>
-
-          <div class="cat-panel">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <h3 class="font-kanit fw-bold text-navy-bkk m-0">หัวข้อย่อยทั้งหมด</h3>
-              <span class="small text-muted">คลิกเพื่อกรอง</span>
-            </div>
-            <div class="d-flex flex-wrap gap-2" id="subPills"></div>
-          </div>
-        </aside>
       </section>
     </main>
 
-    <!-- ✅ Footer (แบบหน้า index) -->
     <footer class="bg-navy-bkk text-white mt-5">
       <div class="container-xl py-5">
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="display-6 fw-bold fst-italic mb-3">
-              <span>BANGKOK</span><span class="text-red-bkk">TODAY</span>
-            </div>
-            <p class="text-white-50 small mb-0 footer-desc">
-              สำนักข่าวสารที่ส่งตรงความจริงถึงหน้าจอคุณ ตลอด 24 ชั่วโมง ข่าวรวดเร็ว รอบด้าน ทันสถานการณ์
-            </p>
-          </div>
-
-          <div class="col-md-3">
-            <h4 class="fw-bold border-bottom border-secondary pb-2 mb-3">เมนูแนะนำ</h4>
-            <ul class="list-unstyled text-white-50 small d-grid gap-2 mb-0">
-              <li><a href="#" class="text-white-50 text-decoration-none">แจ้งเบาะแสข่าว</a></li>
-              <li><a href="#" class="text-white-50 text-decoration-none">ตรวจสอบข่าวปลอม</a></li>
-              <li><a href="#" class="text-white-50 text-decoration-none">ติดต่อเรา</a></li>
-            </ul>
-          </div>
-
-          <div class="col-md-3">
-            <h4 class="fw-bold border-bottom border-secondary pb-2 mb-3">นโยบาย</h4>
-            <ul class="list-unstyled text-white-50 small d-grid gap-2 mb-0">
-              <li><a href="#" class="text-white-50 text-decoration-none">Privacy Policy</a></li>
-              <li><a href="#" class="text-white-50 text-decoration-none">Terms of Use</a></li>
-              <li><a href="#" class="text-white-50 text-decoration-none">Cookie Policy</a></li>
-            </ul>
-          </div>
+        <div class="display-6 fw-bold fst-italic">
+          <span>BANGKOK</span><span class="text-red-bkk">TODAY</span>
         </div>
+        <p class="text-white-50 small mt-2 mb-0">
+          สำนักข่าวสารที่ส่งตรงความจริงถึงหน้าจอคุณ
+        </p>
       </div>
-
       <div class="bg-black py-3 text-center small text-white-50">
-        © 2026 Bangkok Today. Powering by Bootstrap 5 + jQuery.
+        © 2026 Bangkok Today
       </div>
     </footer>
 
-    <!-- jQuery + Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- ✅ JS Navbar (ของคุณ) -->
-    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
-
-    <!-- ✅ JS Category (mock) -->
     <script src="{{ url_for('static', filename='js/page_category.js') }}"></script>
   </body>
 </html>
