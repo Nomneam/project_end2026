@@ -122,8 +122,8 @@
             />
             <div class="cat-card-body">
               <span class="cat-tag">${n.subcat_name}</span>
-              <h3 class="cat-card-title">${n.title}</h3>
-              <p class="cat-card-desc">${n.summary || ""}</p>
+              <div class="fw-bold mt-1">${n.title}</div>
+              <div class="text-secondary small mt-2">${n.summary || ""}</div>
             </div>
           </article>
         </div>
