@@ -19,7 +19,9 @@ def connect_db():
         port=int(os.environ.get('PORT')),
         cursorclass=pymysql.cursors.DictCursor
     )
-
+# =============================
+#  Category Management Page
+# =============================
 @category_management_bp.route('/category-management')
 def category_management():
     user = session.get("user")
@@ -42,6 +44,7 @@ def category_management():
     finally:
         conn.close()
 
+# --- API สำหรับดึงประเภทย่อยตามหมวดหมู่หลัก ---
 @category_management_bp.route('/get-subcategories/<int:cat_id>')
 def get_subcategories(cat_id):
     """API ดึงหมวดหมู่ย่อยตาม ID (ใช้ใน Modal)"""

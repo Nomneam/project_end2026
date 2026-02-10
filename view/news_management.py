@@ -319,6 +319,9 @@ def delete_news(news_id):
         "message": "ลบข่าวเรียบร้อยแล้ว"
     })
 
+# ======================================================
+# 3) API แก้ไขข่าว (Admin)
+# ====================================================
 @news_management_bp.route('/admin/news/<int:news_id>/update', methods=['POST'])
 def update_news_modal(news_id):
     user = session.get("user")
@@ -388,7 +391,6 @@ def update_news_modal(news_id):
 
     finally:
         connection.close()
-
 
 
 # ======================================================

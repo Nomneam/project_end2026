@@ -59,7 +59,9 @@ def file_to_data_uri(file_storage):
         except Exception:
             pass
 
-
+# ==============================
+#  Profile Page
+# ==============================
 @admin_profile_bp.route("/admin-profile", methods=["GET"])
 def profile_page():
     user_session = session.get("user")
@@ -207,6 +209,10 @@ def update_profile():
         conn.close()
 
     return jsonify({"success": True})
+
+# ==============================
+#  Change Password
+# =============================
 
 @admin_profile_bp.route("/admin-profile/change-password", methods=["POST"])
 def change_password():
