@@ -329,7 +329,11 @@ def update_news_modal(news_id):
     content = (request.form.get("content") or "").strip()
     status = (request.form.get("status") or "").strip()
     cat_id = request.form.get("cat_id", type=int)
-    subcat_id = request.form.get("subcat_id", type=int)   # ✅ เพิ่ม
+
+    # ✅ แก้ตรงนี้
+    subcat_raw = request.form.get("subcat_id")
+    subcat_id = int(subcat_raw) if subcat_raw else None
+
     main_image = request.files.get("main_image")
 
     if not title or not content:
@@ -337,7 +341,7 @@ def update_news_modal(news_id):
 
     connection = connect_db()
     try:
-        with connection.cursor() as cursor:
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute("""
                 SELECT cover_image
                 FROM news
@@ -361,7 +365,7 @@ def update_news_modal(news_id):
                     news_content = %s,
                     status = %s,
                     cat_id = %s,
-                    subcat_id = %s,   -- ✅ เพิ่ม
+                    subcat_id = %s,
                     cover_image = %s,
                     updated_at = NOW(),
                     updated_by = %s
@@ -375,9 +379,11 @@ def update_news_modal(news_id):
 
         connection.commit()
         return jsonify(success=True, message="แก้ไขข่าวสำเร็จ")
+    
 
     except Exception as e:
         connection.rollback()
+        print("❌ UPDATE ERROR:", e)   #  จะได้เห็น error ชัด ๆ
         return jsonify(success=False, message=str(e)), 500
 
     finally:

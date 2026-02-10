@@ -163,20 +163,28 @@ async function loadSubcategories(catId, selectedSubcatId = null) {
   const subSelect = document.getElementById("editSubCategory");
   if (!subSelect) return;
 
+  // ถ้าไม่เลือกหมวดหลัก
   if (!catId) {
-    subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย --</option>`;
+    subSelect.innerHTML = `<option value="">-- ไม่มีหมวดย่อย --</option>`;
+    subSelect.disabled = true;
     return;
   }
 
+  subSelect.disabled = true;
   subSelect.innerHTML = `<option value="">กำลังโหลด...</option>`;
 
   try {
     const res = await fetch(`/admin/categories/${catId}/subcategories`);
     const result = await res.json();
 
-    subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย --</option>`;
+    // reset
+    subSelect.innerHTML = "";
 
-    if (result.success && Array.isArray(result.data)) {
+    if (result.success && Array.isArray(result.data) && result.data.length) {
+      // มีหมวดย่อย
+      subSelect.disabled = false;
+      subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย (ไม่บังคับ) --</option>`;
+
       result.data.forEach(sub => {
         const opt = document.createElement("option");
         opt.value = sub.subcat_id;
@@ -186,12 +194,19 @@ async function loadSubcategories(catId, selectedSubcatId = null) {
         }
         subSelect.appendChild(opt);
       });
+    } else {
+      // ไม่มีหมวดย่อย
+      subSelect.innerHTML = `<option value="">-- หมวดนี้ไม่มีหมวดย่อย --</option>`;
+      subSelect.disabled = true;
     }
+
   } catch (err) {
     console.error(err);
     subSelect.innerHTML = `<option value="">โหลดหมวดย่อยไม่สำเร็จ</option>`;
+    subSelect.disabled = true;
   }
 }
+
 
 /* =========================================================
    Edit News
