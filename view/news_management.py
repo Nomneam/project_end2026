@@ -382,3 +382,80 @@ def update_news_modal(news_id):
 
     finally:
         connection.close()
+
+
+
+# ======================================================
+# 4) API: สถิติข่าว "วันนี้" แยกตามหมวดหมู่ (Admin Dashboard / Chart.js)
+@news_management_bp.route('/api/news/today-by-category')
+def api_news_today_by_category():
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return jsonify(success=False, message="Unauthorized"), 401
+
+    range_type = request.args.get("range", "month")  # day | week | month | year | all
+
+    if range_type == "all":
+        date_condition = "1=1"
+    elif range_type == "day":
+        date_condition = """
+            n.created_at >= CURDATE()
+            AND n.created_at < CURDATE() + INTERVAL 1 DAY
+        """
+    elif range_type == "week":
+        date_condition = """
+            n.created_at >= CURDATE() - INTERVAL 7 DAY
+            AND n.created_at < CURDATE() + INTERVAL 1 DAY
+        """
+    elif range_type == "year":
+        date_condition = """
+            n.created_at >= CURDATE() - INTERVAL 1 YEAR
+            AND n.created_at < CURDATE() + INTERVAL 1 DAY
+        """
+    else:  # month (default)
+        date_condition = """
+            n.created_at >= CURDATE() - INTERVAL 1 MONTH
+            AND n.created_at < CURDATE() + INTERVAL 1 DAY
+        """
+
+    conn = connect_db()
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            sql = f"""
+                SELECT 
+                    IFNULL(c.cat_name, 'ไม่ระบุหมวด') AS cat_name,
+                    COUNT(n.news_id) AS total
+                FROM news n
+                LEFT JOIN news_category c 
+                    ON n.cat_id = c.cat_id 
+                   AND c.del_flg = 0
+                WHERE n.del_flg = 0
+                  AND {date_condition}
+                GROUP BY n.cat_id
+                ORDER BY total DESC
+            """
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            # นับรวมทั้งหมดในช่วงเวลาเดียวกัน
+            sql_total = f"""
+                SELECT COUNT(n.news_id) AS total_all
+                FROM news n
+                WHERE n.del_flg = 0
+                  AND {date_condition}
+            """
+            cursor.execute(sql_total)
+            total_all = cursor.fetchone()["total_all"]
+
+        return jsonify(
+            success=True,
+            labels=[r["cat_name"] for r in rows],
+            values=[r["total"] for r in rows],
+            total_all=total_all,   #  เพิ่มยอดรวมทั้งหมด
+            range=range_type
+        )
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+    finally:
+        conn.close()
+

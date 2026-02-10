@@ -142,3 +142,168 @@
     background-color: #d32f2f;
     color: white;
 }
+
+/* ===== Range Filter Buttons (บนการ์ดสถิติข่าว) ===== */
+/* ===== Range Filter Buttons (บนการ์ดสถิติข่าว) ===== */
+.btn-group .btn-range{
+  border: 1px solid rgba(255,255,255,.85);
+  color: #fff;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 999px !important;
+  font-weight: 500;
+  font-size: .8rem;
+  transition: all .2s ease;
+  opacity: .9;
+}
+
+.btn-group .btn-range:hover{
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* Active */
+.btn-group .btn-range.active{
+  background: #fff;
+  color: #d32f2f;
+  border-color: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+  opacity: 1;
+}
+
+/* ===== Badge ช่วงเวลา ===== */
+.range-badge{
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: .75rem;
+  font-weight: 600;
+  background: rgba(255,255,255,.15) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.4);
+  backdrop-filter: blur(4px);
+}
+
+
+
+/* ===== Dashboard Stat Card (Improved) ===== */
+/* ===== Dashboard Stat Card (Final Polish) ===== */
+.stat-card {
+  border-radius: 20px;
+  border: 1px solid rgba(214, 31, 38, .18);
+  box-shadow: 0 12px 32px rgba(214, 31, 38, .14);
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffffff, #fff7f7);
+}
+
+/* Header ให้ดู Premium ขึ้น */
+.stat-card .card-header-custom {
+  background: linear-gradient(135deg, #d32f2f, #e53935);
+  padding: 18px 22px;
+  font-weight: 600;
+  letter-spacing: .4px;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff !important;
+}
+
+.stat-card .card-header-custom i {
+  font-size: 1.5rem;
+}
+
+/* Badge */
+.stat-card .badge {
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: .8rem;
+  background: rgba(255,255,255,.15) !important;
+  color: #fff !important;
+  backdrop-filter: blur(4px);
+}
+
+/* ===== Chart Area ===== */
+.chart-wrap {
+  position: relative;
+  padding: 20px 16px;
+  min-height: 320px;                 /* การ์ดไม่เตี้ย */
+  display: grid;
+  place-items: center;
+}
+
+/* Canvas ใหญ่ เด่น แต่ไม่ล้น */
+.chart-wrap canvas {
+  width: 100% !important;
+  max-width: 300px;
+  height: 280px !important;
+}
+
+/* ตัวเลขกลางโดนัท */
+.chart-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.chart-center .total {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #d32f2f;
+  line-height: 1;
+}
+
+.chart-center .label {
+  font-size: .9rem;
+  color: #777;
+  margin-top: 2px;
+}
+
+/* ===== Legend ===== */
+/* ปรับปรุง Legend ให้ดูเป็นระเบียบ */
+.legend-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* ปรับขนาดอัตโนมัติ */
+    gap: 10px;
+    max-height: 300px; /* จำกัดความสูงหากรายการเยอะเกินไป */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.legend-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.legend-item .name {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.legend-item .value {
+    margin-left: auto;
+    font-weight: bold;
+    color: #d32f2f;
+}
+
+/* เพิ่มเติมสำหรับ Mobile */
+@media (max-width: 768px) {
+    .legend-wrap {
+        grid-template-columns: 1fr 1fr; /* แสดง 2 คอลัมน์ในมือถือ */
+    }
+}

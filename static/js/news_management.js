@@ -11,10 +11,9 @@ const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
    Abort controller (กันกดรัว)
 ========================================================= */
 let currentAbortController = null;
-let ajaxAbortController = null;
 
 /* =========================================================
-   Image preload helper
+   Utils
 ========================================================= */
 function preloadImage(src) {
   return new Promise((resolve, reject) => {
@@ -25,46 +24,59 @@ function preloadImage(src) {
   });
 }
 
+function buildImageSrc(raw) {
+  if (!raw) return null;
+  if (raw.startsWith("data:image")) return raw;
+  if (raw.length > 100) return "data:image/jpeg;base64," + raw;
+  return "/static/" + raw;
+}
+
 /* =========================================================
-   Reset view modal
+   View Modal Helpers
 ========================================================= */
 function resetViewModal() {
   if (!viewModalEl) return;
 
-  document.getElementById('v-title').innerText = 'กำลังโหลด...';
-  document.getElementById('v-author').innerText = '-';
-  document.getElementById('v-category').innerText = '-';
-  document.getElementById('v-date-thai').innerText = '-';
-  document.getElementById('v-time-thai').innerText = '';
+  setText("v-title", "กำลังโหลด...");
+  setText("v-author", "-");
+  setText("v-category", "-");
+  setText("v-date-thai", "-");
+  setText("v-time-thai", "");
 
-  document.getElementById('v-status-container').innerHTML =
-    '<span class="badge bg-secondary w-100">กำลังโหลด</span>';
-
-  document.getElementById('v-content').innerHTML = `
+  setHTML("v-status-container", `<span class="badge bg-secondary w-100">กำลังโหลด</span>`);
+  setHTML("v-content", `
     <div class="text-center text-muted py-4">
       <div class="spinner-border spinner-border-sm me-2"></div>
       กำลังโหลดข้อมูล...
     </div>
-  `;
+  `);
 
-  const coverImg = document.getElementById('v-cover-image');
-  if (coverImg) {
-    coverImg.style.display = 'none';
-    coverImg.src = '';
-  }
+  hideImage("v-cover-image");
+}
+
+function showViewError(message) {
+  setHTML("v-content", `<div class="alert alert-danger mb-0">${message}</div>`);
+}
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = text;
+}
+
+function setHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+function hideImage(id) {
+  const img = document.getElementById(id);
+  if (!img) return;
+  img.style.display = "none";
+  img.src = "";
 }
 
 /* =========================================================
-   แสดง error ใน view modal
-========================================================= */
-function showError(message) {
-  const el = document.getElementById('v-content');
-  if (!el) return;
-  el.innerHTML = `<div class="alert alert-danger mb-0">${message}</div>`;
-}
-
-/* =========================================================
-   View news
+   View News
 ========================================================= */
 async function viewNews(newsId) {
   if (!newsId || !viewModal) return;
@@ -84,74 +96,68 @@ async function viewNews(newsId) {
     const result = await res.json();
 
     if (!result.success) {
-      showError(result.message || 'ไม่พบข้อมูลข่าว');
+      showViewError(result.message || "ไม่พบข้อมูลข่าว");
       return;
     }
 
-    await openViewModal(result.data);
+    await renderViewModal(result.data);
 
   } catch (err) {
-    if (err.name !== 'AbortError') {
+    if (err.name !== "AbortError") {
       console.error(err);
-      showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      showViewError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
     }
   }
 }
 
-/* =========================================================
-   Open view modal
-========================================================= */
-async function openViewModal(news) {
-  document.getElementById('v-title').innerText = news.news_title || 'ไม่มีหัวข้อ';
-  document.getElementById('v-author').innerText =
-    `${news.emp_fname || ''} ${news.emp_lname || ''}`.trim() || '-';
-  document.getElementById('v-category').innerText =
-    [news.cat_name, news.subcat_name].filter(Boolean).join(" / ") || '-';
+async function renderViewModal(news) {
+  setText("v-title", news.news_title || "ไม่มีหัวข้อ");
+  setText("v-author", `${news.emp_fname || ""} ${news.emp_lname || ""}`.trim() || "-");
+  setText("v-category", [news.cat_name, news.subcat_name].filter(Boolean).join(" / ") || "-");
 
-  document.getElementById('v-content').innerHTML =
-    news.news_content || '<span class="text-muted fst-italic">ไม่มีเนื้อหา</span>';
+  setHTML("v-content", news.news_content || `<span class="text-muted fst-italic">ไม่มีเนื้อหา</span>`);
 
-  const coverImg = document.getElementById('v-cover-image');
-  if (coverImg) {
-    coverImg.style.display = 'none';
-    coverImg.src = '';
-  }
+  hideImage("v-cover-image");
 
-  if (news.cover_image && coverImg) {
-    let imageSrc = news.cover_image.startsWith('data:image')
-      ? news.cover_image
-      : news.cover_image.length > 100
-        ? 'data:image/jpeg;base64,' + news.cover_image
-        : '/static/' + news.cover_image;
-
+  if (news.cover_image) {
+    const src = buildImageSrc(news.cover_image);
     try {
-      await preloadImage(imageSrc);
-      coverImg.src = imageSrc;
-      coverImg.style.display = 'block';
+      await preloadImage(src);
+      const img = document.getElementById("v-cover-image");
+      img.src = src;
+      img.style.display = "block";
     } catch {
-      console.warn('Image load failed:', imageSrc);
+      console.warn("โหลดรูปไม่สำเร็จ:", src);
     }
   }
 
-  if (news.created_at) {
-    const d = new Date(news.created_at);
-    document.getElementById('v-date-thai').innerText =
-      d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' });
-    document.getElementById('v-time-thai').innerText =
-      d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-  } else {
-    document.getElementById('v-date-thai').innerText = '-';
-    document.getElementById('v-time-thai').innerText = '';
+  renderThaiDate(news.created_at);
+  renderStatus(news.status);
+}
+
+function renderThaiDate(createdAt) {
+  if (!createdAt) {
+    setText("v-date-thai", "-");
+    setText("v-time-thai", "");
+    return;
   }
 
-  document.getElementById('v-status-container').innerHTML =
-    news.status === 'publish'
-      ? '<span class="badge bg-success w-100">เผยแพร่แล้ว</span>'
-      : '<span class="badge bg-secondary w-100">ฉบับร่าง</span>';
+  const d = new Date(createdAt);
+  setText("v-date-thai", d.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }));
+  setText("v-time-thai", d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }));
+}
+
+function renderStatus(status) {
+  setHTML(
+    "v-status-container",
+    status === "publish"
+      ? `<span class="badge bg-success w-100">เผยแพร่แล้ว</span>`
+      : `<span class="badge bg-secondary w-100">ฉบับร่าง</span>`
+  );
 }
 
 /* =========================================================
-   Load subcategories by category
+   Subcategories
 ========================================================= */
 async function loadSubcategories(catId, selectedSubcatId = null) {
   const subSelect = document.getElementById("editSubCategory");
@@ -175,7 +181,7 @@ async function loadSubcategories(catId, selectedSubcatId = null) {
         const opt = document.createElement("option");
         opt.value = sub.subcat_id;
         opt.textContent = sub.subcat_name;
-        if (selectedSubcatId && String(selectedSubcatId) === String(sub.subcat_id)) {
+        if (String(selectedSubcatId) === String(sub.subcat_id)) {
           opt.selected = true;
         }
         subSelect.appendChild(opt);
@@ -188,7 +194,7 @@ async function loadSubcategories(catId, selectedSubcatId = null) {
 }
 
 /* =========================================================
-   Edit news (เปิด Modal + โหลดข้อมูล + subcategory)
+   Edit News
 ========================================================= */
 async function editNews(newsId) {
   if (!newsId || !editModal) return;
@@ -199,64 +205,62 @@ async function editNews(newsId) {
 
     const result = await res.json();
     if (!result.success) {
-      if (window.Swal) Swal.fire("ผิดพลาด", result.message || "ไม่พบข้อมูลข่าว", "error");
+      Swal?.fire("ผิดพลาด", result.message || "ไม่พบข้อมูลข่าว", "error");
       return;
     }
 
-    const n = result.data;
-
-    document.getElementById("editNewsId").value = n.news_id || '';
-    document.getElementById("editTitle").value = n.news_title || '';
-    document.getElementById("editContent").value = n.news_content || '';
-    document.getElementById("editCategory").value = n.cat_id || '';
-    document.getElementById("editStatus").value = n.status || 'draft';
-    document.getElementById("editFeatured").value = n.is_featured ? "1" : "0";
-    document.getElementById("editVideoUrl").value = n.video_url || '';
-
-    await loadSubcategories(n.cat_id, n.subcat_id);
-
-    const preview = document.getElementById("editPreview");
-    if (preview) {
-      if (n.cover_image) {
-        let imageSrc = n.cover_image.startsWith('data:image')
-          ? n.cover_image
-          : n.cover_image.length > 100
-            ? 'data:image/jpeg;base64,' + n.cover_image
-            : '/static/' + n.cover_image;
-
-        preview.src = imageSrc;
-        preview.style.display = 'block';
-      } else {
-        preview.style.display = 'none';
-      }
-    }
+    fillEditForm(result.data);
+    await loadSubcategories(result.data.cat_id, result.data.subcat_id);
+    renderEditPreview(result.data.cover_image);
 
     editModal.show();
 
   } catch (err) {
     console.error(err);
-    if (window.Swal) Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลข่าวได้", "error");
+    Swal?.fire("เกิดข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลข่าวได้", "error");
   }
 }
 
-/* =========================================================
-   เปลี่ยนหมวดหลัก → โหลดหมวดย่อยใหม่
-========================================================= */
-document.getElementById("editCategory")?.addEventListener("change", function () {
-  loadSubcategories(this.value, null);
-});
+function fillEditForm(n) {
+  setValue("editNewsId", n.news_id || "");
+  setValue("editTitle", n.news_title || "");
+  setValue("editContent", n.news_content || "");
+  setValue("editCategory", n.cat_id || "");
+  setValue("editStatus", n.status || "draft");
+  setValue("editFeatured", n.is_featured ? "1" : "0");
+  setValue("editVideoUrl", n.video_url || "");
+}
+
+function renderEditPreview(rawImage) {
+  const preview = document.getElementById("editPreview");
+  if (!preview) return;
+
+  if (!rawImage) {
+    preview.style.display = "none";
+    return;
+  }
+
+  preview.src = buildImageSrc(rawImage);
+  preview.style.display = "block";
+}
+
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
 
 /* =========================================================
-   Submit Edit News Form (AJAX)
+   Submit Edit Form
 ========================================================= */
+document.getElementById("editNewsForm")?.addEventListener("submit", submitEditForm);
 
-document.getElementById("editNewsForm")?.addEventListener("submit", async function (e) {
+async function submitEditForm(e) {
   e.preventDefault();
 
   const id = document.getElementById("editNewsId")?.value;
   if (!id) return;
 
-  const formData = new FormData(this);
+  const formData = new FormData(e.target);
 
   try {
     const res = await fetch(`/admin/news/${id}/update`, {
@@ -267,103 +271,222 @@ document.getElementById("editNewsForm")?.addEventListener("submit", async functi
     const result = await res.json();
 
     if (!res.ok || !result.success) {
-      if (window.Swal) {
-        Swal.fire("ผิดพลาด", result.message || "บันทึกไม่สำเร็จ", "error");
-      }
+      Swal?.fire("ผิดพลาด", result.message || "บันทึกไม่สำเร็จ", "error");
       return;
     }
 
-    if (window.Swal) {
-      Swal.fire({
-        icon: "success",
-        title: "บันทึกสำเร็จ",
-        timer: 1200,
-        showConfirmButton: false
-      });
-    }
-
+    Swal?.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1200, showConfirmButton: false });
     editModal?.hide();
 
     if (typeof fetchNewsAjax === "function") {
-      fetchNewsAjax(currentPage || 1);
+      fetchNewsAjax(window.currentPage || 1);
     } else {
       location.reload();
     }
 
   } catch (err) {
-    console.error("Update error:", err);
-    if (window.Swal) {
-      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
-    }
+    console.error(err);
+    Swal?.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
   }
-});
+}
 
 /* =========================================================
-   Delete news (SweetAlert2)
+   Delete News
 ========================================================= */
 function deleteNews(id, btn) {
   if (!id || !window.Swal) return;
 
   Swal.fire({
-    title: 'ยืนยันการลบข่าว',
-    text: 'คุณแน่ใจหรือไม่ว่าต้องการลบข่าวนี้?',
-    icon: 'warning',
+    title: "ยืนยันการลบข่าว",
+    text: "คุณแน่ใจหรือไม่ว่าต้องการลบข่าวนี้?",
+    icon: "warning",
     showCancelButton: true,
-    confirmButtonText: 'ลบข่าว',
-    cancelButtonText: 'ยกเลิก',
+    confirmButtonText: "ลบข่าว",
+    cancelButtonText: "ยกเลิก",
     reverseButtons: true
   }).then((result) => {
     if (!result.isConfirmed) return;
 
-    if (btn) btn.disabled = true;
+    btn && (btn.disabled = true);
 
-    fetch(`/admin/news/delete/${id}`, { method: 'POST' })
+    fetch(`/admin/news/delete/${id}`, { method: "POST" })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1200, showConfirmButton: false });
-          const row = btn?.closest('tr');
-          if (row) {
-            row.style.transition = 'opacity .2s';
-            row.style.opacity = '0';
-            setTimeout(() => row.remove(), 200);
-          }
+          Swal.fire({ icon: "success", title: "ลบสำเร็จ", timer: 1200, showConfirmButton: false });
+          const row = btn?.closest("tr");
+          row && fadeOutAndRemove(row);
         } else {
-          Swal.fire('ลบไม่สำเร็จ', data.message || '', 'error');
+          Swal.fire("ลบไม่สำเร็จ", data.message || "", "error");
         }
       })
       .catch(err => {
         console.error(err);
-        Swal.fire('เกิดข้อผิดพลาด', 'ลบข้อมูลไม่สำเร็จ', 'error');
+        Swal.fire("เกิดข้อผิดพลาด", "ลบข้อมูลไม่สำเร็จ", "error");
       })
       .finally(() => {
-        if (btn) btn.disabled = false;
+        btn && (btn.disabled = false);
       });
   });
 }
 
+function fadeOutAndRemove(row) {
+  row.style.transition = "opacity .2s";
+  row.style.opacity = "0";
+  setTimeout(() => row.remove(), 200);
+}
+
 /* =========================================================
-   Event binding ปุ่มในตาราง
+   Event Binding
 ========================================================= */
 document.addEventListener("click", function (e) {
   const editBtn = e.target.closest(".btn-edit");
   if (editBtn) {
     e.preventDefault();
-    const id = editBtn.dataset.id;
-    if (id) editNews(id);
+    editNews(editBtn.dataset.id);
   }
 
   const viewBtn = e.target.closest(".btn-view");
   if (viewBtn) {
     e.preventDefault();
-    const id = viewBtn.dataset.id;
-    if (id) viewNews(id);
+    viewNews(viewBtn.dataset.id);
   }
 
   const deleteBtn = e.target.closest(".btn-delete");
   if (deleteBtn) {
     e.preventDefault();
-    const id = deleteBtn.dataset.id;
-    if (id) deleteNews(id, deleteBtn);
+    deleteNews(deleteBtn.dataset.id, deleteBtn);
   }
+});
+
+document.getElementById("editCategory")?.addEventListener("change", function () {
+  loadSubcategories(this.value);
+});
+
+
+/* =========================================================
+   Chart: News by Category (เลือกวัน/สัปดาห์/เดือน/ปี)
+========================================================= */
+let newsChartInstance = null;
+
+function rangeLabel(range) {
+  return {
+    day: "วันนี้",
+    week: "7 วันล่าสุด",
+    month: "30 วันล่าสุด",
+    year: "1 ปีล่าสุด",
+    all: "ทั้งหมด"
+  }[range] || "วันนี้";
+}
+
+function loadNewsChart(range = "day") {
+  const canvas = document.getElementById("newsTodayChart");
+  const legendContainer = document.getElementById("newsLegend");
+  const badge = document.querySelector(".stat-card .badge");
+
+  if (!canvas) return;
+
+  if (badge) badge.innerText = rangeLabel(range);
+
+  const url = range === "all"
+    ? "/api/news/today-by-category"
+    : `/api/news/today-by-category?range=${range}`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(res => {
+      if (!res.success || !res.labels?.length) {
+        if (legendContainer) {
+          legendContainer.innerHTML = `<div class="text-muted text-center">ยังไม่มีข่าวในช่วงนี้</div>`;
+        }
+        if (newsChartInstance) {
+          newsChartInstance.destroy();
+          newsChartInstance = null;
+        }
+        return;
+      }
+
+      const ctx = canvas.getContext("2d");
+      const palette = [
+        "#d61f26", "#ff6384", "#e91e63", "#9c27b0", "#673ab7",
+        "#3f51b5", "#2196f3", "#00bcd4", "#009688", "#4caf50",
+        "#8bc34a", "#ff9800", "#ffc107"
+      ];
+
+      const total = res.values.reduce((a, b) => a + Number(b || 0), 0);
+
+      // ===== Legend =====
+      if (legendContainer) {
+        legendContainer.innerHTML = res.labels.map((label, i) => `
+          <div class="legend-item">
+            <span class="dot" style="background-color:${palette[i % palette.length]}"></span>
+            <span class="name">${label}</span>
+            <span class="value">${res.values[i]}</span>
+          </div>
+        `).join("");
+      }
+
+      // ===== Plugin วาดเลขกลาง =====
+      const centerTextPlugin = {
+        id: "centerText",
+        beforeDraw(chart) {
+          const { ctx, width, height } = chart;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = "bold 28px sans-serif";
+          ctx.fillStyle = "#d32f2f";
+          ctx.fillText(total, width / 2, height / 2 - 8);
+          ctx.font = "500 13px sans-serif";
+          ctx.fillStyle = "#777";
+          ctx.fillText("ข่าวทั้งหมด", width / 2, height / 2 + 18);
+          ctx.restore();
+        }
+      };
+
+      if (newsChartInstance) newsChartInstance.destroy();
+
+      newsChartInstance = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: res.labels,
+          datasets: [{
+            data: res.values,
+            backgroundColor: palette.slice(0, res.labels.length),
+            borderColor: "#fff",
+            borderWidth: 2,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "70%",
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${ctx.raw} ข่าว`
+              }
+            }
+          }
+        },
+        plugins: [centerTextPlugin]
+      });
+    })
+    .catch(err => console.error("โหลดกราฟล้มเหลว:", err));
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  // โหลดค่าเริ่มต้น = ทั้งหมด
+  loadNewsChart("all");
+
+  // ปุ่มเปลี่ยนช่วงเวลา
+  document.querySelectorAll(".btn-range").forEach(btn => {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".btn-range").forEach(b => b.classList.remove("active"));
+      this.classList.add("active");
+      loadNewsChart(this.dataset.range);
+    });
+  });
 });
