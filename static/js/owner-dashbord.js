@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
-  setCurrentMonthLabel();   // 👈 เพิ่มบรรทัดนี้
+document.addEventListener("DOMContentLoaded", () => {
+  setCurrentMonthLabel();
   loadOwnerDashboard();
 });
 
@@ -37,15 +37,10 @@ async function loadOwnerDashboard() {
     }
 
     renderTopStats(data);
-    renderRevenueByCategoryTable(data.revenue_by_cat);
-    renderEmployeeTable(data.employees);
-
-    renderRoleChart(data.emp_by_role);
-    renderRevenueDailyChart(data.revenue_daily);
-    renderRevenueMonthlyChart(data.revenue_monthly);
-    renderRevenueYearlyChart(data.revenue_yearly);
-    renderNewsViewsDailyChart(data.news_views_daily);
-    renderNewsByCategoryTable(data.news_by_category);
+    renderRevenueByCategoryTable(data.revenue_by_cat || []);
+    renderEmployeeTable(data.employees || []);
+    renderNewsByCategoryTable(data.news_by_category || []);
+    renderRoleChart(data.emp_by_role || []);
 
   } catch (err) {
     console.error("โหลด Dashboard Owner ล้มเหลว:", err);
@@ -53,269 +48,98 @@ async function loadOwnerDashboard() {
 }
 
 // ======================
-// Render: การ์ดด้านบน (แก้แล้วให้ตรง Backend)
+// Render: การ์ดด้านบน
 // ======================
 function renderTopStats(data) {
-  const statRevenue =
-    document.getElementById("statRevenueMonth") ||
-    document.querySelectorAll(".stat-value")[0];
-
-  const statAdsApprovedMonth =
-    document.getElementById("statAdsApprovedMonth") ||
-    document.querySelectorAll(".stat-value")[1];
-
-  const statEmp =
-    document.getElementById("statEmpTotal") ||
-    document.querySelectorAll(".stat-value")[2];
-
-  const statRole =
-    document.getElementById("statRoleTotal") ||
-    document.querySelectorAll(".stat-value")[3];
+  const statRevenue = document.getElementById("statRevenueMonth");
+  const statAdsApprovedMonth = document.getElementById("statAdsApprovedMonth");
+  const statEmp = document.getElementById("statEmpTotal");
+  const statRole = document.getElementById("statRoleTotal");
 
   if (statRevenue) {
-    statRevenue.innerText =
-      "฿" + Number(data.revenue_month || 0).toLocaleString();
+    statRevenue.innerText = "฿" + Number(data.revenue_month || 0).toLocaleString("th-TH");
   }
 
   if (statAdsApprovedMonth) {
     statAdsApprovedMonth.innerText = Number(
       data.total_ads_approved_month || 0
-    ).toLocaleString();
+    ).toLocaleString("th-TH");
   }
 
-  if (statEmp) statEmp.innerText = data.total_emp ?? 0;
-  if (statRole) statRole.innerText = data.total_role ?? 0;
+  if (statEmp) statEmp.innerText = Number(data.total_emp || 0).toLocaleString("th-TH");
+  if (statRole) statRole.innerText = Number(data.total_role || 0).toLocaleString("th-TH");
 }
 
 // ======================
-// Render: ตารางรายรับตามประเภทโฆษณา
+// ตารางรายรับตามประเภทโฆษณา
 // ======================
 function renderRevenueByCategoryTable(rows = []) {
-  const advTableBody =
-    document.querySelector("#revenueByCatTable tbody") ||
-    document.querySelectorAll(".table")[0]?.querySelector("tbody");
-
-  if (!advTableBody) return;
-
-  const data = Array.isArray(rows) ? rows : [];
-
-  advTableBody.innerHTML = data.length
-    ? data
-        .map(
-          (i, idx) => `
-          <tr>
-            <td>${idx + 1}</td>
-            <td>${i.name || "-"}</td>
-            <td>฿${Number(i.total || 0).toLocaleString()}</td>
-          </tr>
-        `
-        )
-        .join("")
-    : `
-      <tr>
-        <td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td>
-      </tr>
-    `;
-}
-
-// ======================
-// Render: ตารางพนักงาน
-// ======================
-function renderEmployeeTable(rows = []) {
-  const empTableBody =
-    document.querySelector("#employeeTable tbody") ||
-    document.querySelectorAll(".table")[2]?.querySelector("tbody");
-
-  if (!empTableBody) return;
-
-  const emps = Array.isArray(rows) ? rows : [];
-
-  empTableBody.innerHTML = emps.length
-    ? emps
-        .map(
-          (emp) => `
-          <tr>
-            <td>${emp.fullname || "-"}</td>
-            <td>${emp.role_name || "-"}</td>
-            <td>
-              <span class="badge ${
-                emp.status === "online" ? "bg-success" : "bg-secondary"
-              }">
-                ${emp.status === "online" ? "ออนไลน์" : "ออฟไลน์"}
-              </span>
-            </td>
-          </tr>
-        `
-        )
-        .join("")
-    : `
-      <tr>
-        <td colspan="3" class="text-center text-muted">ไม่มีข้อมูลพนักงาน</td>
-      </tr>
-    `;
-}
-
-// ======================
-// Render: ตารางประเภทข่าวที่มีข่าวมากที่สุด
-// ======================
-function renderNewsByCategoryTable(rows = []) {
-  const tbody = document.querySelector("#newsByCategoryTable tbody");
-  if (!tbody) return;
-
-  const data = Array.isArray(rows) ? rows : [];
-
-  tbody.innerHTML = data.length
-    ? data
-        .map(
-          (i, idx) => `
-          <tr>
-            <td>${idx + 1}</td>
-            <td>${i.category_name || "-"}</td>
-            <td>${Number(i.total || 0).toLocaleString()}</td>
-          </tr>
-        `
-        )
-        .join("")
-    : `
-      <tr>
-        <td colspan="3" class="text-center text-muted">ไม่มีข้อมูลประเภทข่าว</td>
-      </tr>
-    `;
-}
-
-
-
-document.addEventListener("DOMContentLoaded", async function () {
-  try {
-    const res = await fetch("/api/owner/dashboard");
-    const data = await res.json();
-
-    if (!data || !data.success) {
-      console.warn("โหลดข้อมูล Dashboard ไม่สำเร็จ");
-      return;
-    }
-
-    // ======================
-    // Stat Cards
-    // ======================
-    setText("statRevenueMonth", formatNumber(data.revenue_month || 0));
-    setText("statAdsApprovedMonth", formatNumber(data.total_ads_approved_month || 0));
-    setText("statEmpTotal", formatNumber(data.total_emp || 0));
-    setText("statRoleTotal", formatNumber(data.total_role || 0));
-
-    setText("labelRevenueMonth", getCurrentMonthTH());
-    setText("labelAdsMonth", getCurrentMonthTH());
-
-    // ======================
-    // Revenue by Category Table
-    // ======================
-    renderRevenueByCategoryTable(data.revenue_by_cat || []);
-
-    // ======================
-    // News by Category Table
-    // ======================
-    renderNewsByCategoryTable(data.news_by_category || []);
-
-    // ======================
-    // Employee Table
-    // ======================
-    renderEmpStatusTable(data.employees || []);
-
-    // ======================
-    // Role Chart (เหลือแค่อันนี้)
-    // ======================
-    renderRoleChart(data.emp_by_role || []);
-
-  } catch (err) {
-    console.error("Dashboard error:", err);
-  }
-});
-
-/* ======================
-   Utils
-====================== */
-function setText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
-function formatNumber(num) {
-  return Number(num || 0).toLocaleString("th-TH");
-}
-
-function getCurrentMonthTH() {
-  const months = [
-    "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-    "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
-  ];
-  const d = new Date();
-  return months[d.getMonth()];
-}
-
-/* ======================
-   Tables
-====================== */
-function renderRevenueByCategoryTable(list = []) {
   const tbody = document.querySelector("#revenueByCatTable tbody");
   if (!tbody) return;
 
-  if (!list.length) {
+  if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = list.map((i, idx) => `
+  tbody.innerHTML = rows.map((i, idx) => `
     <tr>
       <td>${idx + 1}</td>
-      <td>${i.name}</td>
-      <td>${formatNumber(i.total)}</td>
+      <td>${i.name || "-"}</td>
+      <td>฿${Number(i.total || 0).toLocaleString("th-TH")}</td>
     </tr>
   `).join("");
 }
 
-function renderNewsByCategoryTable(list = []) {
-  const tbody = document.querySelector("#newsByCategoryTable tbody");
-  if (!tbody) return;
-
-  if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = list.map((i, idx) => `
-    <tr>
-      <td>${idx + 1}</td>
-      <td>${i.category_name}</td>
-      <td>${i.total}</td>
-    </tr>
-  `).join("");
-}
-
-function renderEmpStatusTable(list = []) {
+// ======================
+// ตารางพนักงาน
+// ======================
+function renderEmployeeTable(rows = []) {
   const tbody = document.querySelector("#empStatusTable tbody");
   if (!tbody) return;
 
-  if (!list.length) {
+  if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = list.map((i) => `
+  tbody.innerHTML = rows.map((i) => `
     <tr>
-      <td>${i.fullname}</td>
+      <td>${i.fullname || "-"}</td>
       <td>${i.role_name || "-"}</td>
       <td>
-        <span class="badge bg-secondary">
-          ${i.status || "offline"}
+        <span class="badge ${i.status === "online" ? "bg-success" : "bg-secondary"}">
+          ${i.status === "online" ? "ออนไลน์" : "ออฟไลน์"}
         </span>
       </td>
     </tr>
   `).join("");
 }
 
-/* ======================
-   Charts (เหลือแค่ Role Chart)
-====================== */
+// ======================
+// ตารางประเภทข่าวที่มีข่าวมากที่สุด
+// ======================
+function renderNewsByCategoryTable(rows = []) {
+  const tbody = document.querySelector("#newsByCategoryTable tbody");
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((i, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td>${i.category_name || "-"}</td>
+      <td>${Number(i.total || 0).toLocaleString("th-TH")}</td>
+    </tr>
+  `).join("");
+}
+
+// ======================
+// Chart: Role
+// ======================
 function renderRoleChart(empByRole = []) {
   if (
     !window.initDoughnutChart ||
@@ -330,5 +154,3 @@ function renderRoleChart(empByRole = []) {
     empByRole.map((i) => i.total)
   );
 }
-
-
