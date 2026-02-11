@@ -35,6 +35,7 @@ h1, h2, h3, h4, .font-kanit { font-family: "Kanit", sans-serif; }
   border: 1px solid #e5e7eb;
   background: #fff;
   box-shadow: 0 10px 30px rgba(2, 6, 23, 0.05);
+  overflow: hidden;
 }
 
 .cat-hero-bg {
@@ -189,6 +190,7 @@ h1, h2, h3, h4, .font-kanit { font-family: "Kanit", sans-serif; }
   transition: 0.18s;
   cursor: pointer;
   height: 100%;
+  position: relative;
 }
 .cat-card:hover {
   transform: translateY(-2px);
@@ -336,3 +338,30 @@ h1, h2, h3, h4, .font-kanit { font-family: "Kanit", sans-serif; }
 .btn-page:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .footer-desc { max-width: 520px; }
+
+.line-clamp-2,
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 { -webkit-line-clamp: 2; }
+.line-clamp-3 { -webkit-line-clamp: 3; }
+
+.ad-badge {
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+}
+
+.ad-badge-news { background: rgba(0, 45, 98, 0.75); }
+
+.latest-cat { font-size: 12px; }

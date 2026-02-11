@@ -91,6 +91,7 @@ def api_page_category():
         SELECT
             n.news_id,
             n.news_title AS title,
+            n.published_at,
             LEFT(n.news_content, 200) AS summary,
             n.cover_image,
             n.created_at,

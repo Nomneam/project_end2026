@@ -25,6 +25,45 @@
     pageInfo: document.getElementById("pageInfo"),
   };
 
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function safeText(s, fallback = "—") {
+    const t = String(s ?? "").trim();
+    return t ? t : fallback;
+  }
+
+  function toDate(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  function fmtDateTH(ts) {
+    const d = toDate(ts);
+    if (!d) return "—";
+    return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function timeAgo(ts) {
+    const d = toDate(ts);
+    if (!d) return "—";
+    const diff = Math.max(0, Date.now() - d.getTime());
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "เมื่อสักครู่";
+    if (mins < 60) return `${mins} นาทีที่แล้ว`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} ชม. ที่แล้ว`;
+    const days = Math.floor(hrs / 24);
+    return `${days} วันก่อน`;
+  }
+
   loadData();
 
   // =============================
@@ -120,11 +159,18 @@
               src="${n.cover_image || "/static/img/no-image.jpg"}"
               alt="${n.title}"
             />
-            <div class="cat-card-body">
-              <span class="cat-tag">${n.subcat_name}</span>
-              <div class="fw-bold mt-1">${n.title}</div>
-              <div class="text-secondary small mt-2">${n.summary || ""}</div>
+            <div class="position-absolute top-0 start-0 p-3">
+                  <span class="ad-badge ad-badge-news">news</span>
+                </div>
+          <div class="cat-card-body">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.subcat_name))}</span>
+              <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
             </div>
+              <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.title))}</div>
+              <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.summary || ""))}</div>
+              <div class="small text-muted mt-3">${escapeHtml(fmtDateTH(n.published_at))}</div>
+          </div>
           </article>
         </div>
         `
