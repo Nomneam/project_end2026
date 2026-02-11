@@ -157,20 +157,22 @@ def api_news_popular():
         with db.cursor() as cur:
             cur.execute("""
                 SELECT
-                  n.news_id,
-                  n.news_title,
-                  n.cover_image,
-                  n.published_at,
-                  c.cat_name,
-                  COUNT(v.id) AS view_count
+                n.news_id,
+                n.news_title,
+                n.cover_image,
+                n.published_at,
+                c.cat_name,
+                COUNT(v.id) AS view_count
                 FROM news n
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
                 LEFT JOIN news_view_logs v
-                  ON v.news_id = n.news_id
-                 AND v.viewed_at >= n.published_at
-                 AND v.viewed_at <  n.published_at + INTERVAL 24 HOUR
-                WHERE n.del_flg=0 AND n.status='publish'
+                ON v.news_id = n.news_id
+                AND v.viewed_at >= NOW() - INTERVAL 24 HOUR
+                WHERE n.del_flg=0
+                AND n.status='publish'
+                AND n.published_at >= NOW() - INTERVAL 24 HOUR
                 GROUP BY n.news_id
+                HAVING view_count > 0
                 ORDER BY view_count DESC, n.published_at DESC
                 LIMIT %s
             """, (limit,))
