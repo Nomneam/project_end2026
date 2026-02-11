@@ -122,7 +122,7 @@
 
         <div class="mt-3">
           <div class="nav-section-title">เมนูงาน</div>
-          <a class="side-link" href="#/news/create">✍️ เขียนข่าว</a>
+          <a class="side-link" href="{{ url_for('admin_writenew.admin_writenew') }}">✍️ เขียนข่าว</a>
           <a class="side-link" href="{{url_for('news_management.news_management')}}">📰 หน้ารวมข่าว</a>
           <a class="side-link" href="{{ url_for('user_role.user_role') }}">👤➕ เพิ่มพนักงาน</a>
           <a class="side-link" href="{{ url_for('advert_review.advert_review') }}">📣 ตรวจสอบโฆษณา</a>

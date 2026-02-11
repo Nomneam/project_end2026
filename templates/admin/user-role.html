@@ -102,119 +102,121 @@
             </table>
         </div>
     </div>
-
+<!-- modal add employee -->
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered"> 
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 650px; margin-top: 50px;"> 
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2 text-danger"></i>เพิ่มผู้ใช้งานใหม่</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header py-2 px-3">
+                <h6 class="modal-title fw-bold" style="font-size: 0.95rem;">
+                    <i class="bi bi-person-plus-fill me-2 text-danger"></i>เพิ่มผู้ใช้งานใหม่
+                </h6>
+                <button type="button" class="btn-close small" style="font-size: 0.7rem;" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ url_for('user_role.add_user') }}" method="POST" class="swal-submit">
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Username</label>
-                            <input type="text" name="emp_username" class="form-control" placeholder="ระบุชื่อผู้ใช้งาน" required>
+            <form action="{{ url_for('user_role.add_user') }}" method="POST">
+                <div class="modal-body py-2 px-3"> <div class="row g-2"> <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">Username</label>
+                            <input type="text" name="emp_username" class="form-control form-control-sm" placeholder="ระบุชื่อผู้ใช้งาน" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" placeholder="กำหนดรหัสผ่าน" required>
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">Password</label>
+                            <input type="password" name="password" class="form-control form-control-sm" placeholder="กำหนดรหัสผ่าน" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">ชื่อจริง</label>
-                            <input type="text" name="emp_fname" class="form-control" placeholder="ชื่อ" required>
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">ชื่อจริง</label>
+                            <input type="text" name="emp_fname" class="form-control form-control-sm" placeholder="ชื่อ" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">นามสกุล</label>
-                            <input type="text" name="emp_lname" class="form-control" placeholder="นามสกุล" required>
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">นามสกุล</label>
+                            <input type="text" name="emp_lname" class="form-control form-control-sm" placeholder="นามสกุล" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">เลขบัตรประชาชน</label>
-                            <input type="text" name="emp_idcard" class="form-control" maxlength="13" placeholder="13 หลัก">
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">เลขบัตรประชาชน</label>
+                            <input type="text" name="emp_idcard" class="form-control form-control-sm" maxlength="13" placeholder="13 หลัก">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">เบอร์โทรศัพท์</label>
-                            <input type="text" name="emp_phone" class="form-control" maxlength="10" placeholder="0XXXXXXXXX">
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">เบอร์โทรศัพท์</label>
+                            <input type="text" name="emp_phone" class="form-control form-control-sm" maxlength="10" placeholder="0XXXXXXXXX">
                         </div>
-                        <div class="col-md-8">
-                            <label class="form-label">อีเมล</label>
-                            <input type="email" name="emp_email" class="form-control" placeholder="name@company.com" required>
+                        <div class="col-8">
+                            <label class="form-label small mb-0 fw-bold">อีเมล</label>
+                            <input type="email" name="emp_email" class="form-control form-control-sm" placeholder="name@company.com" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">สิทธิ์การใช้งาน</label>
-                            <select name="role_id" class="form-select">
+                        <div class="col-4">
+                            <label class="form-label small mb-0 fw-bold">สิทธิ์การใช้งาน</label>
+                            <select name="role_id" class="form-select form-select-sm">
                                 <option value="1">Admin</option>
                                 <option value="2">Reporter</option>
                                 <option value="3" selected>Owner</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">ที่อยู่</label>
-                            <textarea name="emp_address" class="form-control" rows="2" placeholder="ที่อยู่ปัจจุบัน"></textarea>
+                            <label class="form-label small mb-0 fw-bold">ที่อยู่</label>
+                            <textarea name="emp_address" class="form-control form-control-sm" rows="1" placeholder="ที่อยู่ปัจจุบัน"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูล</button>
+                <div class="modal-footer py-1 px-3 border-0 bg-light">
+                    <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm btn-danger px-4 fw-bold">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
+<!-- modal edit emoployee -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 650px; margin-top: 50px;">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-danger"></i>แก้ไขข้อมูลผู้ใช้งาน</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header py-2 px-3 border-bottom">
+                <h6 class="modal-title fw-bold" style="font-size: 0.95rem;">
+                    <i class="bi bi-pencil-square me-2 text-danger"></i>แก้ไขข้อมูลผู้ใช้งาน
+                </h6>
+                <button type="button" class="btn-close small" style="font-size: 0.7rem;" data-bs-dismiss="modal"></button>
             </div>
-            <form id="editUserForm" method="POST" class="swal-submit">
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label text-muted">Username (Read Only)</label>
-                            <input type="text" id="edit_username" class="form-control bg-light" readonly>
+            <form id="editUserForm" method="POST">
+                <div class="modal-body py-2 px-3">
+                    <div class="row g-2">
+                        <div class="col-12 mb-1">
+                            <label class="form-label small mb-0 text-muted fw-bold">USERNAME (READ ONLY)</label>
+                            <input type="text" id="edit_username" class="form-control form-control-sm bg-light border-0 fw-bold" readonly style="font-size: 0.85rem;">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">ชื่อจริง</label>
-                            <input type="text" name="emp_fname" id="edit_fname" class="form-control" required>
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">ชื่อจริง</label>
+                            <input type="text" name="emp_fname" id="edit_fname" class="form-control form-control-sm" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">นามสกุล</label>
-                            <input type="text" name="emp_lname" id="edit_lname" class="form-control" required>
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">นามสกุล</label>
+                            <input type="text" name="emp_lname" id="edit_lname" class="form-control form-control-sm" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">เลขบัตรประชาชน</label>
-                            <input type="text" name="emp_idcard" id="edit_idcard" class="form-control" maxlength="13">
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">เลขบัตรประชาชน</label>
+                            <input type="text" name="emp_idcard" id="edit_idcard" class="form-control form-control-sm" maxlength="13">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">เบอร์โทรศัพท์</label>
-                            <input type="text" name="emp_phone" id="edit_phone" class="form-control" maxlength="10">
+                        <div class="col-6">
+                            <label class="form-label small mb-0 fw-bold">เบอร์โทรศัพท์</label>
+                            <input type="text" name="emp_phone" id="edit_phone" class="form-control form-control-sm" maxlength="10">
                         </div>
-                        <div class="col-md-8">
-                            <label class="form-label">อีเมล</label>
-                            <input type="email" name="emp_email" id="edit_email" class="form-control" required>
+                        <div class="col-8">
+                            <label class="form-label small mb-0 fw-bold">อีเมล</label>
+                            <input type="email" name="emp_email" id="edit_email" class="form-control form-control-sm" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">บทบาท</label>
-                            <select name="role_id" id="edit_role" class="form-select">
+                        <div class="col-4">
+                            <label class="form-label small mb-0 fw-bold">บทบาท</label>
+                            <select name="role_id" id="edit_role" class="form-select form-select-sm">
                                 <option value="1">Admin</option>
                                 <option value="2">Reporter</option>
                                 <option value="3">Owner</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">ที่อยู่</label>
-                            <textarea name="emp_address" id="edit_address" class="form-control" rows="2"></textarea>
+                            <label class="form-label small mb-0 fw-bold">ที่อยู่</label>
+                            <textarea name="emp_address" id="edit_address" class="form-control form-control-sm" rows="1"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light text-end">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                    <button type="submit" class="btn btn-primary px-4">บันทึกการเปลี่ยนแปลง</button>
+                <div class="modal-footer py-1 px-3 border-0 bg-light text-end">
+                    <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none" data-bs-dismiss="modal">ปิด</button>
+                    <button type="submit" class="btn btn-sm btn-danger px-4 fw-bold">บันทึกการเปลี่ยนแปลง</button>
                 </div>
             </form>
         </div>

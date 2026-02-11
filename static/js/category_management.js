@@ -43,11 +43,6 @@ $(document).ready(function () {
         });
 
     // ======================================================
-    // FIX: Close Swal before open modal
-    // ======================================================
-    $('[data-bs-toggle="modal"]').on('click', () => Swal.close());
-
-    // ======================================================
     // Add Category
     // ======================================================
     $('#btnConfirmAdd').click(function () {
@@ -79,6 +74,8 @@ $(document).ready(function () {
     // Edit Category Modal
     // ======================================================
     $('#editCategoryModal').on('show.bs.modal', function (event) {
+        Swal.close(); // ปิด Swal เฉพาะตอนเปิด Modal
+
         const btn = $(event.relatedTarget);
         const catId = btn.data('id');
         const catName = btn.data('name');
@@ -124,9 +121,12 @@ $(document).ready(function () {
     });
 
     // ======================================================
-    // ADD NEW SUB ROW  ✅ (FIXED)
+    // ADD NEW SUB ROW
     // ======================================================
-    $(document).on('click', '.add-row-btn', function () {
+    $(document).on('click', '.add-row-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         $('#newSubRowsContainer').append(`
             <div class="input-group mb-2 dynamic-sub-row animate__animated animate__fadeIn">
                 <input type="text" class="form-control new-sub-input" placeholder="ชื่อประเภทย่อยใหม่">
@@ -142,7 +142,10 @@ $(document).ready(function () {
     });
 
     // Confirm new sub row
-    $(document).on('click', '.confirm-row-btn', function () {
+    $(document).on('click', '.confirm-row-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         const val = $(this).siblings('.new-sub-input').val().trim();
         if (!val) return notifyWarning('กรุณาระบุชื่อประเภทย่อย');
 
@@ -153,15 +156,39 @@ $(document).ready(function () {
     });
 
     // Remove row
-    $(document).on('click', '.remove-row-btn', function () {
+    $(document).on('click', '.remove-row-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
         $(this).closest('.dynamic-sub-row').remove();
     });
 
-    // Delete existing sub
-    $(document).on('click', '.delete-sub-btn', function () {
-        $(this).closest('.sub-item-card').fadeOut(200, function () {
-            $(this).remove();
-        });
+    // ======================================================
+    // Delete existing sub (SYNC DB)
+    // ======================================================
+    $(document).on('click', '.delete-sub-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $card = $(this).closest('.sub-item-card');
+        const subId = $(this).data('id');
+
+        confirmAction('ยืนยันการลบประเภทย่อย', 'ต้องการลบประเภทย่อยนี้ใช่หรือไม่?', 'ลบข้อมูล')
+            .then(res => {
+                if (!res.isConfirmed) return;
+
+                showLoading('กำลังลบข้อมูล...');
+
+                $.post('/delete-subcategory', { subcat_id: subId })
+                    .done(res => {
+                        if (res.success) {
+                            notifySuccess('ลบประเภทย่อยเรียบร้อย');
+                            $card.fadeOut(200, () => $card.remove());
+                        } else {
+                            notifyError(res.message || 'ลบไม่สำเร็จ');
+                        }
+                    })
+                    .fail(() => notifyError('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
+            });
     });
 
     // ======================================================
@@ -206,7 +233,7 @@ function appendSubItem($container, text, id) {
             <span class="sub-text-val fw-bold">
                 <i class="bi bi-layers me-2 text-danger"></i>${text}
             </span>
-            <button class="btn btn-sm text-danger delete-sub-btn p-0 border-0" data-id="${id}">
+            <button type="button" class="btn btn-sm text-danger delete-sub-btn p-0 border-0" data-id="${id}">
                 <i class="bi bi-trash3-fill"></i>
             </button>
         </div>
@@ -246,7 +273,7 @@ function deleteCategory(id) {
             .done(res => {
                 res.success
                     ? Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', timer: 1200, showConfirmButton: false })
-                          .then(() => location.reload())
+                        .then(() => location.reload())
                     : Swal.fire({ icon: 'error', title: 'ล้มเหลว', text: res.message });
             })
             .fail(() => Swal.fire({ icon: 'error', title: 'Error', text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้' }));
