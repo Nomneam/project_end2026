@@ -210,27 +210,72 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    new Chart(document.getElementById('userActivityChart'), {
-      type: 'pie',
-      data: {
-        labels: ['ออนไลน์', 'ออฟไลน์'],
-        datasets: [{
-          // ตรงนี้คงไว้เป็นค่า Static ตามที่คุณต้องการ
-          data: [18, 10], 
-          backgroundColor: ['#198754', '#6c757d'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
+document.addEventListener('DOMContentLoaded', function () {
+  const ctx = document.getElementById('userActivityChart');
+  if (!ctx) return;
+
+  fetch('/admin/user-activity/today')
+    .then(res => res.json())
+    .then(res => {
+      if (!res.success) {
+        console.warn('API error:', res);
+        return;
+      }
+
+      const total = (res.online || 0) + (res.offline || 0);
+
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['ออนไลน์ (วันนี้)', 'ออฟไลน์ (วันนี้)'],
+          datasets: [{
+            data: [res.online, res.offline],
+            backgroundColor: ['#20c997', '#adb5bd'], // เขียวสด + เทาอ่อน
+            hoverOffset: 12,                          // ตอน hover เด้งนิด ๆ
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            animateRotate: true,
+            duration: 900,
+            easing: 'easeOutQuart'
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 16,
+                font: {
+                  size: 12,
+                  weight: '600'
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(33, 37, 41, 0.9)',
+              padding: 10,
+              callbacks: {
+                label: function (ctx) {
+                  const value = ctx.raw || 0;
+                  const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+                  return ` ${ctx.label}: ${value} คน (${percent}%)`;
+                }
+              }
+            }
           }
         }
-      }
+      });
+    })
+    .catch(err => {
+      console.error('Fetch user activity failed:', err);
     });
-  });
+});
 </script>
+
 {% endblock %}

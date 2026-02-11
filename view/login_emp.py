@@ -21,6 +21,31 @@ def connect_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+# ==========================================================
+# auditlogin_emp
+# ==========================================================
+def audit_log(emp_id, action, pages="", detail=""):
+    conn = None
+    try:
+        conn = connect_db()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO audit_logs_emp (emp_id, action, pages, detail, ip_address, created_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+            """, (
+                emp_id,
+                action,
+                pages,
+                detail,
+                request.headers.get("X-Forwarded-For", request.remote_addr)
+            ))
+            conn.commit()
+    except Exception as e:
+        print("Audit log error:", e)
+    finally:
+        if conn:
+            conn.close()
+
 
 @login_emp_bp.route("/login_emp", methods=["GET", "POST"])
 def login_emp():
@@ -79,11 +104,18 @@ def login_emp():
         session["user"] = {
             "id": user["emp_id"],
             "username": user["emp_username"],
-            "fname": user.get("emp_fname") or user["emp_username"],  # ✅ ใช้ emp_fname
+            "fname": user.get("emp_fname") or user["emp_username"],  #  ใช้ emp_fname
             "role_id": user.get("role_id"),
             "role_name": user.get("role_name") or "",               # จาก DB (ถ้ามี)
             "avatar_url": None,                                     # ปรับได้ถ้ามีใน DB
         }
+
+        audit_log(
+            emp_id=user["emp_id"],
+            action="Login",
+            pages="/login_emp",
+            detail="Employee login success"
+        )
 
         # Redirect ตาม role (ไม่ใช้ mapping)
         if user.get("role_id") == 1:
@@ -102,6 +134,16 @@ def login_emp():
 
 @login_emp_bp.route("/logout_emp")
 def logout_emp():
+    user = session.get("user")
+
+    if user and user.get("id"):
+        #  เรียกใช้ฟังก์ชัน audit log
+        audit_log(
+                emp_id=user["id"],
+                action="Logout",
+                pages="/logout_emp",
+                detail="Employee logout"
+            )
     session.clear()
     return redirect(url_for("login_emp.login_emp"))
 
