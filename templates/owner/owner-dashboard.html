@@ -1,0 +1,143 @@
+{% extends "layout/owner-layout.html" %}
+
+{% block title %}แดชบอร์ด Owner{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/owner-dashbord.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h2 class="mb-4">Dashboard Owner</h2>
+
+    <!-- ===== Stat Cards ===== -->
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value" id="statRevenueMonth">-</div>
+          <div class="stat-label">
+            รายรับจากโฆษณา เดือน <span id="labelRevenueMonth"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value" id="statAdsApprovedMonth">-</div>
+          <div class="stat-label">
+            จำนวนโฆษณาทั้งหมด เดือน <span id="labelAdsMonth"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value" id="statEmpTotal">-</div>
+          <div class="stat-label">จำนวนพนักงาน</div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-value" id="statRoleTotal">-</div>
+          <div class="stat-label">จำนวน Role</div>
+        </div>
+      </div>
+    </div>
+
+
+  <!-- ===== Revenue by Category ===== -->
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">รายรับจากโฆษณาแยกตามประเภท</div>
+        <div class="card-body">
+          <table class="table table-striped" id="revenueByCatTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ประเภท</th>
+                <th>รายรับ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== News Views by Category (รอ API ข่าว) ===== -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">ประเภทข่าวที่มีข่าวมากที่สุด</div>
+        <div class="card-body">
+          <table class="table table-striped" id="newsByCategoryTable">
+            <thead>
+              <tr>
+                <th>ลำดับ</th>
+                <th>ประเภทข่าว</th>
+                <th>จำนวนข่าว</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="text-center text-muted">
+                  กำลังโหลดข้อมูล...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+  <!-- ===== Employee + Role Chart ===== -->
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">ข้อมูลพนักงาน</div>
+        <div class="card-body">
+          <table class="table table-striped" id="empStatusTable">
+            <thead>
+              <tr>
+                <th>ชื่อ</th>
+                <th>ตำแหน่ง</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="text-center text-muted">
+                  รอเชื่อมข้อมูลสถานะพนักงาน
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">จำนวนพนักงานแยกตาม Role</div>
+        <div class="card-body">
+          <canvas id="roleChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/owner-dashbord.js') }}"></script>
+{% endblock %}
