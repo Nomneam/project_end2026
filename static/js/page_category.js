@@ -153,6 +153,8 @@
         "beforeend",
         `
         <div class="col-md-6 col-xl-4">
+        <a href="/news/${n.news_id}"
+            class="text-decoration-none text-dark d-block h-100">
           <article class="cat-card h-100">
             <img
               class="cat-card-img"
@@ -172,6 +174,7 @@
               <div class="small text-muted mt-3">${escapeHtml(fmtDateTH(n.published_at))}</div>
           </div>
           </article>
+          </a>
         </div>
         `
       );

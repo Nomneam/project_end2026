@@ -365,3 +365,11 @@ h1, h2, h3, h4, .font-kanit { font-family: "Kanit", sans-serif; }
 .ad-badge-news { background: rgba(0, 45, 98, 0.75); }
 
 .latest-cat { font-size: 12px; }
+
+.cat-card {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+a:hover .cat-card {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
