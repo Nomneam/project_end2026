@@ -198,8 +198,8 @@ img { display: block; }
   box-shadow: 0 12px 30px rgba(2, 6, 23, 0.06);
 }
 .sponsor-mark {
-  width: 34px;
-  height: 34px;
+  width:60px;
+  height: 60px;
   border-radius: 999px;
   display: flex;
   align-items: center;
