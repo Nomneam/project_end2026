@@ -170,4 +170,30 @@ $(function () {
     } catch (_) {}
     alert("✅ " + msg);
   }
+
+    // ======================================================
+// Sidebar Ads: จำกัดจำนวนตามความสูงเนื้อหา
+// ======================================================
+$(window).on("load", function () {
+  adjustSidebarAds();
+});
+
+function adjustSidebarAds() {
+  const $article = $(".article-card");
+  const $ads = $(".sidebar-ad");
+
+  if (!$article.length || !$ads.length) return;
+
+  const articleHeight = $article.outerHeight(true);
+  let usedHeight = 0;
+
+  $ads.each(function () {
+    const adHeight = $(this).outerHeight(true);
+    usedHeight += adHeight;
+
+    if (usedHeight > articleHeight - 150) {
+      $(this).hide();
+    }
+  });
+}
 });

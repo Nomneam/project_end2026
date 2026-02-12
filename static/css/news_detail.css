@@ -231,9 +231,6 @@ html.font-lg .article-content { font-size: 1.16rem; }
 }
 .rel-body { border-top: 4px solid var(--bkk-navy); }
 
-/* Sidebar */
-.sidebar-sticky { top: 84px; }
-
 .hot-item {
   display: flex;
   align-items: flex-start;
@@ -266,4 +263,24 @@ html.font-lg .article-content { font-size: 1.16rem; }
   border-radius: 18px;
   max-height: 620px;
   object-fit: cover;
+}
+
+
+/* ===============================
+  SIDEBAR ADS 
+=============================== */
+.sidebar-ads {
+  width: 100%;
+}
+
+.sidebar-ad {
+  display: block;
+  width: 100%;
+}
+
+.sidebar-ad img {
+  width: 460px;
+  max-width: 500px;
+  height: auto;
+  display: block;
 }

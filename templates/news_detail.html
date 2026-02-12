@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>บางกอกทูเดย์ | อ่านข่าว</title>
 
-    <meta name="news-id" content="{{ article.news_id }}">
-    <meta name="news-title" content="{{ article.news_title }}">
+    <meta name="news-id" content="{{ article.news_id }}" />
+    <meta name="news-title" content="{{ article.news_title }}" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/news_detail.css') }}" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/navbar.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/news_detail.css') }}"
+    />
   </head>
 
   <body data-index-url="{{ url_for('index.index_news') }}">
@@ -33,7 +42,9 @@
                 <span class="text-red-bkk fw-bold text-uppercase cat-name">
                   {{ article.category_name }}
                 </span>
-                <span class="small text-muted ms-auto">{{ article.time_ago }}</span>
+                <span class="small text-muted ms-auto"
+                  >{{ article.time_ago }}</span
+                >
               </div>
 
               <h1 class="font-kanit fw-bold text-navy-bkk mb-2 article-title">
@@ -48,15 +59,37 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <button class="btn-page" type="button" id="btnShare">แชร์</button>
-                  <button class="btn-page" type="button" id="btnSave">บันทึก</button>
+                  <button class="btn-page" type="button" id="btnShare">
+                    แชร์
+                  </button>
+                  <button class="btn-page" type="button" id="btnSave">
+                    บันทึก
+                  </button>
 
                   <div class="d-flex align-items-center gap-2 ms-md-2">
                     <span class="small text-muted">ขนาดตัวอักษร</span>
                     <div class="d-flex align-items-center gap-2">
-                      <button class="btn-page js-font" data-font="sm" type="button">-ก</button>
-                      <button class="btn-page js-font active" data-font="md" type="button">ก</button>
-                      <button class="btn-page js-font" data-font="lg" type="button">ก+</button>
+                      <button
+                        class="btn-page js-font"
+                        data-font="sm"
+                        type="button"
+                      >
+                        -ก
+                      </button>
+                      <button
+                        class="btn-page js-font active"
+                        data-font="md"
+                        type="button"
+                      >
+                        ก
+                      </button>
+                      <button
+                        class="btn-page js-font"
+                        data-font="lg"
+                        type="button"
+                      >
+                        ก+
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -75,14 +108,23 @@
 
           <section class="mt-4">
             <div class="section-head">
-              <h3 class="font-kanit fw-bold text-navy-bkk m-0">ข่าวที่เกี่ยวข้อง</h3>
-              <a href="{{ url_for('index.index_news') }}" class="fw-bold small text-red-bkk text-decoration-none">กลับหน้าแรก ></a>
+              <h3 class="font-kanit fw-bold text-navy-bkk m-0">
+                ข่าวที่เกี่ยวข้อง
+              </h3>
+              <a
+                href="{{ url_for('index.index_news') }}"
+                class="fw-bold small text-red-bkk text-decoration-none"
+                >กลับหน้าแรก ></a
+              >
             </div>
 
             <div class="row g-3" id="relatedGrid">
               {% for n in related %}
               <div class="col-md-6">
-                <a class="text-decoration-none text-reset" href="{{ url_for('news_detail.news_detail', news_id=n.news_id) }}">
+                <a
+                  class="text-decoration-none text-reset"
+                  href="{{ url_for('news_detail.news_detail', news_id=n.news_id) }}"
+                >
                   <div class="rel-card h-100">
                     <div class="rel-img">
                       <img
@@ -95,11 +137,18 @@
                     </div>
 
                     <div class="p-3 rel-body">
-                      <div class="d-flex align-items-center justify-content-between gap-2">
-                        <span class="text-red-bkk fw-bold text-uppercase cat-name">{{ n.category_name }}</span>
+                      <div
+                        class="d-flex align-items-center justify-content-between gap-2"
+                      >
+                        <span
+                          class="text-red-bkk fw-bold text-uppercase cat-name"
+                          >{{ n.category_name }}</span
+                        >
                         <span class="small text-muted">{{ n.time_ago }}</span>
                       </div>
-                      <div class="fw-bold mt-1 line-clamp-2">{{ n.news_title }}</div>
+                      <div class="fw-bold mt-1 line-clamp-2">
+                        {{ n.news_title }}
+                      </div>
                       <div class="small text-muted mt-3">คลิกเพื่ออ่านต่อ</div>
                     </div>
                   </div>
@@ -111,35 +160,26 @@
         </div>
 
         <aside class="col-12 col-lg-4">
-          <div class="position-sticky sidebar-sticky">
-            <div class="bg-white p-4 shadow-sm rounded-4 border">
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <h3 class="font-kanit fw-bold text-navy-bkk m-0">ข่าวเด่น</h3>
-                <span class="small text-muted">24 ชม.</span>
-              </div>
+          <div class="sidebar-ads d-flex flex-column gap-5 px-5">
+            <a href="#" target="_blank" class="sidebar-ad">
+              <img src="https://drive.google.com/thumbnail?id=1FvFDs6hMwSTEaIUDOKlujHGfRUKXZ2Vq&sz=w360-h300" alt="" />
+            </a>
 
-              <div class="d-grid gap-2" id="hotList">
-                {% for h in hot %}
-                <a class="text-decoration-none text-reset" href="{{ url_for('news_detail.news_detail', news_id=h.news_id) }}">
-                  <div class="hot-item">
-                    <div class="hot-rank">{{ loop.index }}</div>
-                    <div class="hot-text">
-                      <div class="small text-muted mb-1">{{ h.category_name }} • {{ h.time_ago }}</div>
-                      <div class="fw-bold small line-clamp-2">{{ h.news_title }}</div>
-                    </div>
-                  </div>
-                </a>
-                {% endfor %}
-              </div>
-            </div>
+            <a href="#" target="_blank" class="sidebar-ad">
+              <img src="https://drive.google.com/thumbnail?id=1pXsuNXwtZ1-NIY1EkRVEndigNBsRj7wB&sz=w300-h250" alt="" />
+            </a>
 
-            <div class="mt-3 bg-white p-4 shadow-sm rounded-4 border">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="ad-badge badge-navy">ad</span>
-                <span class="small text-muted">พื้นที่โฆษณา</span>
-              </div>
-              <div class="ratio ratio-16x9 bg-light rounded-4"></div>
-            </div>
+            <a href="#" target="_blank" class="sidebar-ad">
+              <img src="https://drive.google.com/thumbnail?id=1ak-SMAiFuu_Pi98ydGm9vMolgN3D-BnI&sz=w1024-h1024" alt="" />
+            </a>
+
+             <a href="#" target="_blank" class="sidebar-ad">
+              <img src="https://drive.google.com/thumbnail?id=1Klj9uStcr_rJ-n8BdzA_FfZEUaOcrSja&sz=w2048" alt="" />
+            </a>
+
+             <a href="#" target="_blank" class="sidebar-ad">
+              <img src="https://bangkok-today.com/wp-content/uploads/2025/04/Bangkok-Today_Banner-300x250px_1.jpg" alt="" />
+            </a>
           </div>
         </aside>
       </div>
