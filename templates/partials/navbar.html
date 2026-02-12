@@ -76,7 +76,7 @@
       </div>
     </div>
   </div>
-
+         
   <!-- Nav -->
   <nav class="bg-navy-bkk text-white top-nav-sticky">
     <div class="container-xl">
@@ -87,7 +87,7 @@
         {% for c in categories %}
           {% if c.subs and c.subs|length > 0 %}
             <!-- ✅ Split dropdown: กดชื่อหมวดไปหน้า /page_category ได้ + กดลูกศรเปิดเมนูย่อย -->
-            <div class="dropdown nav-dd d-inline-flex align-items-center">
+            <div class="dropdown nav-cat-dd d-inline-flex align-items-center">
               <!-- ✅ MAIN CATEGORY LINK (กดแล้วไปหน้าใหม่) -->
               <a
                 href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}"

@@ -144,7 +144,7 @@ $(function () {
 
     const isDesktop = () => window.matchMedia("(min-width: 992px)").matches;
 
-    nav.querySelectorAll(".dropdown").forEach((dd) => {
+    nav.querySelectorAll(".nav-cat-dd").forEach((dd) => {
       const toggle = dd.querySelector('[data-bs-toggle="dropdown"]');
       const menu = dd.querySelector(".dropdown-menu");
       if (!toggle || !menu) return;
