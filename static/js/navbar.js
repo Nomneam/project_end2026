@@ -261,12 +261,16 @@ function renderAuthUI() {
       $("#userName").text(user.name || user.username);
 
       if (user.avatar) {
-        $("#userAvatar").html(
-          `<img src="${user.avatar}" class="avatar-img rounded-circle" />`
-        );
+        $("#userAvatar").html(`
+          <img 
+            src="${user.avatar}"
+            class="avatar-img rounded-circle"
+            onerror="this.onerror=null;this.parentElement.innerHTML='<i class=\\'bi bi-person-circle text-red-bkk fs-3\\'></i>';"
+          />
+        `);
       } else {
         $("#userAvatar").html(
-          `<i class="bi bi-person-circle text-red-bkk"></i>`
+          `<i class="bi bi-person-circle text-red-bkk fs-3"></i>`
         );
       }
     })
