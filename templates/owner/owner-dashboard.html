@@ -14,38 +14,94 @@
 
     <!-- ===== Stat Cards ===== -->
     <div class="row">
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value" id="statRevenueMonth">฿0</div>
-          <div class="stat-label">
-            รายรับจากโฆษณา เดือน <span id="labelRevenueMonth"></span>
+      <!-- รายรับจากโฆษณา -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">💰</div>
+          <div>
+            <div class="stat-value" id="statRevenueMonth">฿0</div>
+            <div class="stat-label">
+              รายรับจากโฆษณา เดือน <span id="labelRevenueMonth"></span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value" id="statAdsApprovedMonth">-</div>
-          <div class="stat-label">
-            จำนวนโฆษณาทั้งหมด เดือน <span id="labelAdsMonth"></span>
+      <!-- จำนวนโฆษณาที่อนุมัติ -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">📢</div>
+          <div>
+            <div class="stat-value" id="statAdsApprovedMonth">-</div>
+            <div class="stat-label">
+              จำนวนโฆษณาทั้งหมด เดือน <span id="labelAdsMonth"></span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value" id="statEmpTotal">-</div>
-          <div class="stat-label">จำนวนพนักงาน</div>
+      <!-- จำนวนพนักงาน -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">👨‍💼</div>
+          <div>
+            <div class="stat-value" id="statEmpTotal">-</div>
+            <div class="stat-label">จำนวนพนักงาน</div>
+          </div>
         </div>
       </div>
 
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-value" id="statRoleTotal">-</div>
-          <div class="stat-label">จำนวน Role</div>
+      <!-- จำนวน Role -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">🛡️</div>
+          <div>
+            <div class="stat-value" id="statRoleTotal">-</div>
+            <div class="stat-label">จำนวนตำแหน่ง</div>
+          </div>
         </div>
       </div>
     </div>
+
+    <div class="row">
+      <!-- จำนวนลูกค้า -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">👥</div>
+          <div>
+            <div class="stat-value" id="statCustomerTotal">-</div>
+            <div class="stat-label">จำนวนลูกค้า</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- จำนวนข่าวเดือนนี้ -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">📰</div>
+          <div>
+            <div class="stat-value" id="statNewsMonth">-</div>
+            <div class="stat-label">
+              จำนวนข่าว เดือน <span id="labelNewsMonth"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- จำนวนประเภทข่าวทั้งหมด -->
+      <div class="col-md-3 mb-3">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="font-size: 28px;">📚</div>
+          <div>
+            <div class="stat-value" id="statNewsCategoryTotal">-</div>
+            <div class="stat-label">จำนวนประเภทข่าว</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
 
 
   <!-- ===== Revenue by Category ===== -->

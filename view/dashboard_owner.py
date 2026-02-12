@@ -81,20 +81,55 @@ def api_owner_dashboard():
             """)
             emp_by_role = cur.fetchall() or []
 
-            # ===== รายชื่อพนักงาน (ตาราง) =====
+            # ===== รายชื่อพนักงาน + สถานะออนไลน์/ออฟไลน์ =====
             cur.execute("""
                 SELECT 
                     e.emp_id,
                     CONCAT(e.emp_fname, ' ', e.emp_lname) AS fullname,
                     r.role_name,
-                    'offline' AS status
+                    CASE 
+                        WHEN al.action = 'Login' THEN 'online'
+                        ELSE 'offline'
+                    END AS status
                 FROM employee e
-                LEFT JOIN role r ON e.role_id = r.role_id
+                LEFT JOIN role r 
+                    ON e.role_id = r.role_id
+                LEFT JOIN (
+                    SELECT t.emp_id, t.action
+                    FROM audit_logs_emp t
+                    INNER JOIN (
+                        SELECT emp_id, MAX(created_at) AS last_time
+                        FROM audit_logs_emp
+                        GROUP BY emp_id
+                    ) x 
+                      ON t.emp_id = x.emp_id 
+                     AND t.created_at = x.last_time
+                ) al 
+                  ON e.emp_id = al.emp_id
                 WHERE e.del_flg = 0
                 ORDER BY e.created_at DESC
                 LIMIT 5
             """)
             employees = cur.fetchall() or []
+
+            # ===== จำนวนลูกค้า =====
+            cur.execute("SELECT COUNT(*) AS total FROM customer WHERE del_flg = 0")
+            total_customer = cur.fetchone()["total"] or 0
+
+            # ===== จำนวนข่าวเดือนปัจจุบัน =====
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM news
+                WHERE del_flg = 0
+                  AND status = 'publish'
+                  AND YEAR(created_at) = YEAR(CURDATE())
+                  AND MONTH(created_at) = MONTH(CURDATE())
+            """)
+            total_news_month = cur.fetchone()["total"] or 0
+
+            # ===== จำนวนประเภทข่าวทั้งหมด =====
+            cur.execute("SELECT COUNT(*) AS total FROM news_category WHERE del_flg = 0")
+            total_news_category = cur.fetchone()["total"] or 0
 
             # ===== ประเภทข่าวที่มีข่าวมากที่สุด =====
             cur.execute("""
@@ -128,7 +163,10 @@ def api_owner_dashboard():
             revenue_month=revenue_month,
             total_ads_approved_month=total_ads_approved_month,
             total_emp=total_emp,
+            total_customer=total_customer,
             total_role=total_role,
+            total_news_month=total_news_month,
+            total_news_category=total_news_category,
             revenue_by_cat=revenue_by_cat,
             emp_by_role=emp_by_role,
             employees=employees,
@@ -137,8 +175,6 @@ def api_owner_dashboard():
 
     finally:
         conn.close()
-
-
 
 
 

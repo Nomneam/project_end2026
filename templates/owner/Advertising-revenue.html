@@ -1,0 +1,147 @@
+{% extends "layout/owner-layout.html" %}
+
+{% block title %}รายได้จากโฆษณา{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- ===== Header ===== -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">📊 รายได้จากโฆษณา</h2>
+    <select class="form-select form-select-sm w-auto">
+      <option>เดือนนี้</option>
+      <option>ปีนี้</option>
+      <option>ทั้งหมด</option>
+    </select>
+  </div>
+
+  <!-- ===== Summary Cards ===== -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="stat-card d-flex align-items-center gap-3">
+        <div class="stat-icon fs-3">💰</div>
+        <div>
+          <div class="stat-value">฿125,000</div>
+          <div class="stat-label">รายได้รวม</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="stat-card d-flex align-items-center gap-3">
+        <div class="stat-icon fs-3">📢</div>
+        <div>
+          <div class="stat-value">48</div>
+          <div class="stat-label">จำนวนออเดอร์</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="stat-card d-flex align-items-center gap-3">
+        <div class="stat-icon fs-3">🏆</div>
+        <div>
+          <div class="stat-value">แบนเนอร์</div>
+          <div class="stat-label">หมวดโฆษณายอดนิยม</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Charts ===== -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header fw-bold">รายได้แยกตามประเภทโฆษณา</div>
+        <div class="card-body">
+          <canvas id="revenueByCategoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header fw-bold">แนวโน้มรายได้รายเดือน</div>
+        <div class="card-body">
+          <canvas id="revenueTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Table ===== -->
+  <div class="card">
+    <div class="card-header fw-bold">รายการออเดอร์โฆษณาล่าสุด</div>
+    <div class="table-responsive">
+      <table class="table table-striped mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>ลูกค้า</th>
+            <th>ชื่อโฆษณา</th>
+            <th>ประเภท</th>
+            <th>ยอดเงิน</th>
+            <th>สถานะ</th>
+            <th>วันที่เริ่ม</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>บริษัท A</td>
+            <td>โปรโมทสินค้าใหม่</td>
+            <td>แบนเนอร์</td>
+            <td>฿25,000</td>
+            <td><span class="badge bg-success">กำลังแสดง</span></td>
+            <td>01/02/2026</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>บริษัท B</td>
+            <td>แคมเปญวาเลนไทน์</td>
+            <td>วิดีโอ</td>
+            <td>฿40,000</td>
+            <td><span class="badge bg-secondary">สิ้นสุดแล้ว</span></td>
+            <td>20/01/2026</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Mock Chart
+  new Chart(document.getElementById('revenueByCategoryChart'), {
+    type: 'pie',
+    data: {
+      labels: ['แบนเนอร์', 'วิดีโอ', 'ป๊อปอัป'],
+      datasets: [{
+        data: [50000, 55000, 20000]
+      }]
+    }
+  });
+
+  new Chart(document.getElementById('revenueTrendChart'), {
+    type: 'line',
+    data: {
+      labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.'],
+      datasets: [{
+        label: 'รายได้',
+        data: [20000, 35000, 30000, 45000, 60000],
+        fill: false,
+        tension: 0.3
+      }]
+    }
+  });
+</script>
+{% endblock %}

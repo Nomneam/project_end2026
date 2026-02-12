@@ -1,31 +1,31 @@
+/* =========================================================
+   Init
+========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   setCurrentMonthLabel();
   loadOwnerDashboard();
 });
 
-// ======================
-// แสดงชื่อเดือนปัจจุบัน (ภาษาไทย)
-// ======================
+/* =========================================================
+   Utils
+========================================================= */
 function setCurrentMonthLabel() {
   const monthsTH = [
-    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน",
-    "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม",
-    "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน",
+    "พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม",
+    "กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
   ];
 
-  const now = new Date();
-  const monthName = monthsTH[now.getMonth()];
+  const monthName = monthsTH[new Date().getMonth()];
 
-  const revenueLabel = document.getElementById("labelRevenueMonth");
-  const adsLabel = document.getElementById("labelAdsMonth");
-
-  if (revenueLabel) revenueLabel.textContent = monthName;
-  if (adsLabel) adsLabel.textContent = monthName;
+  setText("labelRevenueMonth", monthName);
+  setText("labelAdsMonth", monthName);
+  setText("labelNewsMonth", monthName);
 }
 
-// ======================
-// Main Loader
-// ======================
+/* =========================================================
+   API Loader
+========================================================= */
 async function loadOwnerDashboard() {
   try {
     const res = await fetch("/api/owner/dashboard");
@@ -47,63 +47,36 @@ async function loadOwnerDashboard() {
   }
 }
 
-// ======================
-// Render: การ์ดด้านบน
-// ======================
+/* =========================================================
+   Render: Top Stats Cards
+========================================================= */
 function renderTopStats(data) {
-  const statRevenue = document.getElementById("statRevenueMonth");
-  const statAdsApprovedMonth = document.getElementById("statAdsApprovedMonth");
-  const statEmp = document.getElementById("statEmpTotal");
-  const statRole = document.getElementById("statRoleTotal");
-
-  if (statRevenue) {
-    statRevenue.innerText = "฿" + Number(data.revenue_month || 0).toLocaleString("th-TH");
-  }
-
-  if (statAdsApprovedMonth) {
-    statAdsApprovedMonth.innerText = Number(
-      data.total_ads_approved_month || 0
-    ).toLocaleString("th-TH");
-  }
-
-  if (statEmp) statEmp.innerText = Number(data.total_emp || 0).toLocaleString("th-TH");
-  if (statRole) statRole.innerText = Number(data.total_role || 0).toLocaleString("th-TH");
+  setText("statRevenueMonth", "฿" + Number(data.revenue_month || 0).toLocaleString("th-TH"));
+  setText("statAdsApprovedMonth", Number(data.total_ads_approved_month || 0).toLocaleString("th-TH"));
+  setText("statEmpTotal", Number(data.total_emp || 0).toLocaleString("th-TH"));
+  setText("statRoleTotal", Number(data.total_role || 0).toLocaleString("th-TH"));
+  setText("statCustomerTotal", Number(data.total_customer || 0).toLocaleString("th-TH"));
+  setText("statNewsMonth", Number(data.total_news_month || 0).toLocaleString("th-TH"));
+  setText("statNewsCategoryTotal", Number(data.total_news_category || 0).toLocaleString("th-TH"));
 }
 
-// ======================
-// ตารางรายรับตามประเภทโฆษณา
-// ======================
+/* =========================================================
+   Render: Tables
+========================================================= */
 function renderRevenueByCategoryTable(rows = []) {
   const tbody = document.querySelector("#revenueByCatTable tbody");
-  if (!tbody) return;
-
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map((i, idx) => `
+  renderTable(tbody, rows, (i, idx) => `
     <tr>
       <td>${idx + 1}</td>
       <td>${i.name || "-"}</td>
       <td>฿${Number(i.total || 0).toLocaleString("th-TH")}</td>
     </tr>
-  `).join("");
+  `);
 }
 
-// ======================
-// ตารางพนักงาน
-// ======================
 function renderEmployeeTable(rows = []) {
   const tbody = document.querySelector("#empStatusTable tbody");
-  if (!tbody) return;
-
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map((i) => `
+  renderTable(tbody, rows, (i) => `
     <tr>
       <td>${i.fullname || "-"}</td>
       <td>${i.role_name || "-"}</td>
@@ -113,33 +86,23 @@ function renderEmployeeTable(rows = []) {
         </span>
       </td>
     </tr>
-  `).join("");
+  `, 3);
 }
 
-// ======================
-// ตารางประเภทข่าวที่มีข่าวมากที่สุด
-// ======================
 function renderNewsByCategoryTable(rows = []) {
   const tbody = document.querySelector("#newsByCategoryTable tbody");
-  if (!tbody) return;
-
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map((i, idx) => `
+  renderTable(tbody, rows, (i, idx) => `
     <tr>
       <td>${idx + 1}</td>
       <td>${i.category_name || "-"}</td>
       <td>${Number(i.total || 0).toLocaleString("th-TH")}</td>
     </tr>
-  `).join("");
+  `);
 }
 
-// ======================
-// Chart: Role
-// ======================
+/* =========================================================
+   Render: Chart
+========================================================= */
 function renderRoleChart(empByRole = []) {
   if (
     !window.initDoughnutChart ||
@@ -153,4 +116,23 @@ function renderRoleChart(empByRole = []) {
     empByRole.map((i) => i.name),
     empByRole.map((i) => i.total)
   );
+}
+
+/* =========================================================
+   Helper Functions (Reusable)
+========================================================= */
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = text;
+}
+
+function renderTable(tbody, rows, rowRenderer, colSpan = 3) {
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(rowRenderer).join("");
 }
