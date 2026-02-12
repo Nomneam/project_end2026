@@ -290,3 +290,19 @@ header {
   position: relative;
   z-index: 2000;
 }
+
+.avatar-bkk {
+  width: 40px;
+  height: 40px;
+}
+
+.avatar-bkk i {
+  font-size: 32px;
+  color: #ce1126;
+}
+
+.avatar-img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}

@@ -19,10 +19,6 @@
     <!-- CSS -->
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/navbar.css') }}"
-    />
-    <link
-      rel="stylesheet"
       href="{{ url_for('static', filename='css/page_category.css') }}"
     />
   </head>
@@ -139,7 +135,6 @@
         subcat_id: "{{ subcat_id or '' }}",
       };
     </script>
-    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/page_category.js') }}"></script>
   </body>
 </html>

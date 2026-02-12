@@ -218,143 +218,121 @@ $(function () {
   }
 
   // ----------------------
-  // Auth (mock)
-  // ----------------------
-  const AUTH_KEY = "bkk_today_user";
+// Auth (REAL - Flask session)
+// ----------------------
+function showAuthMsg(msg) {
+  const $m = $("#authMsg");
+  if (!$m.length) return;
 
-  function getUser() {
-    try {
-      return JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-    } catch {
-      return null;
-    }
-  }
-  function setUser(user) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-    renderAuthUI();
-  }
-  function clearUser() {
-    localStorage.removeItem(AUTH_KEY);
-    renderAuthUI();
-  }
-
-  function showAuthMsg(msg) {
-    const $m = $("#authMsg");
-    if (!$m.length) return;
-
-    if (!msg) {
-      $m.addClass("d-none").text("");
-      return;
-    }
+  if (!msg) {
+    $m.addClass("d-none").text("");
+  } else {
     $m.removeClass("d-none").text(msg);
   }
+}
 
-  function setAuthTab(tab) {
-    if (!$("#tabLogin").length) return;
+function openAuthModal(mode) {
+  if (!$("#authModal").length) return;
+  $("#authModal").addClass("show");
+  $("body").addClass("no-scroll");
+  setAuthTab(mode || "login");
+}
 
-    if (tab === "register") {
-      $("#tabLogin").removeClass("active");
-      $("#tabRegister").addClass("active");
-      $("#loginForm").addClass("d-none");
-      $("#registerForm").removeClass("d-none");
-    } else {
-      $("#tabRegister").removeClass("active");
-      $("#tabLogin").addClass("active");
-      $("#registerForm").addClass("d-none");
-      $("#loginForm").removeClass("d-none");
-    }
-    showAuthMsg("");
-  }
+function closeAuthModal() {
+  if (!$("#authModal").length) return;
+  $("#authModal").removeClass("show");
+  $("body").removeClass("no-scroll");
+  showAuthMsg("");
+}
 
-  function openAuthModal(mode) {
-    if (!$("#authModal").length) return;
-    $("#authModal").addClass("show");
-    $("body").addClass("no-scroll");
-    setAuthTab(mode || "login");
-  }
-  function closeAuthModal() {
-    if (!$("#authModal").length) return;
-    $("#authModal").removeClass("show");
-    $("body").removeClass("no-scroll");
-    showAuthMsg("");
-  }
+// render จาก session ที่ Flask ส่งมา
+function renderAuthUI() {
+  fetch("/me")
+    .then((r) => {
+      if (!r.ok) throw new Error("not login");
+      return r.json();
+    })
+    .then((res) => {
+      const user = res.user;
 
-  function renderAuthUI() {
-    const user = getUser();
-    const $authButtons = $("#authButtons");
-    const $userMenu = $("#userMenu");
-    if (!$authButtons.length || !$userMenu.length) return;
+      $("#authButtons").addClass("d-none");
+      $("#userMenu").removeClass("d-none").addClass("d-flex");
 
-    if (user) {
-      $authButtons.addClass("d-none");
-      $userMenu.removeClass("d-none").addClass("d-flex");
-      $("#userName").text(user.name || "Member");
+      $("#userName").text(user.name || user.username);
 
-      const ch = (user.name || "U").trim().slice(0, 1).toUpperCase();
-      $("#userAvatar").text(ch || "U");
-    } else {
-      $userMenu.addClass("d-none").removeClass("d-flex");
-      $authButtons.removeClass("d-none");
-      $("#userAvatar").text("U");
-    }
-  }
+      if (user.avatar) {
+        $("#userAvatar").html(
+          `<img src="${user.avatar}" class="avatar-img rounded-circle" />`
+        );
+      } else {
+        $("#userAvatar").html(
+          `<i class="bi bi-person-circle text-red-bkk"></i>`
+        );
+      }
+    })
+    .catch(() => {
+      $("#userMenu").addClass("d-none").removeClass("d-flex");
+      $("#authButtons").removeClass("d-none");
+    });
+}
 
-  function bindAuth() {
-    $("#btnOpenLogin").off("click.auth").on("click.auth", () => openAuthModal("login"));
-    $("#btnOpenRegister").off("click.auth").on("click.auth", () => openAuthModal("register"));
+function bindAuth() {
+  $("#btnOpenLogin").off("click.auth").on("click.auth", () => openAuthModal("login"));
+  $("#btnOpenRegister").off("click.auth").on("click.auth", () => openAuthModal("register"));
+  $("#btnCloseAuth").off("click.auth").on("click.auth", closeAuthModal);
 
-    $("#btnCloseAuth").off("click.auth").on("click.auth", closeAuthModal);
+  $("#authModal")
+    .off("click.auth")
+    .on("click.auth", function (e) {
+      if (e.target && e.target.id === "authModal") closeAuthModal();
+    });
 
-    $("#authModal")
-      .off("click.auth")
-      .on("click.auth", function (e) {
-        if (e.target && e.target.id === "authModal") closeAuthModal();
-      });
+  $(document)
+    .off("keydown.auth")
+    .on("keydown.auth", function (e) {
+      if (e.key === "Escape") closeAuthModal();
+    });
 
-    $(document)
-      .off("keydown.auth")
-      .on("keydown.auth", function (e) {
-        if (e.key === "Escape") closeAuthModal();
-      });
+  // LOGIN → Flask
+  $("#loginForm")
+    .off("submit.auth")
+    .on("submit.auth", function (e) {
+      e.preventDefault();
 
-    $("#tabLogin").off("click.auth").on("click.auth", () => setAuthTab("login"));
-    $("#tabRegister").off("click.auth").on("click.auth", () => setAuthTab("register"));
+      const username = ($("#loginUsername").val() || "").trim();
+      const password = ($("#loginPassword").val() || "").trim();
 
-    $("#btnLogout").off("click.auth").on("click.auth", () => clearUser());
+      if (!username || !password) {
+        return showAuthMsg("กรุณากรอก Username และ Password");
+      }
 
-    $("#loginForm")
-      .off("submit.auth")
-      .on("submit.auth", function (e) {
-        e.preventDefault();
-        const email = ($("#loginEmail").val() || "").toString().trim();
-        const pwd = ($("#loginPassword").val() || "").toString().trim();
-        if (!email || !pwd) return showAuthMsg("กรุณากรอกอีเมลและรหัสผ่าน");
+      fetch("/login_cus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ username, password }),
+      })
+        .then((r) => r.json())
+        .then((res) => {
+          if (!res.ok) {
+            showAuthMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
+            return;
+          }
+          location.reload();
+        })
+        .catch(() => showAuthMsg("เกิดข้อผิดพลาด กรุณาลองใหม่"));
+    });
 
-        const name = email.split("@")[0].slice(0, 12);
-        setUser({ name, email });
-        closeAuthModal();
-      });
+  // LOGOUT
+  $("#btnLogout")
+    .off("click.auth")
+    .on("click.auth", () => {
+      window.location.href = "/logout_cus";
+    });
+}
 
-    $("#registerForm")
-      .off("submit.auth")
-      .on("submit.auth", function (e) {
-        e.preventDefault();
-        const first = ($("#regFirst").val() || "").toString().trim();
-        const last = ($("#regLast").val() || "").toString().trim();
-        const email = ($("#regEmail").val() || "").toString().trim();
-        const p1 = ($("#regPassword").val() || "").toString().trim();
-        const p2 = ($("#regPassword2").val() || "").toString().trim();
-
-        if (!first || !last || !email || !p1 || !p2) return showAuthMsg("กรุณากรอกข้อมูลให้ครบ");
-        if (p1.length < 6) return showAuthMsg("รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร");
-        if (p1 !== p2) return showAuthMsg("รหัสผ่านไม่ตรงกัน");
-
-        setUser({ name: `${first} ${last}`, email });
-        closeAuthModal();
-      });
-  }
-
-  // ----------------------
+// ----------------------
   // Date header
   // ----------------------
   function renderHeaderDate() {
