@@ -1,12 +1,14 @@
-$(document).ready(function(){
+$(function () {
 
-    // Avatar Preview
-    $("#avatarInput").on("change", function(e){
+    /* =========================
+       AVATAR PREVIEW
+    ========================== */
+    $("#avatarInput").on("change", function (e) {
         const file = e.target.files[0];
-        if(!file) return;
+        if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = function(){
+        reader.onload = function () {
             $("#avatarPreview")
                 .attr("src", reader.result)
                 .show();
@@ -15,98 +17,104 @@ $(document).ready(function(){
         reader.readAsDataURL(file);
     });
 
-    // Change Password
-    const correctPassword = "123456";
 
-    $("#changePasswordBtn").click(function(){
+    /* =========================
+       CHANGE PASSWORD (ยิง backend)
+    ========================== */
+    $("#changePasswordBtn").click(function () {
 
         Swal.fire({
             title: "ยืนยันรหัสผ่านปัจจุบัน",
-            icon: "question",
             input: "password",
             inputPlaceholder: "กรอกรหัสผ่านปัจจุบัน",
             showCancelButton: true,
             confirmButtonText: "ยืนยัน",
-            cancelButtonText: "ยกเลิก",
             confirmButtonColor: "#0b1c3d"
-        }).then(function(result){
+        }).then(function (result) {
 
-            if(!result.isConfirmed) return;
+            if (!result.isConfirmed) return;
 
-            if(result.value !== correctPassword){
-                Swal.fire({
-                    icon: "error",
-                    title: "รหัสผ่านไม่ถูกต้อง",
-                    confirmButtonColor: "#0b1c3d"
-                });
-                return;
-            }
+            const currentPass = result.value;
 
             Swal.fire({
                 title: "ตั้งรหัสผ่านใหม่",
                 html:
                     '<input type="password" id="newPass" class="swal2-input" placeholder="รหัสผ่านใหม่">' +
                     '<input type="password" id="confirmPass" class="swal2-input" placeholder="ยืนยันรหัสผ่านใหม่">',
-                confirmButtonText: "บันทึก",
                 showCancelButton: true,
-                cancelButtonText: "ยกเลิก",
+                confirmButtonText: "บันทึก",
                 confirmButtonColor: "#0b1c3d",
-                preConfirm: function(){
+                preConfirm: function () {
+
                     const newPass = $("#newPass").val();
                     const confirmPass = $("#confirmPass").val();
 
-                    if(!newPass || !confirmPass){
-                        Swal.showValidationMessage("กรุณากรอกข้อมูลให้ครบ");
-                        return false;
-                    }
+                    if (!newPass || !confirmPass)
+                        return Swal.showValidationMessage("กรอกข้อมูลให้ครบ");
 
-                    if(newPass.length < 6){
-                        Swal.showValidationMessage("รหัสผ่านต้องอย่างน้อย 6 ตัว");
-                        return false;
-                    }
+                    if (newPass.length < 6)
+                        return Swal.showValidationMessage("รหัสผ่านต้องอย่างน้อย 6 ตัว");
 
-                    if(newPass !== confirmPass){
-                        Swal.showValidationMessage("รหัสผ่านไม่ตรงกัน");
-                        return false;
-                    }
+                    if (newPass !== confirmPass)
+                        return Swal.showValidationMessage("รหัสผ่านไม่ตรงกัน");
 
-                    return newPass;
+                    return { currentPass, newPass };
                 }
-            }).then(function(result2){
-                if(result2.isConfirmed){
-                    Swal.fire({
-                        icon: "success",
-                        title: "เปลี่ยนรหัสผ่านสำเร็จ",
-                        confirmButtonColor: "#0b1c3d"
-                    });
-                }
+            }).then(function (res2) {
+
+                if (!res2.isConfirmed) return;
+
+                $.post("/update_password", {
+                    current_password: res2.value.currentPass,
+                    new_password: res2.value.newPass
+                }, function (res3) {
+
+                    if (res3.ok) {
+                        Swal.fire("สำเร็จ", "เปลี่ยนรหัสผ่านแล้ว", "success");
+                    } else {
+                        Swal.fire("ผิดพลาด", res3.message, "error");
+                    }
+
+                });
+
             });
 
         });
 
     });
 
-    // ✅ Save Profile (ย้ายมาไว้ตรงนี้)
-    $("#saveProfileBtn").click(function(){
 
-        const firstName = $("input[placeholder='ชื่อ']").val();
-        const lastName = $("input[placeholder='นามสกุล']").val();
-        const phone = $("input[placeholder='เบอร์โทรศัพท์']").val();
-        const email = $("input[type='email']").val();
+    /* =========================
+       SAVE PROFILE (FORM SUBMIT)
+    ========================== */
+    $("#profileForm").on("submit", function (e) {
 
-        if(!firstName || !lastName || !phone || !email){
-            Swal.fire({
-                icon: "warning",
-                title: "กรุณากรอกข้อมูลให้ครบ",
-                confirmButtonColor: "#0b1c3d"
-            });
-            return;
-        }
+        e.preventDefault();
 
-        Swal.fire({
-            icon: "success",
-            title: "บันทึกข้อมูลสำเร็จ",
-            confirmButtonColor: "#0b1c3d"
+        const formData = new FormData(this);
+
+        $.ajax({
+            url: "/update_profile",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+
+                if (res.ok) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "บันทึกข้อมูลสำเร็จ",
+                        confirmButtonColor: "#0b1c3d"
+                    });
+                } else {
+                    Swal.fire("ผิดพลาด", res.message, "error");
+                }
+
+            },  
+            error: function () {
+                Swal.fire("ผิดพลาด", "เกิดข้อผิดพลาดของระบบ", "error");
+            }
         });
 
     });

@@ -34,7 +34,7 @@ def print_bcrypt_hash(plain_password: str):
 
     return hashed
 
-print_bcrypt_hash("1122")
+print_bcrypt_hash("1234")
     
 @login_customer_bp.route("/login_cus", methods=["POST"])
 def login_cus():
