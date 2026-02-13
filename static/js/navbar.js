@@ -245,45 +245,33 @@ function closeAuthModal() {
   showAuthMsg("");
 }
 
-// render จาก session ที่ Flask ส่งมา
-function renderAuthUI() {
-  fetch("/me")
-    .then((r) => {
-      if (!r.ok) throw new Error("not login");
-      return r.json();
-    })
-    .then((res) => {
-      const user = res.user;
+function setAuthTab(mode) {
+  const isLogin = mode === "login";
 
-      $("#authButtons").addClass("d-none");
-      $("#userMenu").removeClass("d-none").addClass("d-flex");
+  $("#tabLogin").toggleClass("active", isLogin);
+  $("#tabRegister").toggleClass("active", !isLogin);
 
-      $("#userName").text(user.name || user.username);
+  $("#loginForm").toggleClass("d-none", !isLogin);
+  $("#registerForm").toggleClass("d-none", isLogin);
 
-      if (user.avatar) {
-        $("#userAvatar").html(`
-          <img 
-            src="${user.avatar}"
-            class="avatar-img rounded-circle"
-            onerror="this.onerror=null;this.parentElement.innerHTML='<i class=\\'bi bi-person-circle text-red-bkk fs-3\\'></i>';"
-          />
-        `);
-      } else {
-        $("#userAvatar").html(
-          `<i class="bi bi-person-circle text-red-bkk fs-3"></i>`
-        );
-      }
-    })
-    .catch(() => {
-      $("#userMenu").addClass("d-none").removeClass("d-flex");
-      $("#authButtons").removeClass("d-none");
-    });
+  showAuthMsg("");
 }
+
+
 
 function bindAuth() {
   $("#btnOpenLogin").off("click.auth").on("click.auth", () => openAuthModal("login"));
   $("#btnOpenRegister").off("click.auth").on("click.auth", () => openAuthModal("register"));
   $("#btnCloseAuth").off("click.auth").on("click.auth", closeAuthModal);
+  // TAB SWITCH
+$("#tabLogin").off("click.tab").on("click.tab", function () {
+  setAuthTab("login");
+});
+
+$("#tabRegister").off("click.tab").on("click.tab", function () {
+  setAuthTab("register");
+});
+
 
   $("#authModal")
     .off("click.auth")
@@ -357,5 +345,4 @@ function bindAuth() {
   bindTopSearch();
   bindNavbarCategories();
   bindAuth();
-  renderAuthUI();
 });

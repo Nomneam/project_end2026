@@ -15,29 +15,31 @@
 <body>
   
 
-  <!-- templates/partials/navbar_index.html -->
-<header class="bg-white border-bottom">
+  <header class="bg-white border-bottom">
   <div class="container-xl py-3">
     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-      <!-- Logo -->
+
+      <!-- ================= LOGO ================= -->
       <div class="d-flex align-items-center gap-3">
         <a href="{{ url_for('index.index_news') }}" class="text-decoration-none">
           <div class="display-6 fw-bold fst-italic m-0">
-            <span class="text-navy-bkk">BANGKOK</span><span class="text-red-bkk">TODAY</span>
+            <span class="text-navy-bkk">BANGKOK</span>
+            <span class="text-red-bkk">TODAY</span>
           </div>
         </a>
 
-        <!-- Date -->
         <div class="d-none d-sm-block border-start ps-3">
           <div class="text-uppercase small fw-bold text-secondary" id="dayName">—</div>
           <div class="small text-muted" id="dayDate">—</div>
         </div>
       </div>
 
-      <!-- Right -->
+      <!-- ================= RIGHT SIDE ================= -->
       <div class="header-right w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2">
+
         <!-- Search -->
-        <div class="top-search-wrap position-relative flex-grow-1" style="max-width: 360px; width: 100%">
+        <div class="top-search-wrap position-relative flex-grow-1"
+             style="max-width: 360px; width: 100%">
           <input
             id="topSearch"
             type="text"
@@ -47,57 +49,88 @@
           <span class="top-search-icon">⌕</span>
         </div>
 
-        <!-- Auth buttons -->
-        <div id="authButtons" class="d-flex align-items-center gap-2">
-          <button id="btnOpenLogin" class="btn btn-outline-secondary fw-bold btn-pill">เข้าสู่ระบบ</button>
-          <button id="btnOpenRegister" class="btn fw-bold text-white btn-pill btn-register">สมัครสมาชิก</button>
-          <!-- ✅ แพ็คเกจโฆษณา -->
-          <a class="btn btn-outline-dark" href="{{ url_for('packages.packages_page') }}">
+        <!-- ================= AUTH SECTION ================= -->
+
+        {% if session.get("front_user") %}
+
+        <!-- ===== Logged In ===== -->
+        <div class="d-flex align-items-center gap-2">
+
+          <div class="dropdown">
+            <button
+              class="btn p-0 border-0 bg-transparent d-flex align-items-center gap-2"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <div class="d-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-2">
+
+                {% if session.front_user.avatar %}
+                  <img src="{{ session.front_user.avatar }}"
+                       class="avatar-img rounded-circle"
+                       width="40"
+                       height="40">
+                {% else %}
+                  <i class="bi bi-person-circle text-red-bkk fs-3"></i>
+                {% endif %}
+
+                <div class="lh-sm">
+                  <div class="fw-bold text-navy-bkk">
+                    {{ session.front_user.name }}
+                  </div>
+                  <div class="small text-muted">สมาชิก</div>
+                </div>
+
+              </div>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li>
+                <a class="dropdown-item"
+                   href="{{ url_for('profile_cus.profile_cus') }}">
+                  <i class="bi bi-person"></i> โปรไฟล์
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item text-danger"
+                   href="{{ url_for('login_customer.logout_cus') }}">
+                  <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <a class="btn btn-outline-dark"
+             href="{{ url_for('packages.packages_page') }}">
             แพ็คเกจโฆษณา
           </a>
-
         </div>
 
-        <!-- Logged-in menu -->
-        <div id="userMenu" class="d-none align-items-center gap-2">
-           <div class="dropdown">
-             <button
-                class="btn p-0 border-0 bg-transparent d-flex align-items-center gap-2"
-                id="userDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-          <div class="d-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-2">
-            <div id="userAvatar"></div>
-            <div class="lh-sm">
-              <div id="userName" class="fw-bold text-navy-bkk">User</div>
-              <div class="small text-muted">สมาชิก</div>
-            </div>
-          </div>
+        {% else %}
+
+        <!-- ===== Not Logged In ===== -->
+        <div class="d-flex align-items-center gap-2">
+          <button id="btnOpenLogin"
+                  class="btn btn-outline-secondary fw-bold btn-pill">
+            เข้าสู่ระบบ
           </button>
 
-          <ul class="dropdown-menu dropdown-menu-end shadow">
-      <li>
-        <a class="dropdown-item" href="{{ url_for('profile_cus.profile_cus')}}">
-          <i class="bi bi-person"></i> โปรไฟล์
-        </a>
-      </li>
+          <button id="btnOpenRegister"
+                  class="btn fw-bold text-white btn-pill btn-register">
+            สมัครสมาชิก
+          </button>
 
-      <li>
-        <button id="btnLogout" class="dropdown-item text-danger">
-          <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
-        </button>
-      </li>
-
-        </div>
-        <a class="btn btn-outline-dark" href="{{ url_for('packages.packages_page') }}">
+          <a class="btn btn-outline-dark"
+             href="{{ url_for('packages.packages_page') }}">
             แพ็คเกจโฆษณา
           </a>
+        </div>
+
+        {% endif %}
+
       </div>
     </div>
   </div>
-  
-</div>
+
 
 
          

@@ -94,15 +94,6 @@ def login_cus():
         }
     )
 
-@login_customer_bp.route("/me")
-def me():
-    user = session.get("front_user")
-    if not user:
-        return jsonify(ok=False), 401
-    return jsonify(ok=True, user=user)
-
-
-
 @login_customer_bp.route("/logout_cus")
 def logout_cus():
     session.pop("front_user", None)
