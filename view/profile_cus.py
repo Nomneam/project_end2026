@@ -51,6 +51,7 @@ def profile_cus():
     return render_template("profile_cus.html", user=user)
 
 
+
 @profile_cus_bp.route("/update_profile", methods=["POST"])
 def update_profile():
 
@@ -58,7 +59,22 @@ def update_profile():
         return jsonify(ok=False), 401
 
     user_id = session["front_user"]["id"]
-    data = request.json
+
+    data = request.form
+    file = request.files.get("avatar")
+
+    avatar_base64 = None
+
+    if file and file.filename != "":
+        avatar_base64 = base64.b64encode(file.read()).decode()
+
+
+    fname = (data.get("fname") or "").strip()
+    lname = (data.get("lname") or "").strip()
+    phone = (data.get("phone") or "").strip()
+    email = (data.get("email") or "").strip()
+    address = (data.get("address") or "").strip()
+    citizen_id = (data.get("citizen_id") or "").strip()
 
     conn = connect_db()
     with conn.cursor() as cursor:
@@ -70,15 +86,17 @@ def update_profile():
                 cus_email=%s,
                 cus_address=%s,
                 cus_idcard=%s,
+                cus_profile=COALESCE(%s, cus_profile),
                 updated_by=%s
             WHERE cus_id=%s
         """, (
-            data["fname"],
-            data["lname"],
-            data["phone"],
-            data["email"],
-            data["address"],
-            data["idcard"],
+            fname,
+            lname,
+            phone,
+            email,
+            address,
+            citizen_id,
+            avatar_base64,
             user_id,
             user_id
         ))
@@ -86,39 +104,17 @@ def update_profile():
     conn.commit()
     conn.close()
 
-    return jsonify(ok=True)
+    # ✅ อัปเดตแค่ชื่อใน session (ไม่เก็บรูป)
+    session["front_user"] = {
+        "id": user_id,
+        "username": session["front_user"]["username"],
+        "name": f"{fname} {lname}".strip(),
+    }
 
-
-@profile_cus_bp.route("/update_profile_image", methods=["POST"])
-def update_profile_image():
-
-    if "front_user" not in session:
-        return jsonify(ok=False), 401
-
-    user_id = session["front_user"]["id"]
-    data = request.json
-    image_base64 = data.get("image")
-
-    conn = connect_db()
-    with conn.cursor() as cursor:
-        cursor.execute("""
-            UPDATE customer
-            SET cus_profile=%s,
-                updated_by=%s
-            WHERE cus_id=%s
-        """, (
-            image_base64,
-            user_id,
-            user_id
-        ))
-
-    conn.commit()
-    conn.close()
-
-    # อัพเดต session avatar ด้วย
-    session["front_user"]["avatar"] = image_base64
+    session.modified = True
 
     return jsonify(ok=True)
+
 
 
 @profile_cus_bp.route("/change_password", methods=["POST"])
@@ -128,7 +124,7 @@ def change_password():
         return jsonify(ok=False), 401
 
     user_id = session["front_user"]["id"]
-    data = request.json
+    data = request.get_json(silent=True) or {}
     old_password = data.get("old_password")
     new_password = data.get("new_password")
 

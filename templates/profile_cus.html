@@ -34,19 +34,28 @@
 <div class="text-center mb-4">
 <div class="avatar-container position-relative d-inline-block">
 
-<div id="defaultAvatar" class="default-avatar avatar-bkk">
-    <i class="bi bi-person-circle"></i>
-</div>
-
-
-<img id="avatarPreview" class="avatar-preview" style="display:none;">
+{% if user.cus_profile %}
+    <img id="avatarPreview"
+         class="avatar-preview"
+         src="data:image/jpeg;base64,{{ user.cus_profile }}"
+         style="display:block;">
+    <div id="defaultAvatar" class="default-avatar avatar-bkk" style="display:none;">
+        <i class="bi bi-person-circle"></i>
+    </div>
+{% else %}
+    <div id="defaultAvatar" class="default-avatar avatar-bkk">
+        <i class="bi bi-person-circle"></i>
+    </div>
+    <img id="avatarPreview" class="avatar-preview" style="display:none;">
+{% endif %}
 
 <label class="btn btn-navy-bkk btn-sm change-avatar-btn position-absolute bottom-0 end-0">
-<i class="bi bi-camera "></i>
-<input type="file" name="avatar" id="avatarInput" hidden accept="image/*">
+    <i class="bi bi-camera"></i>
+    <input type="file" name="avatar" id="avatarInput" hidden accept="image/*">
 </label>
 
 </div>
+
 </div>
 
 <div class="mb-4">
@@ -54,27 +63,60 @@
 <div class="row g-3">
 
 <div class="col-md-6">
-<input type="text" name="fname" class="form-control" placeholder="ชื่อ" value="{{ user.cus_fname or '' }}"  required>
+<input type="text"
+       name="fname"
+       class="form-control"
+       placeholder="ชื่อ"
+       value="{{ user.cus_fname or '' }}"
+       data-original="{{ user.cus_fname or '' }}"
+       required>
 </div>
 
 <div class="col-md-6">
-<input type="text" name="lname" class="form-control" placeholder="นามสกุล" value="{{ user.cus_lname or ''}}" required>
+<input type="text"
+       name="lname"
+       class="form-control"
+       placeholder="นามสกุล"
+       value="{{ user.cus_lname or '' }}"
+       data-original="{{ user.cus_lname or '' }}"
+       required>
 </div>
 
 <div class="col-md-6">
-<input type="text" name="phone" class="form-control" placeholder="เบอร์โทรศัพท์" value="{{ user.cus_phone or ''}}">
+<input type="text"
+       name="phone"
+       class="form-control"
+       placeholder="เบอร์โทรศัพท์"
+       maxlength="10"
+       value="{{ user.cus_phone or '' }}"
+       data-original="{{ user.cus_phone or '' }}">
 </div>
 
 <div class="col-md-6">
-<input type="text" name="citizen_id" class="form-control" placeholder="รหัสบัตรประชาชน" value="{{ user.cus_idcard or ''}}">
+<input type="text"
+       name="citizen_id"
+       class="form-control"
+       placeholder="รหัสบัตรประชาชน"
+       maxlength="13"
+       value="{{ user.cus_idcard or '' }}"
+       data-original="{{ user.cus_idcard or '' }}">
 </div>
 
 <div class="col-12">
-<input type="email" name="email" class="form-control" placeholder="อีเมล" value="{{ user.cus_email or ''}}">
+<input type="email"
+       name="email"
+       class="form-control"
+       placeholder="อีเมล"
+       value="{{ user.cus_email or '' }}"
+       data-original="{{ user.cus_email or '' }}">
 </div>
 
 <div class="col-12">
-<textarea name="address" class="form-control" rows="3" placeholder="ที่อยู่">{{ user.cus_address or ''}}</textarea>
+<textarea name="address"
+          class="form-control"
+          rows="3"
+          placeholder="ที่อยู่"
+          data-original="{{ user.cus_address or '' }}">{{ user.cus_address or ''}}</textarea>
 </div>
 
 </div>

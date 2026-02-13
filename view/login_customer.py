@@ -1,10 +1,12 @@
 from flask import Blueprint, request, session, render_template, redirect, url_for
 from flask import jsonify
 from dotenv import load_dotenv
+from flask import Response
 import os
 import pymysql
 import pymysql.cursors
 import bcrypt
+import base64
 
 load_dotenv()
 
@@ -78,21 +80,45 @@ def login_cus():
     except ValueError:
         return jsonify(ok=False, message="บัญชีนี้ไม่รองรับรูปแบบรหัสผ่านปัจจุบัน"), 401
 
+    # ✅ เก็บเฉพาะข้อมูลเล็ก ๆ ใน session (ห้ามเก็บ base64)
     session["front_user"] = {
         "id": user["cus_id"],
         "username": user["cus_username"],
         "name": f"{user['cus_fname']} {user['cus_lname']}".strip(),
-        "avatar": user["cus_profile"] or None
     }
-    
+
+    session.modified = True  # ป้องกันกรณี session ไม่อัปเดต
 
     return jsonify(
         ok=True,
         user={
             "name": session["front_user"]["name"],
-            "avatar": session["front_user"]["avatar"]
+            "avatar": user["cus_profile"]  # ส่งให้ frontend ใช้แสดงผล แต่ไม่เก็บใน session
         }
     )
+
+@login_customer_bp.route("/avatar/<int:user_id>")
+def get_avatar(user_id):
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT cus_profile
+            FROM customer
+            WHERE cus_id=%s
+        """, (user_id,))
+        row = cursor.fetchone()
+    conn.close()
+
+    if not row or not row["cus_profile"]:
+        return "", 404
+
+    try:
+        img_binary = base64.b64decode(row["cus_profile"])
+        return Response(img_binary, mimetype="image/jpeg")
+    except Exception:
+        return "", 404
+
+
 
 @login_customer_bp.route("/logout_cus")
 def logout_cus():
