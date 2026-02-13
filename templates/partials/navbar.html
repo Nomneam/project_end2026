@@ -60,6 +60,13 @@
 
         <!-- Logged-in menu -->
         <div id="userMenu" class="d-none align-items-center gap-2">
+           <div class="dropdown">
+             <button
+                class="btn p-0 border-0 bg-transparent d-flex align-items-center gap-2"
+                id="userDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
           <div class="d-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-2">
             <div id="userAvatar"></div>
             <div class="lh-sm">
@@ -67,15 +74,32 @@
               <div class="small text-muted">สมาชิก</div>
             </div>
           </div>
-          <a class="btn btn-outline-dark" href="{{ url_for('packages.packages_page') }}">
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow">
+      <li>
+        <a class="dropdown-item" href="/profile">
+          <i class="bi bi-person"></i> โปรไฟล์
+        </a>
+      </li>
+
+      <li>
+        <button id="btnLogout" class="dropdown-item text-danger">
+          <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
+        </button>
+      </li>
+
+        </div>
+        <a class="btn btn-outline-dark" href="{{ url_for('packages.packages_page') }}">
             แพ็คเกจโฆษณา
           </a>
-
-          <button id="btnLogout" class="btn btn-outline-secondary fw-bold btn-pill">ออกจากระบบ</button>
-        </div>
       </div>
     </div>
   </div>
+  
+</div>
+
+
          
   <!-- Nav -->
   <nav class="bg-navy-bkk text-white top-nav-sticky">
