@@ -24,6 +24,7 @@ from view.page_category import page_cat_bp
 from view.navbar import load_nav_categories
 from view.packages import packages_bp
 from view.login_customer import login_customer_bp
+from view.profile_cus import profile_cus_bp
 
 
 
@@ -45,6 +46,7 @@ app.register_blueprint(news_detail_bp)
 app.register_blueprint(page_cat_bp)
 app.register_blueprint(packages_bp)
 app.register_blueprint(login_customer_bp)
+app.register_blueprint(profile_cus_bp)
 
 @app.route('/')
 def home():
