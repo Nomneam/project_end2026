@@ -338,6 +338,33 @@ $("#tabRegister").off("click.tab").on("click.tab", function () {
     $dayDate.text(d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
   }
 
+  // =======================
+// Require login handler
+// =======================
+(function () {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("auth") === "required") {
+
+    Swal.fire({
+      icon: "warning",
+      title: "กรุณาเข้าสู่ระบบก่อน",
+      text: "คุณต้องเป็นสมาชิกก่อนจึงจะลงโฆษณาได้",
+      confirmButtonText: "สมัครสมาชิก",
+      confirmButtonColor: "#002d62"
+    }).then(() => {
+
+      // เปิด modal สมัครสมาชิก
+      openAuthModal("register");
+
+      // ลบ query ออกจาก URL (กันแจ้งซ้ำ)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    });
+
+  }
+})();
+
+
   // ----------------------
   // Init
   // ----------------------
