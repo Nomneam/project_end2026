@@ -23,20 +23,7 @@ def connect_db():
     )
     
     
-def print_bcrypt_hash(plain_password: str):
-    hashed = bcrypt.hashpw(
-        plain_password.encode("utf-8"),
-        bcrypt.gensalt()
-    ).decode("utf-8")
 
-    print("====== BCRYPT HASH ======")
-    print("password :", plain_password)
-    print("hash     :", hashed)
-    print("=========================")
-
-    return hashed
-
-print_bcrypt_hash("1234")
     
 @login_customer_bp.route("/login_cus", methods=["POST"])
 def login_cus():
