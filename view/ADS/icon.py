@@ -21,7 +21,6 @@ def connect_db():
         database=os.environ.get('DB'),
         port=int(os.environ.get('PORT')),
         cursorclass=pymysql.cursors.DictCursor,
-        autocommit=True
     )
 
 # ===============================
@@ -106,6 +105,8 @@ def create_icon_ad():
                 valid_to,
                 "draft"         
             ))
+            
+            conn.commit()
 
     except Exception as e:
         print("DB ERROR:", e)

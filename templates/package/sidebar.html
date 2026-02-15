@@ -41,6 +41,12 @@
               class="form-control mb-2"
               placeholder="ชื่อแบรนด์"
             />
+            <textarea
+              id="sideDesc"
+              class="form-control mb-2"
+              placeholder="รายละเอียดโฆษณา (แสดงใต้ภาพ)"
+            ></textarea>
+
             <input
               type="url"
               id="sideUrl"
@@ -55,28 +61,26 @@
               <option value="12">12 เดือน</option>
             </select>
 
-            <div id="sideTotal" class="total-price"></div>
-
-            <!-- PREVIEW -->
             <div class="preview-box mt-3">
-              <div class="preview-label">พรีวิวตำแหน่งจริง</div>
-                <a
-                  id="sidePreview"
-                  href="#"
-                  class="sidebar-ad"
-                  target="_blank"
-                >
-                  <div class="sidebar-ad">
-                    <img src="" alt="" />
-                  </div>
-                </a>
+            <div class="preview-label">พรีวิวตำแหน่งจริง</div>
+
+            <a id="sidePreview" href="#" class="sidebar-ad" target="_blank">
+              <div class="sidebar-ad">
+                <img src="" alt="">
               </div>
+            </a>
+          </div>
+          <button id="submitSidebarAd" class="btn btn-primary w-100 mt-3">
+            ส่งโฆษณา
+          </button>
+
             </div>
           </div>
         </div>
       </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="{{ url_for ('static', filename='js/sidebar-pack.js')}}"></script>
 
