@@ -16,8 +16,6 @@ $(function () {
     const file = $("#sideImage")[0].files[0];
     if (!file) return;
 
-    const title = $("#sideTitle").val() || "ชื่อแบรนด์";
-    const desc = $("#sideDesc").val() || "รายละเอียดโฆษณา";
     const url = $("#sideUrl").val() || "#";
 
     const reader = new FileReader();
@@ -38,60 +36,81 @@ $(function () {
   // =========================
   $("#submitSidebarAd").click(function () {
 
-    const file = $("#sideImage")[0].files[0];
-    const title = $("#sideTitle").val();
-    const desc = $("#sideDesc").val();
-    const url = $("#sideUrl").val();
-    const month = $("#sideMonth").val();
+  const file = $("#sideImage")[0].files[0];
+  const title = $("#sideTitle").val();
+  const desc = $("#sideDesc").val();
+  const url = $("#sideUrl").val();
+  const month = $("#sideMonth").val();
 
-    if (!file || !title || !url) {
-      Swal.fire("กรอกข้อมูลให้ครบก่อน");
-      return;
+  if (!file || !title || !url) {
+    Swal.fire({
+      icon: "warning",
+      title: "กรอกข้อมูลไม่ครบ",
+      text: "กรุณาใส่รูป หัวข้อ และลิงก์"
+    });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("title", title);
+  formData.append("description", desc);
+  formData.append("url", url);
+  formData.append("months", month);
+
+  Swal.fire({
+    title: "กำลังอัปโหลด...",
+    text: "กรุณารอสักครู่",
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  fetch("/api/sidebar_ads", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => {
+
+    if (res.status === 401) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณาเข้าสู่ระบบก่อน",
+        confirmButtonText: "สมัครสมาชิก"
+      }).then(() => {
+        window.location.href="/?auth=required";
+      });
+      return null;
     }
 
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", title);
-    formData.append("description", desc);
-    formData.append("url", url);
-    formData.append("months", month);
+    return res.json();
+  })
+  .then(data => {
 
-    fetch("/api/sidebar_ads", {
-      method: "POST",
-      body: formData
-    })
-    .then(res => {
-      if (res.status === 401) {
-        Swal.fire({
-          icon: "warning",
-          title: "กรุณาเข้าสู่ระบบก่อน",
-          confirmButtonText: "สมัครสมาชิก"
-        }).then(() => {
-          window.location.href="/?auth=required";
-        });
-        return;
-      }
-      return res.json();
-    })
-    .then(data => {
+    if (!data) return;
 
-      if (!data) return;
+    if (data.success) {
+      Swal.fire({
+        icon: "success",
+        title: "ส่งโฆษณาเรียบร้อย",
+        text: "ระบบได้รับข้อมูลแล้ว กรุณารออนุมัติ"
+      }).then(() => location.reload());
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: data.error || "ไม่สามารถบันทึกข้อมูลได้"
+      });
+    }
 
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "ส่งโฆษณาเรียบร้อย",
-          text: "ระบบได้รับข้อมูลแล้ว กรุณารออนุมัติ"
-        }).then(() => location.reload());
-      } else {
-        Swal.fire("เกิดข้อผิดพลาด", data.error || "", "error");
-      }
-
-    })
-    .catch(() => {
-      Swal.fire("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้","","error");
+  })
+  .catch(() => {
+    Swal.fire({
+      icon: "error",
+      title: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
     });
-
   });
+
+});
+
 
 });

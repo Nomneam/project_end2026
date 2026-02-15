@@ -47,3 +47,70 @@ $(function () {
   });
 
 });
+
+// submit
+// submit
+$("#submitFooterAd").click(function () {
+
+  const file = $("#slideImage")[0].files[0];
+  const title = $("#slideTitle").val();
+  const description = $("#slideSub").val();
+  const url = $("#slideUrl").val();
+  const months = $("#slideMonth").val();
+
+  if (!file || !title || !url) {
+    Swal.fire({
+      icon: "warning",
+      title: "กรอกข้อมูลไม่ครบ",
+      text: "กรุณาใส่รูป หัวข้อ และลิงก์"
+    });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("url", url);
+  formData.append("months", months);
+
+  // loading
+  Swal.fire({
+    title: "กำลังอัปโหลด...",
+    text: "กรุณารอสักครู่",
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  $.ajax({
+    url: "/api/footer_ads",
+    type: "POST",
+    data: formData,
+    contentType: false,
+    processData: false,
+    success: function (res) {
+
+      Swal.fire({
+        icon: "success",
+        title: "ส่งโฆษณาเรียบร้อย",
+        text: res.message,
+        confirmButtonText: "ตกลง"
+      }).then(() => {
+        location.reload();
+      });
+
+    },
+    error: function (xhr) {
+
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: xhr.responseJSON?.error || "ไม่สามารถบันทึกข้อมูลได้"
+      });
+
+    }
+  });
+
+});
