@@ -25,6 +25,10 @@ from view.navbar import load_nav_categories
 from view.packages import packages_bp
 from view.login_customer import login_customer_bp
 from view.profile_cus import profile_cus_bp
+from view.ADS.icon import icon_ads_bp
+from view.ADS.sidebar import sidebar_ads_bp
+from view.ADS.footer_ads import footer_ads_bp
+from view.ADS.bighero import bighero_ads_bp
 
 
 
@@ -47,6 +51,10 @@ app.register_blueprint(page_cat_bp)
 app.register_blueprint(packages_bp)
 app.register_blueprint(login_customer_bp)
 app.register_blueprint(profile_cus_bp)
+app.register_blueprint(icon_ads_bp)
+app.register_blueprint(sidebar_ads_bp)
+app.register_blueprint(footer_ads_bp)
+app.register_blueprint(bighero_ads_bp)
 
 @app.route('/')
 def home():
