@@ -29,6 +29,7 @@ from view.ADS.icon import icon_ads_bp
 from view.ADS.sidebar import sidebar_ads_bp
 from view.ADS.footer_ads import footer_ads_bp
 from view.ADS.bighero import bighero_ads_bp
+from view.ads_overview import ads_overview_bp
 
 
 
@@ -55,6 +56,7 @@ app.register_blueprint(icon_ads_bp)
 app.register_blueprint(sidebar_ads_bp)
 app.register_blueprint(footer_ads_bp)
 app.register_blueprint(bighero_ads_bp)
+app.register_blueprint(ads_overview_bp)
 
 @app.route('/')
 def home():
