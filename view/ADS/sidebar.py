@@ -56,6 +56,9 @@ def create_sidebar_ad():
         months = int(months)
         if months < 1 or months > 12:
             return jsonify({"error": "เลือกได้ 1-12 เดือน"}), 400
+        
+        SIDEBAR_PRICE = 150
+        total_price = SIDEBAR_PRICE * months
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
 
@@ -91,13 +94,15 @@ def create_sidebar_ad():
                 adv_description,
                 adv_image_url,
                 target_url,
+                adv_price,
+                adv_position,
                 valid_from,
                 valid_to,
                 status,
                 created_at,
                 del_flg
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
             """
 
             cur.execute(sql, (
@@ -107,6 +112,8 @@ def create_sidebar_ad():
                 description,
                 image_url,
                 url,
+                total_price,       # ⭐ ราคาที่คำนวณ
+                "SIDEBAR",
                 valid_from,
                 valid_to
             ))

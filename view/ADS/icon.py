@@ -53,6 +53,10 @@ def create_icon_ad():
 
     try:
         months = int(months)
+        
+        ICON_PRICE = 300
+        total_price = ICON_PRICE * months
+    
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
 
@@ -86,13 +90,15 @@ def create_icon_ad():
                     adv_name,
                     adv_image_url,
                     target_url,
+                    adv_price,
+                    adv_position,
                     valid_from,
                     valid_to,
                     status,
                     created_at,
                     del_flg
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,NOW(),0)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW(),0)
             """
 
             cursor.execute(sql, (
@@ -101,6 +107,8 @@ def create_icon_ad():
                 name,
                 image_url,
                 url,
+                total_price,
+                "HOME_ICON",
                 valid_from,
                 valid_to,
                 "draft"         

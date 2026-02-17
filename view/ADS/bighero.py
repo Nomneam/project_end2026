@@ -60,13 +60,17 @@ def create_bighero_ad():
     valid_from = datetime.now()
     valid_to = valid_from + relativedelta(months=months)
 
-    # map ตำแหน่งโฆษณา
+    # map ตำแหน่ง + ราคา
     if place == "home":
         position = "INDEX_PAGE"
+        price = 900
     elif place == "category":
         position = "CATEGORY_PAGE"
+        price = 700
     else:
-        position = "UNKNOWN"
+        return jsonify({"error": "ตำแหน่งไม่ถูกต้อง"}), 400
+
+    total_price = price * months
 
 
     conn = connect_db()
@@ -83,13 +87,14 @@ def create_bighero_ad():
                 adv_image_url,
                 target_url,
                 adv_position,
+                adv_price,
                 valid_from,
                 valid_to,
                 status,
                 created_at,
                 del_flg
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
             """
 
             cur.execute(sql, (
@@ -100,6 +105,7 @@ def create_bighero_ad():
                 image_url,
                 url,
                 position,
+                total_price,
                 valid_from,
                 valid_to
             ))

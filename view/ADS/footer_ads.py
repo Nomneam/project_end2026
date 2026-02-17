@@ -56,6 +56,9 @@ def create_footer_ad():
         months = int(months)
         if months < 1 or months > 12:
             return jsonify({"error": "เลือกได้ 1-12 เดือน"}), 400
+        
+        ICON_PRICE = 500
+        total_price = ICON_PRICE * months
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
 
@@ -91,13 +94,15 @@ def create_footer_ad():
                 adv_description,
                 adv_image_url,
                 target_url,
+                adv_price,
+                adv_position,
                 valid_from,
                 valid_to,
                 status,
                 created_at,
                 del_flg
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
             """
 
             cur.execute(sql, (
@@ -107,6 +112,8 @@ def create_footer_ad():
                 description,
                 image_url,
                 url,
+                total_price,
+                "FOOTER_HOME",
                 valid_from,
                 valid_to
             ))
