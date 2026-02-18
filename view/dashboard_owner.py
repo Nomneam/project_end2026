@@ -40,13 +40,15 @@ def api_owner_dashboard():
 
             # ===== รายรับเดือนนี้ =====
             cur.execute("""
-                SELECT IFNULL(SUM(total_amount),0) AS total
-                FROM advert_order
-                WHERE order_status IN ('paid','active','completed')
-                  AND MONTH(start_date) = MONTH(CURDATE())
-                  AND YEAR(start_date) = YEAR(CURDATE())
+                SELECT IFNULL(SUM(adv_price),0) AS total
+                FROM advert
+                WHERE status IN ('approved','running','expired')
+                AND MONTH(valid_from) = MONTH(CURDATE())
+                AND YEAR(valid_from) = YEAR(CURDATE())
+                AND del_flg = 0
             """)
             revenue_month = cur.fetchone()["total"] or 0
+
 
             # ===== จำนวนพนักงาน =====
             cur.execute("SELECT COUNT(*) AS total FROM employee WHERE del_flg = 0")
@@ -58,15 +60,20 @@ def api_owner_dashboard():
 
             # ===== รายรับแยกตามประเภทโฆษณา =====
             cur.execute("""
-                SELECT c.adc_cat_name AS name, IFNULL(SUM(o.total_amount),0) AS total
+                SELECT 
+                    c.adc_cat_name AS name,
+                    IFNULL(SUM(a.adv_price),0) AS total
                 FROM advert_category c
-                LEFT JOIN advert_order o 
-                  ON o.adc_cat_id = c.adc_cat_id
-                 AND o.order_status IN ('paid','active','completed')
+                LEFT JOIN advert a
+                    ON a.adc_cat_id = c.adc_cat_id
+                AND a.status IN ('approved','running','expired')
+                AND a.del_flg = 0
                 GROUP BY c.adc_cat_id, c.adc_cat_name
                 ORDER BY total DESC
             """)
+
             revenue_by_cat = cur.fetchall() or []
+
 
             # ===== จำนวนพนักงานแยกตาม Role =====
             cur.execute("""
