@@ -1,0 +1,245 @@
+{% extends "layout/owner-layout.html" %}
+
+{% block title %}Dashboard โฆษณา{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/advert_dashbord.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="main-content">
+
+  <div class="container-fluid">
+
+     <!-- HEADER + YEAR FILTER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+      <div>
+        <h4 class="fw-bold mb-1">Dashboard โฆษณา</h4>
+        <small class="text-muted">ภาพรวมสถิติการลงโฆษณา</small>
+      </div>
+
+      <div class="mt-3 mt-md-0">
+        <select class="form-select year-select">
+          <option value="2026">ปี 2026</option>
+          <option value="2025">ปี 2025</option>
+          <option value="2024">ปี 2024</option>
+          <option value="2023">ปี 2023</option>
+        </select>
+      </div>
+    </div>
+
+
+    <div class="row g-4 mb-4 kpi-section">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-primary">
+        <div class="kpi-content">
+            <div>
+            <div class="kpi-title">โฆษณาทั้งหมด (ปีนี้)</div>
+            <div class="kpi-value" id="totalAdsYear">0</div>
+            </div>
+            <div class="kpi-icon-wrapper">
+            <i class="bi bi-megaphone"></i>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-success">
+        <div class="kpi-content">
+            <div>
+            <div class="kpi-title">อนุมัติแล้ว</div>
+            <div class="kpi-value" id="approvedAds">0</div>
+            </div>
+            <div class="kpi-icon-wrapper">
+            <i class="bi bi-check-circle"></i>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-warning">
+        <div class="kpi-content">
+            <div>
+            <div class="kpi-title">ยังไม่อนุมัติ</div>
+            <div class="kpi-value" id="pendingAds">0</div>
+            </div>
+            <div class="kpi-icon-wrapper">
+            <i class="bi bi-hourglass-split"></i>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-dark">
+        <div class="kpi-content">
+            <div>
+            <div class="kpi-title">จำนวนประเภทโฆษณา</div>
+            <div class="kpi-value" id="totalCategories">0</div>
+            </div>
+            <div class="kpi-icon-wrapper">
+            <i class="bi bi-grid"></i>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    </div>
+
+
+    <!-- CHART SECTION -->
+    <div class="row g-4 mb-4">
+
+      <div class="col-lg-12">
+        <div class="card chart-card shadow-sm h-100">
+          <div class="card-header">
+            โฆษณาแต่ละเดือน
+          </div>
+          <div class="card-body">
+            <canvas id="adsByMonthChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TOP CUSTOMER -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow-sm rounded-4">
+          <div class="card-header">
+            ลูกค้าลงโฆษณามากที่สุด 5 อันดับ
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table align-middle top-customer-table">
+                <thead>
+                  <tr>
+                    <th width="80">อันดับ</th>
+                    <th>ชื่อลูกค้า</th>
+                    <th width="150">จำนวนโฆษณา</th>
+                    <th width="200">มูลค่ารวม</th>
+                  </tr>
+                </thead>
+                <tbody id="topCustomerTable">
+                  <tr>
+                    <td colspan="4" class="text-center text-muted">
+                      ยังไม่มีข้อมูล
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  // ===== MOCK KPI DATA =====
+  const mockData = {
+    totalAdsYear: 128,
+    approvedAds: 96,
+    pendingAds: 32,
+    totalCategories: 12
+  };
+
+  document.getElementById("totalAdsYear").innerText = mockData.totalAdsYear;
+  document.getElementById("approvedAds").innerText = mockData.approvedAds;
+  document.getElementById("pendingAds").innerText = mockData.pendingAds;
+  document.getElementById("totalCategories").innerText = mockData.totalCategories;
+
+
+  // ===== MOCK TOP CUSTOMER =====
+  const customers = [
+    { name: "บริษัท ABC จำกัด", ads: 25, total: 125000 },
+    { name: "บริษัท Smart Media", ads: 21, total: 110000 },
+    { name: "บริษัท Digital Pro", ads: 18, total: 95000 },
+    { name: "บริษัท Fast Ads", ads: 15, total: 82000 },
+    { name: "บริษัท Creative Hub", ads: 12, total: 76000 }
+  ];
+
+  const table = document.getElementById("topCustomerTable");
+  table.innerHTML = "";
+
+  customers.forEach((c, index) => {
+    table.innerHTML += `
+      <tr>
+        <td><strong>${index + 1}</strong></td>
+        <td>${c.name}</td>
+        <td>${c.ads}</td>
+        <td>฿ ${c.total.toLocaleString()}</td>
+      </tr>
+    `;
+  });
+
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  const ctx = document.getElementById("adsByMonthChart");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", 
+               "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
+      datasets: [
+        {
+          label: "ปีปัจจุบัน",
+          data: [8, 12, 10, 15, 18, 20, 14, 17, 19, 22, 16, 21],
+          backgroundColor: "#dc3545",
+          borderRadius: 6,
+          barThickness: 14
+        },
+        {
+          label: "ปีที่แล้ว",
+          data: [6, 9, 8, 11, 14, 16, 12, 13, 15, 18, 14, 17],
+          backgroundColor: "#212529",
+          borderRadius: 6,
+          barThickness: 14
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top"
+        }
+      },
+      scales: {
+        y: {
+          display: false,   // ❌ เอาแกน Y ออก
+          grid: { display: false }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+
+});
+</script>
+
+
+
+{% endblock %}
