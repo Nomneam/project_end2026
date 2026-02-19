@@ -17,16 +17,12 @@
      <!-- HEADER + YEAR FILTER -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
       <div>
-        <h4 class="fw-bold mb-1">Dashboard โฆษณา</h4>
+        <h2 class="fw-bold mb-1">Dashboard โฆษณา</h2>
         <small class="text-muted">ภาพรวมสถิติการลงโฆษณา</small>
       </div>
 
       <div class="mt-3 mt-md-0">
-        <select class="form-select year-select">
-          <option value="2026">ปี 2026</option>
-          <option value="2025">ปี 2025</option>
-          <option value="2024">ปี 2024</option>
-          <option value="2023">ปี 2023</option>
+        <select class="form-select year-select"></select>
         </select>
       </div>
     </div>
@@ -101,9 +97,9 @@
           <div class="card-header">
             โฆษณาแต่ละเดือน
           </div>
-          <div class="card-body">
-            <canvas id="adsByMonthChart" height="120"></canvas>
-          </div>
+            <div class="card-body chart-wrapper">
+              <canvas id="adsByMonthChart"></canvas>
+            </div>
         </div>
       </div>
 
@@ -148,98 +144,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
 
-  // ===== MOCK KPI DATA =====
-  const mockData = {
-    totalAdsYear: 128,
-    approvedAds: 96,
-    pendingAds: 32,
-    totalCategories: 12
-  };
-
-  document.getElementById("totalAdsYear").innerText = mockData.totalAdsYear;
-  document.getElementById("approvedAds").innerText = mockData.approvedAds;
-  document.getElementById("pendingAds").innerText = mockData.pendingAds;
-  document.getElementById("totalCategories").innerText = mockData.totalCategories;
-
-
-  // ===== MOCK TOP CUSTOMER =====
-  const customers = [
-    { name: "บริษัท ABC จำกัด", ads: 25, total: 125000 },
-    { name: "บริษัท Smart Media", ads: 21, total: 110000 },
-    { name: "บริษัท Digital Pro", ads: 18, total: 95000 },
-    { name: "บริษัท Fast Ads", ads: 15, total: 82000 },
-    { name: "บริษัท Creative Hub", ads: 12, total: 76000 }
-  ];
-
-  const table = document.getElementById("topCustomerTable");
-  table.innerHTML = "";
-
-  customers.forEach((c, index) => {
-    table.innerHTML += `
-      <tr>
-        <td><strong>${index + 1}</strong></td>
-        <td>${c.name}</td>
-        <td>${c.ads}</td>
-        <td>฿ ${c.total.toLocaleString()}</td>
-      </tr>
-    `;
-  });
-
-});
-</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-
-  const ctx = document.getElementById("adsByMonthChart");
-
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", 
-               "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
-      datasets: [
-        {
-          label: "ปีปัจจุบัน",
-          data: [8, 12, 10, 15, 18, 20, 14, 17, 19, 22, 16, 21],
-          backgroundColor: "#dc3545",
-          borderRadius: 6,
-          barThickness: 14
-        },
-        {
-          label: "ปีที่แล้ว",
-          data: [6, 9, 8, 11, 14, 16, 12, 13, 15, 18, 14, 17],
-          backgroundColor: "#212529",
-          borderRadius: 6,
-          barThickness: 14
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "top"
-        }
-      },
-      scales: {
-        y: {
-          display: false,   // ❌ เอาแกน Y ออก
-          grid: { display: false }
-        },
-        x: {
-          grid: { display: false }
-        }
-      }
-    }
-  });
-
-});
-</script>
-
-
+<script src="{{ url_for('static', filename='js/advert_dashbord.js') }}"></script>
 
 {% endblock %}

@@ -181,3 +181,41 @@ def api_compare_revenue_by_type():
         result[ad_type][month] = float(r["total"])
 
     return jsonify(success=True, data=result)
+
+
+# ======================================================
+# 6) YEARS (ดึงปีที่มีข้อมูลจริง)
+# ======================================================
+@advertising_revenue_bp.route('/api/owner/advertising-revenue/years')
+def api_advertising_revenue_years():
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT 
+                    MIN(YEAR(created_at)) AS min_year,
+                    MAX(YEAR(created_at)) AS max_year
+                FROM advert
+                WHERE status IN ('approved','running','expired')
+                  AND del_flg = 0
+            """)
+            row = cur.fetchone()
+
+            if not row or not row["min_year"]:
+                return jsonify(success=True, years=[])
+
+            min_year = row["min_year"]
+            max_year = row["max_year"]
+
+            years = list(range(max_year, min_year - 1, -1))
+
+        return jsonify(
+            success=True,
+            years=years,
+            minYear=min_year,
+            maxYear=max_year
+        )
+
+    finally:
+        conn.close()
