@@ -136,6 +136,40 @@
       object-fit: cover;
     }
 
+    /* Ads overview (DB version): make thumbnail smaller and consistent */
+    .ad-thumbnail-wrapper {
+      width: 120px;
+      flex: 0 0 120px;
+    }
+
+    /* ให้รูปไม่ขยายเกินกล่อง thumbnail */
+    .ad-thumbnail-wrapper img,
+    .ad-thumbnail-wrapper .bg-light {
+      width: 120px !important;
+      height: 80px !important;
+      max-width: 120px !important;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+    }
+
+    @media (max-width: 767.98px) {
+      .ad-thumbnail-wrapper {
+        width: 100%;
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .ad-thumbnail-wrapper img,
+      .ad-thumbnail-wrapper .bg-light {
+        width: 100% !important;
+        max-width: 200px !important;
+        height: 120px !important;
+      }
+    }
+
     .thumb-badge {
       position: absolute;
       left: 0.6rem;

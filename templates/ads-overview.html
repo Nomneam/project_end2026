@@ -8,30 +8,29 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ads_overview.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
-
 </head>
 <body>
-      {% include "partials/navbar.html" %}
-
+  {% include "partials/navbar.html" %}
 
   <main class="page-wrapper">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
       <div>
         <div class="section-header-title">โฆษณาของฉัน</div>
-        <div class="section-header-subtitle">ดูสรุปแคมเปญโฆษณาที่เคยลงกับ Bangkok Today ทั้งหมดในที่เดียว</div>
+        <div class="section-header-subtitle">
+          ดูสรุปแคมเปญโฆษณาที่เคยลงกับ Bangkok Today ทั้งหมดในที่เดียว
+        </div>
       </div>
-      <button class="btn btn-danger btn-sm rounded-pill px-3" id="btnNewAd" type="button">
-        <i class="bi bi-plus-lg me-1"></i>สร้างแคมเปญใหม่
-      </button>
     </div>
 
+    <!-- แถบค้นหา/กรอง -->
     <div class="filter-bar mb-3">
       <div class="row g-3 align-items-center">
-        <div class="col-12 col-md-5">
-          <div class="filter-pill-label mb-1">ค้นหาแคมเปญ</div>
-          <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="พิมพ์ชื่อแคมเปญหรือแบรนด์" />
+        <div class="col-12 col-md-8">
+          <div class="filter-pill-label mb-1">ค้นหาแคมเปญ / แบรนด์</div>
+          <input type="text" id="searchInput" class="form-control form-control-sm"
+                 placeholder="พิมพ์ชื่อแคมเปญหรือแบรนด์เพื่อค้นหา..." />
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-md-4">
           <div class="filter-pill-label mb-1">สถานะ</div>
           <select id="statusFilter" class="form-select form-select-sm">
             <option value="">ทั้งหมด</option>
@@ -40,20 +39,100 @@
             <option value="ended">หมดอายุ</option>
           </select>
         </div>
-        <div class="col-6 col-md-4">
-          <div class="filter-pill-label mb-1">ลำดับ</div>
-          <select id="sortSelect" class="form-select form-select-sm">
-            <option value="recent">ล่าสุด</option>
-            <option value="impressions">Impressions สูงสุด</option>
-            <option value="clicks">Clicks สูงสุด</option>
-          </select>
-        </div>
       </div>
     </div>
 
-    <div id="adsList" class="d-flex flex-column gap-3"></div>
+    <!-- แสดงโฆษณาจริงจาก DB -->
+    <div id="adsContainer" class="d-flex flex-column gap-3">
+      {% if adverts and adverts|length > 0 %}
+        {% for ad in adverts %}
+        <div class="card shadow-sm border-0 ad-card-item" 
+             data-name="{{ ad.adv_name|lower }}" 
+             data-status="{{ ad.status|lower }}">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+              <!-- รูปโฆษณา -->
+              <div class="ad-thumbnail-wrapper">
+                {% if ad.adv_image_url %}
+                  <img src="{{ ad.adv_image_url }}" class="img-fluid rounded ad-thumb" alt="{{ ad.adv_name }}" style="width: 120px; height: 80px; object-fit: cover;">
+                {% else %}
+                  <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                       style="width: 120px; height: 80px;">
+                    <span class="text-muted small">ไม่มีรูปภาพ</span>
+                  </div>
+                {% endif %}
+              </div>
 
-    <div class="pagination-wrapper d-flex justify-content-between align-items-center" id="paginationWrapper" style="display:none;">
+              <!-- ข้อมูลหลัก -->
+              <div class="flex-grow-1">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+                  <div>
+                    <h5 class="mb-1 ad-title">{{ ad.adv_name }}</h5>
+                    <div class="text-muted small mb-1">
+                      ตำแหน่งแสดงผล:
+                      <span class="fw-semibold">
+                        {{ ad.adv_position or '-' }}
+                      </span>
+                    </div>
+                    {% if ad.adv_description %}
+                      <p class="mb-1 text-muted small">
+                        {{ ad.adv_description }}
+                      </p>
+                    {% endif %}
+                    {% if ad.target_url %}
+                      <a href="{{ ad.target_url }}" target="_blank" class="small">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>ดูหน้า Landing Page
+                      </a>
+                    {% endif %}
+                  </div>
+
+                  <!-- สถานะ + ช่วงเวลา + ราคา -->
+                  <div class="text-md-end">
+                    <div class="mb-1">
+                      {% set status = ad.status or 'draft' %}
+                      {% if status == 'running' %}
+                        <span class="badge bg-success" data-status-val="running">กำลังรัน</span>
+                      {% elif status in ['submitted', 'approved'] %}
+                        <span class="badge bg-warning text-dark" data-status-val="pending">รอตรวจ/อนุมัติ</span>
+                      {% elif status == 'rejected' %}
+                        <span class="badge bg-danger" data-status-val="ended">ถูกปฏิเสธ</span>
+                      {% elif status == 'paused' %}
+                        <span class="badge bg-secondary" data-status-val="ended">หยุดชั่วคราว</span>
+                      {% elif status == 'expired' %}
+                        <span class="badge bg-dark" data-status-val="ended">หมดอายุ</span>
+                      {% else %}
+                        <span class="badge bg-secondary" data-status-val="pending">ร่าง</span>
+                      {% endif %}
+                    </div>
+
+                    <div class="small text-muted">
+                      ช่วงแสดงผล:<br>
+                      {% if ad.valid_from %}{{ ad.valid_from.strftime('%d/%m/%Y') }}{% else %}-{% endif %}
+                      -
+                      {% if ad.valid_to %}{{ ad.valid_to.strftime('%d/%m/%Y') }}{% else %}-{% endif %}
+                    </div>
+
+                    {% if ad.adv_price is not none %}
+                      <div class="mt-2 fw-semibold">
+                        {{ '{:,.2f}'.format(ad.adv_price) }} บาท
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center text-muted py-5" id="emptyState">
+          ยังไม่มีโฆษณาในระบบ
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrapper d-flex justify-content-between align-items-center mt-4" id="paginationWrapper" style="display:none;">
       <div class="small text-muted" id="pageInfo"></div>
       <nav>
         <ul class="pagination mb-0" id="pagination"></ul>
