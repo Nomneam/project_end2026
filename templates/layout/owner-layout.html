@@ -66,13 +66,13 @@
 
             <ul class="dropdown-menu dropdown-menu-end p-2">
               <li>
-                <a class="dropdown-item rounded-3" href="#" id="ddProfile">
+                <a class="dropdown-item rounded-3" href="{{ url_for('owner_profile.owner_profile') }}" id="ddProfile">
                   ⚙️ ตั้งค่าโปรไฟล์
                 </a>
               </li>
               <li><hr class="dropdown-divider" /></li>
               <li>
-                <a class="dropdown-item rounded-3 text-danger" href="#" id="ddLogout">
+                <a class="dropdown-item rounded-3 text-danger" href="{{ url_for('login_emp.logout_emp') }}" id="ddLogout">
                   🚪 Logout
                 </a>
               </li>
@@ -111,13 +111,13 @@
 
         <div class="mt-3">
           <div class="nav-section-title">ทั่วไป</div>
-          <a class="side-link" href="#/dashboard">📊 Dashboard</a>
+          <a class="side-link" href="{{ url_for('dashboard_owner.owner_dashboard') }}">📊 Dashboard</a>
         </div>
 
         <div class="mt-3">
           <div class="nav-section-title">เมนูงาน</div>
-          <a class="side-link" href="#/news/create">✍️ เขียนข่าว</a>
-          <a class="side-link" href="#/ads/review">📣 ตรวจสอบโฆษณา</a>
+          <a class="side-link" href="{{ url_for('advertising_revenue.advertising_revenue_page') }}">💰 รายรับจากโฆษณา</a>
+          <a class="side-link" href="{{ url_for('advert_dashbord.advert_dashbord_page') }}">📣 โฆษณา</a>
         </div>
       </aside>
 

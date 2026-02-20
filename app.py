@@ -20,6 +20,9 @@ from view.category_management import category_management_bp
 from view.news_management import news_management_bp
 from view.admin_writenew import admin_writenew_bp  
 from view.admin_profile import admin_profile_bp
+from view.Advertising_revenue import advertising_revenue_bp
+from view.advert_dashbord import advert_dashbord_bp
+from view.owner_profile import owner_profile_bp
 
 
 
@@ -38,6 +41,9 @@ app.register_blueprint(category_management_bp)
 app.register_blueprint(news_management_bp)
 app.register_blueprint(admin_writenew_bp)
 app.register_blueprint(admin_profile_bp)
+app.register_blueprint(advertising_revenue_bp)
+app.register_blueprint(advert_dashbord_bp)
+app.register_blueprint(owner_profile_bp)
 
 @app.route('/')
 def home():

@@ -1,0 +1,84 @@
+:root{
+  --sidebar-w: 260px;
+  --navbar-h: 64px;
+}
+
+/* โครงหลัก */
+.app-shell{
+  display: flex;
+  min-height: calc(100vh - var(--navbar-h));
+}
+
+/* Sidebar */
+.sidebar{
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  position: sticky;
+  top: var(--navbar-h);
+  height: calc(100vh - var(--navbar-h));
+  overflow-y: auto;
+  z-index: 5;
+}
+
+/* Main content */
+.main{
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 16px 20px;
+  overflow-x: hidden;
+}
+
+/* ===== Stat Card ===== */
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  min-height: 110px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+/* ===== Chart Fix (ล็อกกรอบกราฟ ไม่หลุด ไม่ยืด) ===== */
+.chart-card {
+  height: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card .card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px;
+}
+
+.chart-card .chart-wrap {
+  position: relative;
+  flex: 1 1 auto;     /* กราฟกินพื้นที่หลัก */
+  min-height: 0;
+}
+
+.chart-card canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#revenueTypeDetail {
+  flex: 0 0 auto;    /* รายละเอียดไม่โดนบีบ */
+}
+
+
+
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 12px;
+  }
+
+  .chart-card {
+    height: 280px;   /* มือถือให้เตี้ยลง */
+  }
+}
