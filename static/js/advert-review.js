@@ -23,8 +23,10 @@ $(function () {
             $('#modalImage').attr('src', imageUrl);
             $('#modalName').text(currentAd.adv_name);
             $('#modalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
-            $('#modalArea').text(currentAd.advert_area_name || '-');
-            $('#modalPrice').text(price);
+            $('#modalArea').text(currentAd.adc_cat_name || '-');
+            $('#modalPrice').text(
+                Number(currentAd.adv_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })
+            );
             $('#modalDate').text(
                 formatDate(currentAd.valid_from) + ' - ' +
                 formatDate(currentAd.valid_to)
@@ -41,8 +43,11 @@ $(function () {
             $('#approvedModalImage').attr('src', imageUrl);
             $('#approvedModalName').text(currentAd.adv_name);
             $('#approvedModalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
-            $('#approvedModalArea').text(currentAd.advert_area_name || '-');
-            $('#approvedModalPrice').text(price);
+            $('#approvedModalArea').text(currentAd.adc_cat_name || '-');
+            $('#approvedModalPrice').text(
+                    Number(currentAd.adv_price || 0)
+                        .toLocaleString('th-TH', { minimumFractionDigits: 2 })
+                );
 
             let statusBadge = '';
 
