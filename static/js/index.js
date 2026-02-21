@@ -139,19 +139,6 @@ $(function () {
     };
   }
 
-  // ======================================================
-  // Sponsor marquee (MOCK)
-  // ======================================================
-  const SPONSORS = [
-    { name: "KBank", key: "kbank", mark: "K", url: "https://www.kasikornbank.com", tag: "Banking" },
-    { name: "True", key: "true", mark: "T", url: "https://www.true.th", tag: "Telecom" },
-    { name: "AIS", key: "ais", mark: "A", url: "https://www.ais.th", tag: "5G" },
-    { name: "PTT", key: "ptt", mark: "P", url: "https://www.pttplc.com", tag: "Energy" },
-    { name: "SCB", key: "scb", mark: "S", url: "https://www.scb.co.th", tag: "Finance" },
-    { name: "Lazada", key: "lazada", mark: "L", url: "https://www.lazada.co.th", tag: "E-commerce" },
-    { name: "Shopee", key: "shopee", mark: "S", url: "https://shopee.co.th", tag: "E-commerce" },
-    { name: "Grab", key: "grab", mark: "G", url: "https://www.grab.com/th", tag: "Delivery" },
-  ];
 
   function buildSponsorPill(s) {
     return `
@@ -165,12 +152,31 @@ $(function () {
     `;
   }
 
-  function renderLogoMarquee() {
-    const $track = $("#logoTrack");
-    if (!$track.length) return;
-    const list = [...SPONSORS, ...SPONSORS];
-    $track.html(list.map(buildSponsorPill).join(""));
-  }
+  async function loadSponsorIcons() {
+  const res = await fetch("/api/ads/icons");
+  const data = await res.json();
+
+  if (!data.items || !data.items.length) return;
+
+  const track = document.getElementById("logoTrack");
+
+  track.innerHTML = data.items.map(s => `
+  <a class="sponsor-pill" href="${s.target_url}" target="_blank">
+    
+    <img src="${s.adv_image_url}" 
+         class="sponsor-logo" 
+         alt="${s.adv_name}">
+    
+    <div class="sponsor-name">
+      ${s.adv_name}
+    </div>
+
+  </a>
+`).join("");
+
+  track.innerHTML += track.innerHTML; // scroll smooth
+}
+
 
   // ======================================================
   // Hero Swiper (ข่าวยอดฮิต)
@@ -272,7 +278,7 @@ $(function () {
           `<div class="text-danger small">โหลดไม่ควรพลาดไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`
         );
       });
-  }
+  } 
 
   // ======================================================
   // Latest + More
@@ -653,6 +659,7 @@ $(function () {
     safeCall(() => loadMustRead());
     safeCall(() => loadLatestAndMore(false));
     safeCall(() => loadPopular());
+    safeCall(() => loadSponsorIcons());
 
     // Mock sections
     safeCall(() => renderEditorsPicks());
@@ -661,8 +668,6 @@ $(function () {
     safeCall(() => renderFooterAds());
     safeCall(() => renderTopicSections());
 
-    // Sponsor
-    safeCall(() => renderLogoMarquee());
   }
 
   // ======================================================

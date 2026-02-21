@@ -479,3 +479,11 @@ img { display: block; }
   color: rgba(255, 255, 255, 0.85);
   margin: 0;
 }
+
+.sponsor-logo{
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+

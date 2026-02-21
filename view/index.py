@@ -181,3 +181,29 @@ def api_news_popular():
         db.close()
 
     return jsonify({"ok": True, "items": items})
+
+
+@index_bp.get("/api/ads/icons")
+def api_ads_icons():
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    adv_id,
+                    adv_name,
+                    adv_image_url,
+                    target_url
+                FROM advert
+                WHERE status = 'approved'
+                  AND adv_position = 'HOME_ICON'
+                  AND (valid_from IS NULL OR valid_from <= NOW())
+                  AND (valid_to IS NULL OR valid_to >= NOW())
+                  AND del_flg = 0
+                ORDER BY adv_id DESC
+            """)
+            items = cur.fetchall()
+    finally:
+        db.close()
+
+    return jsonify({"ok": True, "items": items})
