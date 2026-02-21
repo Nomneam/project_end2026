@@ -21,36 +21,38 @@ def connect_db():
 # ==============================
 #  Advert Review Page
 # ==============================
-
 @advert_review_bp.route('/ad-review')
 def advert_review():
     user = session.get("user")
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
+
     conn = connect_db()
     try:
         with conn.cursor() as cur:
+
             # ----------------------------
-            # โฆษณาที่รอตรวจสอบ (submitted)
+            # โฆษณาที่รอตรวจสอบ
             # ----------------------------
             cur.execute("""
                 SELECT 
                     a.adv_id,
                     a.adv_name,
+                    a.adv_image_url,
+                    a.adv_price,
                     a.valid_from,
                     a.valid_to,
-                    a.status,        
+                    a.status,
                     c.cus_fname,
                     c.cus_lname,
                     ar.advert_area_name,
-                    ao.total_amount,
                     ac.adc_cat_name
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
                 LEFT JOIN advert_order ao ON a.adv_id = ao.adv_id
                 LEFT JOIN advert_area ar ON ao.advert_area_id = ar.advert_area_id
                 LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
-                WHERE a.status = 'submitted'
+                WHERE a.status = 'draft'
                   AND a.del_flg = 0
                 ORDER BY a.created_at DESC
                 LIMIT 5
@@ -64,13 +66,14 @@ def advert_review():
                 SELECT 
                     a.adv_id,
                     a.adv_name,
+                    a.adv_image_url,
+                    a.adv_price,
                     a.valid_from,
                     a.valid_to,
                     a.status,
                     c.cus_fname,
                     c.cus_lname,
                     ar.advert_area_name,
-                    ao.total_amount,
                     ac.adc_cat_name
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
@@ -84,16 +87,14 @@ def advert_review():
             """)
             approved_ads = cur.fetchall()
 
-        # ส่ง template พร้อมทั้งสองตัวแปร
         return render_template(
             'admin/ad-review.html',
             adverts=adverts,
             approved_ads=approved_ads
         )
+
     finally:
         conn.close()
-
-
 
 
 #  Approve

@@ -33,7 +33,7 @@
                             {% for ad in adverts %}
                             <tr>
                                 <td>
-                                    <img src="https://picsum.photos/seed/ad{{ ad.adv_id }}/600/300.jpg"
+                                    <img src="{{ ad.adv_image_url if ad.adv_image_url else url_for('static', filename='images/no-image.png') }}"
                                         class="rounded border"
                                         style="width:100px;height:56px;object-fit:cover">
                                 </td>
@@ -98,7 +98,7 @@
                             {% for ad in approved_ads %}
                             <tr>
                                 <td>
-                                    <img src="https://picsum.photos/seed/ad{{ ad.adv_id }}/600/300.jpg"
+                                    <img src="{{ ad.adv_image_url if ad.adv_image_url else url_for('static', filename='images/no-image.png') }}"
                                         class="rounded border"
                                         style="width:100px;height:56px;object-fit:cover">
                                 </td>
