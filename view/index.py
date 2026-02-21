@@ -207,3 +207,35 @@ def api_ads_icons():
         db.close()
 
     return jsonify({"ok": True, "items": items})
+
+
+
+@index_bp.get("/api/ads/footer")
+def api_ads_footer():
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    adv_id,
+                    adv_name,
+                    adv_description,
+                    adv_image_url,
+                    target_url
+                FROM advert
+                WHERE status = 'approved'
+                  AND adv_position = 'FOOTER_HOME'
+                  AND (valid_from IS NULL OR valid_from <= NOW())
+                  AND (valid_to IS NULL OR valid_to >= NOW())
+                  AND del_flg = 0
+                ORDER BY adv_id DESC
+            """)
+            items = cur.fetchall()
+
+            for item in items:
+                item["target_url"] = item["target_url"] or "#"
+
+    finally:
+        db.close()
+
+    return jsonify({"ok": True, "items": items})

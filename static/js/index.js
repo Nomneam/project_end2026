@@ -140,18 +140,6 @@ $(function () {
   }
 
 
-  function buildSponsorPill(s) {
-    return `
-      <a class="sponsor-pill" href="${s.url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(s.name)}">
-        <span class="sponsor-mark sponsor-${escapeHtml(s.key)}">${escapeHtml(s.mark)}</span>
-        <span class="sponsor-meta">
-          <div class="sponsor-name">${escapeHtml(s.name)}</div>
-          <div class="sponsor-sub">${escapeHtml(s.tag)}</div>
-        </span>
-      </a>
-    `;
-  }
-
   async function loadSponsorIcons() {
   const res = await fetch("/api/ads/icons");
   const data = await res.json();
@@ -175,6 +163,46 @@ $(function () {
 `).join("");
 
   track.innerHTML += track.innerHTML; // scroll smooth
+}
+
+
+async function loadFooterAds() {
+  const wrapper = document.getElementById("footerAdWrapper");
+  if (!wrapper) return;
+
+  const res = await fetch("/api/ads/footer");
+  const data = await res.json();
+
+  if (!data.ok || !data.items.length) {
+    wrapper.innerHTML = "<div class='p-3 text-muted'>ไม่มีโฆษณา</div>";
+    return;
+  }
+
+  wrapper.innerHTML = data.items.map(ad => `
+    <div class="swiper-slide">
+      <a class="ad-banner" href="${ad.target_url}" target="_blank">
+        <img src="${ad.adv_image_url}">
+        <div class="ad-meta"> 
+        <div class="ad-meta-body">
+        <div class="ad-title line-clamp-2">${ad.adv_name}</div>
+        <div class="ad-sub line-clamp-2">${ad.adv_description}</div>
+         </div>
+         <span class="ad-badge ad-badge-ad">ad</span>
+      </div>
+      </a>
+    </div>
+  `).join("");
+
+  new Swiper(".footerAdSwiper", {
+    slidesPerView: 2,
+    spaceBetween: 20,
+    loop: true,
+    autoplay: { delay: 3500 },
+    navigation: {
+      nextEl: "#adNext",
+      prevEl: "#adPrev"
+    }
+  });
 }
 
 
@@ -582,69 +610,6 @@ $(function () {
     });
   }
 
-  let footerAdSwiper = null;
-  const FOOTER_ADS = [
-    {
-      title: "โปรแรง! ส่วนลดตั๋วเครื่องบิน",
-      sub: "ดีลพิเศษวันนี้เท่านั้น",
-      img: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1400&q=80",
-      url: "https://example.com",
-    },
-    {
-      title: "มือถือใหม่ + แพ็กเน็ตสุดคุ้ม",
-      sub: "ผ่อน 0% • ของแถมเพียบ",
-      img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1400&q=80",
-      url: "https://example.com",
-    },
-    {
-      title: "คูปองส่วนลดร้านดัง",
-      sub: "รับส่วนลดเพิ่ม • จำกัดเวลา",
-      img: "https://images.unsplash.com/photo-1520975958225-1baf0af5f3f1?auto=format&fit=crop&w=1400&q=80",
-      url: "https://example.com",
-    },
-  ];
-
-  function renderFooterAds() {
-    if (!$("#footerAdWrapper").length) return;
-
-    const list = [...FOOTER_ADS, ...FOOTER_ADS];
-    const html = list
-      .map(
-        (ad) => `
-          <div class="swiper-slide">
-            <a class="ad-banner" href="${ad.url}" target="_blank" rel="noopener noreferrer" aria-label="โฆษณา">
-              <img src="${ad.img}" alt="">
-              <div class="ad-meta">
-                <div class="ad-meta-body">
-                  <div class="ad-title line-clamp-2">${escapeHtml(ad.title)}</div>
-                  <div class="ad-sub line-clamp-2">${escapeHtml(ad.sub)}</div>
-                </div>
-                <span class="ad-badge ad-badge-ad">ad</span>
-              </div>
-            </a>
-          </div>
-        `
-      )
-      .join("");
-
-    $("#footerAdWrapper").html(html);
-
-    if (footerAdSwiper) {
-      footerAdSwiper.destroy(true, true);
-      footerAdSwiper = null;
-    }
-
-    footerAdSwiper = new Swiper(".footerAdSwiper", {
-      slidesPerView: 1,
-      spaceBetween: 12,
-      loop: true,
-      speed: 900,
-      autoplay: { delay: 3500, disableOnInteraction: false, pauseOnMouseEnter: true },
-      navigation: { prevEl: "#adPrev", nextEl: "#adNext" },
-      breakpoints: { 768: { slidesPerView: 2 } },
-    });
-  }
-
   function renderTopicSections() {
     if (!$("#topicSections").length) return;
     $("#topicSections").html(`<div class="text-muted small">โซน Topics ยังเป็น mock (ถ้าจะทำ DB จริง เดี๋ยวผมจัด API ให้ครบ)</div>`);
@@ -660,12 +625,12 @@ $(function () {
     safeCall(() => loadLatestAndMore(false));
     safeCall(() => loadPopular());
     safeCall(() => loadSponsorIcons());
+    safeCall(() => loadFooterAds());
 
     // Mock sections
     safeCall(() => renderEditorsPicks());
     safeCall(() => renderInPictures());
     safeCall(() => renderWatchRail());
-    safeCall(() => renderFooterAds());
     safeCall(() => renderTopicSections());
 
   }
