@@ -65,6 +65,7 @@
   }
 
   loadData();
+  loadCatHeroAd();
 
   // =============================
   // LOAD
@@ -96,6 +97,56 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
+
+
+  async function loadCatHeroAd() {
+  const container = document.getElementById("bigCatHeroAd");
+  if (!container) return;
+
+  try {
+    const res = await fetch("/api/ads/cathero");
+    const data = await res.json();
+
+    if (!data.ok || !data.item) {
+      container.style.display = "none";
+      return;
+    }
+
+    const ad = data.item;
+
+    container.innerHTML = `
+      <a href="${ad.target_url}" target="_blank" rel="noopener noreferrer"
+         class="big-ad-wrap text-decoration-none">
+
+        <img src="${ad.adv_image_url}" 
+             class="big-ad-img"
+             loading="lazy"
+             onerror="this.style.display='none'">
+
+        <div class="big-ad-overlay"></div>
+
+        <div class="big-ad-content">
+          <span class="ad-badge ad-badge-ad mb-2">ad</span>
+          <h2 class="font-kanit fw-bold big-ad-title">
+            ${ad.adv_name}
+          </h2>
+          <p class="big-ad-desc">
+            ${ad.adv_description || ""}
+          </p>
+          <div class="mt-3">
+            <span class="btn btn-bkk-red px-4">ดูรายละเอียด</span>
+          </div>
+        </div>
+
+      </a>
+    `;
+
+  } catch (err) {
+    console.error("Hero Ad Load Error:", err);
+    container.style.display = "none";
+  }
+}
+
 
   // =============================
   // RENDER

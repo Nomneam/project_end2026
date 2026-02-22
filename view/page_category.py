@@ -161,3 +161,48 @@ def api_page_category():
         "page": page,
         "pageSize": PAGE_SIZE
     })
+    
+    
+    
+@page_cat_bp.get("/api/ads/cathero")
+def api_ads_hero():
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    adv_id,
+                    adv_name,
+                    adv_description,
+                    adv_image_url,
+                    target_url
+                FROM advert
+                WHERE status = 'approved'
+                  AND adv_position = 'CATEGORY_PAGE'
+                  AND del_flg = 0
+                  AND (valid_from IS NULL OR valid_from <= NOW())
+                  AND (valid_to IS NULL OR valid_to >= NOW())
+                ORDER BY adv_id DESC
+                LIMIT 1
+            """)
+            ad = cur.fetchone()
+
+            # ถ้าไม่มีโฆษณา
+            if not ad:
+                return jsonify({"ok": True, "item": None})
+
+            # กันค่า NULL
+            ad["target_url"] = ad["target_url"] or "#"
+            ad["adv_description"] = ad["adv_description"] or ""
+
+            # กัน path รูปว่าง
+            if not ad["adv_image_url"]:
+                return jsonify({"ok": True, "item": None})
+
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    finally:
+        db.close()
+
+    return jsonify({"ok": True, "item": ad})
