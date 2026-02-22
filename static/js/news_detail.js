@@ -143,6 +143,58 @@ $(function () {
     return { id, title };
   }
 
+//   // ============================================
+// // Load Sidebar Ads
+// // ============================================
+async function loadSidebarAds() {
+  const container = document.getElementById("sidebarAds");
+  if (!container) return;
+
+  try {
+    const res = await fetch("/api/ads/sidebar");
+    const data = await res.json();
+
+    if (!data.ok || !data.items || data.items.length === 0) {
+      container.style.display = "none";
+      return;
+    }
+
+    container.innerHTML = data.items.map(ad => `
+      <a href="${ad.target_url}" target="_blank" class="sidebar-ad">
+        <img src="${ad.adv_image_url}" alt="${ad.adv_name}">
+      </a>
+    `).join("");
+
+    // ✅ รอให้รูปโหลดก่อนคำนวณ
+    const images = container.querySelectorAll("img");
+    let loaded = 0;
+
+    images.forEach(img => {
+      if (img.complete) {
+        loaded++;
+      } else {
+        img.onload = img.onerror = () => {
+          loaded++;
+          if (loaded === images.length) adjustSidebarAds();
+        };
+      }
+    });
+
+    if (loaded === images.length) {
+      adjustSidebarAds();
+    }
+
+  } catch (err) {
+    console.error("Sidebar ads error:", err);
+    container.style.display = "none";
+  }
+}
+
+
+loadSidebarAds();
+
+
+
   // ======================================================
   // Date helpers (ไทย)
   // ======================================================
@@ -171,12 +223,6 @@ $(function () {
     alert("✅ " + msg);
   }
 
-    // ======================================================
-// Sidebar Ads: จำกัดจำนวนตามความสูงเนื้อหา
-// ======================================================
-$(window).on("load", function () {
-  adjustSidebarAds();
-});
 
 function adjustSidebarAds() {
   const $article = $(".article-card");

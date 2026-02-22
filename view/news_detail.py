@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort, session, request, url_for
+from flask import Blueprint, render_template, abort, session, request, url_for,jsonify
 import pymysql
 import os
 import json
@@ -373,3 +373,32 @@ def news_detail(news_id: int):
 
     finally:
         conn.close()
+
+
+@news_detail_bp.get("/api/ads/sidebar")
+def api_ads_sidebar():
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    adv_name,
+                    adv_image_url,
+                    target_url
+                FROM advert
+                WHERE status = 'approved'
+                  AND adv_position = 'SIDEBAR'
+                  AND (valid_from IS NULL OR valid_from <= NOW())
+                  AND (valid_to IS NULL OR valid_to >= NOW())
+                ORDER BY adv_id DESC
+                LIMIT 5
+            """)
+            ads = cur.fetchall()
+
+            for ad in ads:
+                ad["target_url"] = ad["target_url"] or "#"
+
+    finally:
+        db.close()
+
+    return jsonify({"ok": True, "items": ads})
