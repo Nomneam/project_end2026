@@ -156,37 +156,12 @@
         </div>
 
         <aside class="col-12 col-lg-4">
-          <!-- <div class="sidebar-ads d-flex flex-column gap-5 px-5">
-            <a href="#" target="_blank" class="sidebar-ad">
-              <img src="https://drive.google.com/thumbnail?id=1FvFDs6hMwSTEaIUDOKlujHGfRUKXZ2Vq&sz=w360-h300" alt="" />
-            </a>
-
-            <a href="#" target="_blank" class="sidebar-ad">
-              <img src="https://drive.google.com/thumbnail?id=1pXsuNXwtZ1-NIY1EkRVEndigNBsRj7wB&sz=w300-h250" alt="" />
-            </a>
-
-            <a href="#" target="_blank" class="sidebar-ad">
-              <img src="https://drive.google.com/thumbnail?id=1ak-SMAiFuu_Pi98ydGm9vMolgN3D-BnI&sz=w1024-h1024" alt="" />
-            </a>
-
-             <a href="#" target="_blank" class="sidebar-ad">
-              <img src="https://drive.google.com/thumbnail?id=1Klj9uStcr_rJ-n8BdzA_FfZEUaOcrSja&sz=w2048" alt="" />
-            </a>
-
-             <a href="#" target="_blank" class="sidebar-ad">
-              <img src="https://bangkok-today.com/wp-content/uploads/2025/04/Bangkok-Today_Banner-300x250px_1.jpg" alt="" />
-            </a>
-          </div> -->
           <div class="sidebar-ads d-flex flex-column gap-5 px-5" id="sidebarAds"></div>
         </aside>
       </div>
     </main>
 
-    <footer class="bg-navy-bkk text-white mt-5">
-      <div class="container-xl py-4">
-        <div class="small text-white-50 text-center">© 2026 Bangkok Today.</div>
-      </div>
-    </footer>
+    {% include "partials/footer.html" %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/news_detail.js') }}"></script>

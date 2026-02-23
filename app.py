@@ -35,6 +35,8 @@ from view.admin_profile import admin_profile_bp
 from view.Advertising_revenue import advertising_revenue_bp
 from view.advert_dashbord import advert_dashbord_bp
 from view.owner_profile import owner_profile_bp
+from view.footer_context import load_footer_data
+
 
 
 
@@ -75,7 +77,8 @@ def home():
 @app.context_processor
 def inject_navbar():
     return {
-        "categories": load_nav_categories()
+        "categories": load_nav_categories(),
+        **load_footer_data()
     }
 
 if __name__ == '__main__':

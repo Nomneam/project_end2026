@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, abort
 from dotenv import load_dotenv
-from view.navbar import load_nav_categories
 import pymysql
 import os
 
@@ -34,11 +33,9 @@ def page_category():
     if not cat_id:
         abort(400, "cat_id is required")
 
-    categories = load_nav_categories()
 
     return render_template(
         "page_category.html",
-        categories=categories,
         cat_id=cat_id,
         subcat_id=subcat_id
     )

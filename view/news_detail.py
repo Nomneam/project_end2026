@@ -7,8 +7,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 from markupsafe import escape
 
-# ✅ ใช้ navbar กลาง (ที่คุณสร้างไว้แล้ว)
-from view.navbar import load_nav_categories
+
 
 load_dotenv()
 
@@ -238,8 +237,6 @@ def news_detail(news_id: int):
 
     conn = connect_db()
     try:
-        # ✅ ใช้ categories จากไฟล์กลาง navbar.py
-        categories = load_nav_categories()
 
         with conn.cursor() as cur:
             # 1) Article (เพิ่ม sub_images)
@@ -365,7 +362,6 @@ def news_detail(news_id: int):
 
         return render_template(
             "news_detail.html",
-            categories=categories,
             article=article,
             hot=hot,
             related=related,

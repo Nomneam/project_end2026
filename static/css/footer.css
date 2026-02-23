@@ -1,0 +1,167 @@
+.site-footer {
+  background: #002d62;
+  color: #fff;
+  font-size: 15px;
+}
+
+.footer-logo {
+  font-family: "Kanit", sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.text-red {
+  color: #ce1126;
+}
+
+.footer-desc {
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  max-width: 420px;
+}
+
+.footer-title {
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.footer-text {
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.footer-contact {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-contact li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.footer-contact .label {
+  font-weight: 700;
+  margin-right: 6px;
+  color: #fff;
+}
+
+.fb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.fb-link:hover {
+  color: #ce1126;
+}
+
+.footer-bottom {
+  background: #000;
+  text-align: center;
+  padding: 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+}
+
+.footer-icon {
+  margin-right: 8px;
+  color: #ce1126;
+  font-size: 16px;
+  min-width: 16px;
+}
+
+/* =========================
+   📱 Responsive Styles
+========================= */
+
+/* Tablet */
+@media (max-width: 992px) {
+  .footer-logo {
+    font-size: 24px;
+  }
+
+  .footer-desc {
+    max-width: 100%;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+
+  .site-footer .row > div {
+    text-align: center;
+  }
+
+  .footer-desc {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .footer-contact li {
+    justify-content: center;
+  }
+
+  .footer-text {
+    text-align: center;
+  }
+
+  .fb-link {
+    justify-content: center;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+
+  .footer-logo {
+    font-size: 22px;
+  }
+
+  .footer-title {
+    font-size: 15px;
+  }
+
+  .footer-text,
+  .footer-contact li,
+  .footer-desc {
+    font-size: 13px;
+  }
+
+  .footer-bottom {
+    font-size: 12px;
+  }
+}
+
+
+@media (max-width: 576px) {
+  .footer-logo {
+    font-size: 22px;
+  }
+
+  .footer-desc {
+    font-size: 13px;
+  }
+
+  .footer-title {
+    font-size: 15px;
+  }
+
+  .footer-contact li,
+  .footer-text {
+    font-size: 13px;
+  }
+}

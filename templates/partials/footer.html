@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/footer.css') }}"
+    />
+  </head>
+  <body>
+    <footer class="site-footer">
+      <div class="container-xl py-5">
+        <div class="row g-4">
+          <!-- Brand -->
+          <div class="col-md-5">
+            <div class="footer-logo">
+              <span>BANGKOK</span><span class="text-red">TODAY</span>
+            </div>
+
+            <p class="footer-desc">
+              สำนักข่าวสารที่ส่งตรงความจริงถึงหน้าจอคุณ ตลอด 24 ชั่วโมง
+              ข่าวรวดเร็ว รอบด้าน ทันสถานการณ์
+            </p>
+
+            <!-- Facebook -->
+
+            <a
+              href="https://www.facebook.com/BangkokTodayFan"
+              target="_blank"
+              class="fb-link"
+            >
+              <i class="bi bi-facebook"></i> Facebook
+            </a>
+          </div>
+
+          <!-- Address -->
+          <div class="col-6 col-md-4">
+            <h5 class="footer-title">ที่อยู่</h5>
+            <p class="footer-text">
+              <i class="bi bi-geo-alt-fill footer-icon"></i>
+              {{ contact.address }}
+            </p>
+          </div>
+
+          <!-- Phones -->
+          <div class="col-6 col-md-3">
+            <h5 class="footer-title">ติดต่อ</h5>
+
+            <ul class="footer-contact">
+              {% for p in phones %}
+              <li>
+                <i class="bi bi-telephone-fill footer-icon"></i>
+                {% if p.label %}
+                <span class="label">{{ p.label }}</span>
+                {% endif %} {{ p.phone_number }}
+              </li>
+              {% endfor %} {% if contact.email %}
+              <li>
+                <i class="bi bi-envelope-fill footer-icon"></i>
+                {{ contact.email }}
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">© 2026 Bangkok Today</div>
+    </footer>
+  </body>
+</html>
