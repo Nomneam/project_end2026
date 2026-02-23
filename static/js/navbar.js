@@ -365,6 +365,30 @@ $("#tabRegister").off("click.tab").on("click.tab", function () {
 })();
 
 
+// ===============================
+// MOBILE MENU
+// ===============================
+$(function () {
+
+  const menu = $("#mobileNewsMenu");
+  const overlay = $("#mobileMenuOverlay");
+
+  $("#hamburgerBtn").on("click", function () {
+    menu.addClass("open");
+    overlay.addClass("show");
+    $("body").addClass("no-scroll");
+  });
+
+  $("#closeMenu, #mobileMenuOverlay").on("click", function () {
+    menu.removeClass("open");
+    overlay.removeClass("show");
+    $("body").removeClass("no-scroll");
+  });
+
+});
+
+
+
   // ----------------------
   // Init
   // ----------------------

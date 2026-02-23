@@ -379,6 +379,42 @@
           </div>
         </div>
       </div>
+
+
+      <!-- ================= MOBILE NEWS MENU ================= -->
+<div id="mobileMenuOverlay"></div>
+
+<aside id="mobileNewsMenu">
+  <div class="menu-header">
+    <span class="fw-bold">หมวดข่าว</span>
+    <button id="closeMenu"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="menu-content">
+    <a href="{{ url_for('index.index_news') }}">หน้าแรก</a>
+
+    {% for c in categories %}
+      <div class="menu-cat">
+        <a href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}">
+          {{ c.cat_name }}
+        </a>
+
+        {% if c.subs %}
+        <div class="menu-sub">
+          {% for s in c.subs %}
+            <a href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}&subcat_id={{ s.subcat_id }}">
+              - {{ s.subcat_name }}
+            </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</aside>
+
+
+
     </header>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
