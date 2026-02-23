@@ -10,5 +10,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Ignore uploads folder inside static
-static/uploads/
+
+# ignore uploaded files
+static/uploads/**
+!static/uploads/.gitkeep

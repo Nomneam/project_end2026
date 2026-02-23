@@ -1,0 +1,112 @@
+:root {
+    --bkk-navy: #002d62;
+    --bkk-red: #ce1126;
+}
+
+body {
+    font-family: 'Sarabun', sans-serif;
+}
+
+.text-navy-bkk { color: var(--bkk-navy); }
+.font-kanit { font-family: 'Kanit', sans-serif; }
+
+/* Toggle Switch */
+.pkg-toggle-wrapper {
+    background: #e9ecef;
+    display: inline-flex;
+    padding: 5px;
+    border-radius: 50px;
+}
+.pkg-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 25px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-family: 'Kanit', sans-serif;
+    transition: 0.3s;
+}
+.pkg-toggle-btn.active {
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Package Card */
+.pkg-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.pkg-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 45, 98, 0.1) !important;
+}
+
+.featured-pkg {
+    border: 2px solid var(--bkk-navy) !important;
+}
+
+.pkg-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.pkg-tag {
+    position: absolute;
+    top: 15px;
+    right: -30px;
+    background: var(--bkk-navy);
+    color: white;
+    padding: 5px 35px;
+    transform: rotate(45deg);
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.pkg-price .amount {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Kanit';
+    color: var(--bkk-navy);
+}
+.pkg-price .currency, .pkg-price .period {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.pkg-features li {
+    margin-bottom: 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+.pkg-features li i {
+    color: #198754;
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+/* Buttons */
+.btn-navy {
+    background: var(--bkk-navy);
+    color: white;
+}
+.btn-navy:hover {
+    background: #001f44;
+    color: white;
+}
+.btn-outline-navy {
+    border: 2px solid var(--bkk-navy);
+    color: var(--bkk-navy);
+}
+.btn-outline-navy:hover {
+    background: var(--bkk-navy);
+    color: white;
+}

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/navbar.css') }}"
+    />
+  </head>
+
+  <body>
+    <header class="bg-white border-bottom">
+      <div class="container-xl py-3">
+        <div
+          class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3"
+        >
+          <!-- ================= LOGO ================= -->
+          <div class="d-flex align-items-center gap-3">
+            <!-- MOBILE HAMBURGER -->
+            <button class="hamburger-btn d-lg-none" id="hamburgerBtn">
+              <i class="bi bi-list"></i>
+            </button>
+            <a
+              href="{{ url_for('index.index_news') }}"
+              class="text-decoration-none"
+            >
+              <div class="display-6 fw-bold fst-italic m-0">
+                <span class="text-navy-bkk">BANGKOK</span>
+                <span class="text-red-bkk">TODAY</span>
+              </div>
+            </a>
+
+            <div class="d-none d-sm-block border-start ps-3">
+              <div
+                class="text-uppercase small fw-bold text-secondary"
+                id="dayName"
+              >
+                —
+              </div>
+              <div class="small text-muted" id="dayDate">—</div>
+            </div>
+          </div>
+
+          <!-- ================= RIGHT SIDE ================= -->
+          <div
+            class="header-right w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2"
+          >
+            <!-- Search -->
+            <div
+              class="top-search-wrap position-relative flex-grow-1"
+              style="max-width: 360px; width: 100%"
+            >
+              <input
+                id="topSearch"
+                type="text"
+                placeholder="ค้นหาข่าวบนเว็บไซต์..."
+                class="form-control top-search-input"
+              />
+              <span class="top-search-icon">⌕</span>
+            </div>
+
+            <!-- ================= AUTH SECTION ================= -->
+
+            {% if session.get("front_user") %}
+
+            <!-- ===== Logged In ===== -->
+            <div class="d-flex align-items-center gap-2">
+              <div class="dropdown">
+                <button
+                  class="btn p-0 border-0 bg-transparent d-flex align-items-center gap-2"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <div
+                    class="d-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-2"
+                  >
+                    {% if session.get("front_user") %}
+                    <img
+                      src="{{ url_for('login_customer.get_avatar', user_id=session.front_user.id) }}"
+                      class="avatar-img"
+                      onerror="
+                        this.outerHTML =
+                          '<i class=&quot;bi bi-person-circle text-red-bkk fs-3&quot;></i>'
+                      "
+                    />
+                    {% endif %}
+
+                    <div class="lh-sm">
+                      <div class="fw-bold text-navy-bkk">
+                        {{ session.front_user.name }}
+                      </div>
+                      <div class="small text-muted">สมาชิก</div>
+                    </div>
+                  </div>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                  <li>
+                    <a
+                      class="dropdown-item"
+                      href="{{ url_for('profile_cus.profile_cus') }}"
+                    >
+                      <i class="bi bi-person"></i> โปรไฟล์
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item"
+                      href="{{ url_for('ads_overview.ads_page')}}"
+                    >
+                      <i class="bi bi-megaphone me-2"></i> รายการโฆษณา
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item text-danger"
+                      href="{{ url_for('login_customer.logout_cus') }}"
+                    >
+                      <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                class="btn btn-outline-dark"
+                href="{{ url_for('packages.packages_page') }}"
+              >
+                แพ็คเกจโฆษณา
+              </a>
+            </div>
+
+            {% else %}
+
+            <!-- ===== Not Logged In ===== -->
+            <div class="d-flex align-items-center gap-2">
+              <button
+                id="btnOpenLogin"
+                class="btn btn-outline-secondary fw-bold btn-pill"
+              >
+                เข้าสู่ระบบ
+              </button>
+
+              <button
+                id="btnOpenRegister"
+                class="btn fw-bold text-white btn-pill btn-register"
+              >
+                สมัครสมาชิก
+              </button>
+
+              <a
+                class="btn btn-outline-dark"
+                href="{{ url_for('packages.packages_page') }}"
+              >
+                แพ็คเกจโฆษณา
+              </a>
+            </div>
+
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="bg-navy-bkk text-white top-nav-sticky">
+        <div class="container-xl">
+          <div
+            class="nav-scroll d-flex gap-3 py-3 no-scrollbar small fw-semibold"
+          >
+            <!-- Home -->
+            <a
+              href="{{ url_for('index.index_news') }}"
+              class="nav-cat"
+              data-type="home"
+              >หน้าแรก</a
+            >
+
+            {% for c in categories %} {% if c.subs and c.subs|length > 0 %}
+            <!-- ✅ Split dropdown: กดชื่อหมวดไปหน้า /page_category ได้ + กดลูกศรเปิดเมนูย่อย -->
+            <div class="dropdown nav-cat-dd d-inline-flex align-items-center">
+              <!-- ✅ MAIN CATEGORY LINK (กดแล้วไปหน้าใหม่) -->
+              <a
+                href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}"
+                class="nav-cat"
+                data-type="cat"
+                data-cat="{{ c.cat_id }}"
+              >
+                {{ c.cat_name }}
+              </a>
+
+              <!-- ✅ DROPDOWN TOGGLE BUTTON (ไว้เปิดเมนู) -->
+              <button
+                class="nav-dd-toggle dropdown-toggle dropdown-toggle-split"
+                type="button"
+                data-bs-toggle="dropdown"
+                data-bs-display="static"
+                data-bs-auto-close="outside"
+                aria-expanded="false"
+                aria-label="เปิดหัวข้อย่อย {{ c.cat_name }}"
+              ></button>
+
+              <ul class="dropdown-menu dropdown-menu-dark">
+                {% for s in c.subs %}
+                <li>
+                  <a
+                    href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}&subcat_id={{ s.subcat_id }}"
+                    class="dropdown-item sub-cat"
+                    data-type="subcat"
+                    data-cat="{{ c.cat_id }}"
+                    data-subcat="{{ s.subcat_id }}"
+                  >
+                    {{ s.subcat_name }}
+                  </a>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% else %}
+            <!-- Category only -->
+            <a
+              href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}"
+              class="nav-cat"
+              data-type="cat"
+              data-cat="{{ c.cat_id }}"
+            >
+              {{ c.cat_name }}
+            </a>
+            {% endif %} {% endfor %}
+          </div>
+        </div>
+      </nav>
+
+      <!-- Auth Modal -->
+      <div id="authModal" class="modal-backdrop-custom" aria-hidden="true">
+        <div class="modal-card">
+          <div
+            class="modal-top d-flex align-items-center justify-content-between"
+          >
+            <div class="d-flex align-items-center gap-2">
+              <span class="ad-badge ad-badge-account">ACCOUNT</span>
+              <span class="fw-bold">บัญชีผู้ใช้</span>
+            </div>
+            <button id="btnCloseAuth" class="btn btn-sm btn-light fw-bold">
+              ✕
+            </button>
+          </div>
+
+          <div class="p-4">
+            <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+              <button id="tabLogin" class="tab-btn active" type="button">
+                เข้าสู่ระบบ
+              </button>
+              <button id="tabRegister" class="tab-btn" type="button">
+                สมัครสมาชิก
+              </button>
+              <div class="ms-auto small text-secondary">เข้าสู่ระบบสมาชิก</div>
+            </div>
+
+            <!-- LOGIN -->
+            <form id="loginForm" class="d-grid gap-3">
+              <div>
+                <label class="small fw-bold text-secondary">Username</label>
+                <input
+                  id="loginUsername"
+                  type="text"
+                  class="form-input mt-1"
+                  name="username"
+                  placeholder="Sonsree"
+                  required
+                />
+              </div>
+              <div>
+                <label class="small fw-bold text-secondary">password</label>
+                <input
+                  id="loginPassword"
+                  class="form-input mt-1"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between">
+                <label
+                  class="small text-secondary d-flex align-items-center gap-2 mb-0"
+                >
+                  <input id="rememberMe" type="checkbox" checked />
+                  จำฉันไว้
+                </label>
+                <a
+                  href="#"
+                  class="small fw-bold text-red-bkk text-decoration-none"
+                  >ลืมรหัสผ่าน?</a
+                >
+              </div>
+
+              <button type="submit" class="btn btn-bkk-red">เข้าสู่ระบบ</button>
+            </form>
+
+            <!-- REGISTER -->
+            <form id="registerForm" class="d-grid gap-3 d-none mt-2">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="small fw-bold text-secondary">ชื่อ</label>
+                  <input
+                    id="regFirst"
+                    class="form-input mt-1"
+                    type="text"
+                    placeholder="ชื่อ"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="small fw-bold text-secondary">นามสกุล</label>
+                  <input
+                    id="regLast"
+                    class="form-input mt-1"
+                    type="text"
+                    placeholder="นามสกุล"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="small fw-bold text-secondary">อีเมล</label>
+                <input
+                  id="regEmail"
+                  class="form-input mt-1"
+                  type="email"
+                  placeholder="name@email.com"
+                  required
+                />
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="small fw-bold text-secondary">รหัสผ่าน</label>
+                  <input
+                    id="regPassword"
+                    class="form-input mt-1"
+                    type="password"
+                    placeholder="อย่างน้อย 6 ตัว"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="small fw-bold text-secondary"
+                    >ยืนยันรหัสผ่าน</label
+                  >
+                  <input
+                    id="regPassword2"
+                    class="form-input mt-1"
+                    type="password"
+                    placeholder="พิมพ์ซ้ำอีกครั้ง"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-bkk-navy">
+                สมัครสมาชิก
+              </button>
+              <p class="small text-secondary mb-0">
+                *สำหรับ mock: สมัครแล้วจะเข้าสู่ระบบให้ทันที (เก็บไว้ใน
+                localStorage)
+              </p>
+            </form>
+
+            <div id="authMsg" class="mt-3 fw-bold text-danger d-none"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= MOBILE NEWS MENU ================= -->
+<div id="mobileMenuOverlay"></div>
+
+<aside id="mobileNewsMenu">
+  <div class="menu-header">
+    <span class="fw-bold">หมวดข่าว</span>
+    <button id="closeMenu"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="menu-content">
+    <a href="{{ url_for('index.index_news') }}">หน้าแรก</a>
+
+    {% for c in categories %}
+      <div class="menu-cat">
+        <a href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}">
+          {{ c.cat_name }}
+        </a>
+
+        {% if c.subs %}
+        <div class="menu-sub">
+          {% for s in c.subs %}
+            <a href="{{ url_for('page_cat.page_category') }}?cat_id={{ c.cat_id }}&subcat_id={{ s.subcat_id }}">
+              - {{ s.subcat_name }}
+            </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</aside>
+
+
+
+    </header>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+  </body>
+</html>

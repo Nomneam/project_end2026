@@ -1,0 +1,489 @@
+@import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Kanit:wght@400;500;600;700&display=swap");
+
+:root {
+  --bkk-navy: #002d62;
+  --bkk-red: #ce1126;
+}
+
+/* ======================================================
+  Base + Utilities (หน้า index ใช้)
+====================================================== */
+body {
+  font-family: "Sarabun", sans-serif;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+h1, h2, h3, h4, .font-kanit { font-family: "Kanit", sans-serif; }
+
+img, svg, video, canvas { max-width: 100%; height: auto; }
+img { display: block; }
+
+.bg-navy-bkk { background: var(--bkk-navy); }
+.bg-red-bkk { background: var(--bkk-red); }
+.text-navy-bkk { color: var(--bkk-navy); }
+.text-red-bkk { color: var(--bkk-red); }
+.border-bkk-red { border-color: var(--bkk-red) !important; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.line-clamp-2,
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 { -webkit-line-clamp: 2; }
+.line-clamp-3 { -webkit-line-clamp: 3; }
+
+/* ======================================================
+  Badge (หน้า index ใช้หลายส่วน)
+====================================================== */
+.ad-badge {
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ad-badge-sponsor { background: rgba(0, 45, 98, 0.75); }
+.ad-badge-photo { background: rgba(0, 45, 98, 0.8); }
+.ad-badge-watch { background: rgba(255, 255, 255, 0.14); }
+.ad-badge-ad {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.ad-badge-news { background: rgba(0, 45, 98, 0.75); }
+
+/* Pagination buttons (หน้า index ใช้กับ more/watch/ad) */
+.btn-page {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 13px;
+  transition: 0.2s;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-page:hover { border-color: var(--bkk-navy); color: var(--bkk-navy); }
+.btn-page.active { background: var(--bkk-navy); color: #fff; border-color: var(--bkk-navy); }
+.btn-page:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ======================================================
+  Hero Swiper
+====================================================== */
+.mainSwiper {
+  width: 100%;
+  height: 520px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b1220;
+}
+@media (max-width: 768px) {
+  .mainSwiper { height: 420px; }
+}
+
+.hero-img { width: 100%; height: 100%; object-fit: cover; }
+.hero-overlay { position: absolute; inset: 0; }
+.news-gradient {
+  background: linear-gradient(to top, rgba(0, 45, 98, 0.95) 0%, rgba(0, 45, 98, 0.35) 55%, transparent 100%);
+}
+.hero-title { font-size: clamp(22px, 3vw, 38px); line-height: 1.15; }
+.hero-desc { max-width: 720px; }
+.hero-cta { border-radius: 12px; }
+
+.slide-tag {
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  width: fit-content;
+}
+.slide-tag-breaking { background: var(--bkk-red); }
+
+/* ======================================================
+  Must read
+====================================================== */
+.must-read-card { align-items: center; }
+.must-read-img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.must-read-body { min-width: 0; }
+.must-read-accent { border-left: 4px solid var(--bkk-navy) !important; }
+
+/* ======================================================
+  Popular
+====================================================== */
+.popular-rank {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 12px;
+  background: var(--bkk-red);
+  color: #fff;
+  font-weight: 900;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.popular-body { min-width: 0; }
+
+/* ======================================================
+  Latest / More
+====================================================== */
+.latest-img { height: 180px; object-fit: cover; }
+.more-img { height: 160px; object-fit: cover; }
+.latest-body { border-top: 4px solid var(--bkk-navy); }
+.latest-cat { font-size: 12px; }
+
+/* Editors */
+.editors-img { height: 160px; object-fit: cover; }
+.editors-cat { font-size: 12px; }
+
+/* ======================================================
+  Sponsor marquee
+====================================================== */
+.logo-marquee {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+}
+.logo-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  width: max-content;
+  animation: marquee 18s linear infinite;
+}
+.logo-marquee:hover .logo-track { animation-play-state: paused; }
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.sponsor-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  transition: 0.15s;
+  text-decoration: none;
+  color: inherit;
+  white-space: nowrap;
+}
+.sponsor-pill:hover {
+  background: #fff;
+  border-color: #dbeafe;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.06);
+}
+.sponsor-mark {
+  width:60px;
+  height: 60px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-family: "Kanit", sans-serif;
+  color: #fff;
+  flex: 0 0 auto;
+}
+.sponsor-meta { min-width: 0; }
+.sponsor-name {
+  font-family: "Kanit", sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1;
+  color: #111827;
+}
+.sponsor-sub { font-size: 11px; color: #6b7280; line-height: 1.2; }
+
+.sponsor-kbank { background: #10b981; }
+.sponsor-true { background: #ef4444; }
+.sponsor-ais { background: #22c55e; }
+.sponsor-ptt { background: #2563eb; }
+.sponsor-scb { background: #7c3aed; }
+.sponsor-lazada { background: #f97316; }
+.sponsor-shopee { background: #fb7185; }
+.sponsor-grab { background: #16a34a; }
+
+/* ======================================================
+  BBC-like dividers + Cards
+====================================================== */
+.bbc-divider { border-top: 2px solid #0f172a; opacity: 0.55; }
+.bbc-kicker {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 900;
+  color: #111827;
+}
+.bbc-section-title {
+  font-family: "Kanit", sans-serif;
+  font-weight: 900;
+  color: #0f172a;
+  font-size: 22px;
+}
+.bbc-subtitle { color: #6b7280; font-size: 12px; }
+
+.mini-cat {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--bkk-red);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* In Pictures */
+.feature-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.05);
+}
+.feature-hero { position: relative; min-height: 340px; background: #0b1220; }
+.feature-hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.02);
+}
+.feature-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(2, 6, 23, 0.88) 0%, rgba(2, 6, 23, 0.55) 35%, rgba(2, 6, 23, 0.15) 70%, rgba(2, 6, 23, 0) 100%);
+}
+.feature-card {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  background: #fff;
+  border-radius: 16px;
+  width: min(520px, calc(100% - 36px));
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.18);
+}
+.picture-mini-img { height: 160px; object-fit: cover; }
+
+/* Watch rail */
+.rail {
+  background: #0b1220;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 60px rgba(2, 6, 23, 0.18);
+}
+.rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.watchSwiper .swiper-slide { width: 280px; }
+.watchSwiper-area { padding: 14px 16px 16px; }
+.rail-card {
+  height: 100%;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: 0.18s;
+}
+.rail-thumb { position: relative; height: 160px; background: #111827; }
+.rail-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.92;
+}
+.play-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+}
+
+/* Footer Ads */
+.footer-ad-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.05);
+  overflow: hidden;
+}
+.footerAdSwiper { height: auto; border-radius: 16px; overflow: hidden; }
+.ad-banner {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #eef2f7;
+  background: #0b1220;
+  display: block;
+  text-decoration: none;
+}
+.ad-banner img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  opacity: 0.94;
+}
+@media (max-width: 768px) {
+  .ad-banner img { height: 150px; }
+}
+.ad-banner:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(2, 6, 23, 0.7) 0%, rgba(2, 6, 23, 0.2) 60%, rgba(2, 6, 23, 0) 100%);
+}
+.ad-meta {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  right: 14px;
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ad-meta-body { min-width: 0; }
+.ad-title {
+  font-family: "Kanit", sans-serif;
+  font-weight: 900;
+  font-size: 15px;
+  line-height: 1.15;
+}
+.ad-sub { font-size: 12px; color: rgba(255, 255, 255, 0.82); margin-top: 4px; }
+
+.footer-desc { max-width: 520px; }
+
+/* กัน swiper ทับ */
+.swiper, .mainSwiper { position: relative; z-index: 1; }
+
+/* Buttons components (หน้า index ใช้) */
+.btn-bkk-red {
+  background: var(--bkk-red) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  border: none !important;
+}
+.btn-bkk-navy {
+  background: var(--bkk-navy) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  border: none !important;
+}
+
+/* ======================================================
+  Big Hero Ad (Index)
+====================================================== */
+.big-ad-wrap {
+  position: relative;
+  display: block;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #0b1220;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.big-ad-wrap:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.35);
+}
+
+.big-ad-img {
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .big-ad-img {
+    height: 260px;
+  }
+}
+
+.big-ad-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(2, 6, 23, 0.85) 0%,
+    rgba(2, 6, 23, 0.55) 40%,
+    rgba(2, 6, 23, 0.15) 70%,
+    rgba(2, 6, 23, 0) 100%
+  );
+}
+
+.big-ad-content {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  max-width: 520px;
+  color: #fff;
+}
+
+.big-ad-title {
+  font-size: clamp(22px, 3vw, 36px);
+  line-height: 1.15;
+  margin: 6px 0;
+}
+
+.big-ad-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.sponsor-logo{
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
