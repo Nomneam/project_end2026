@@ -6,12 +6,13 @@ import pymysql.cursors
 from datetime import datetime
 import base64
 
-# โหลดค่าคอนฟิกจากไฟล์ .env
 load_dotenv()
 
 news_management_bp = Blueprint('news_management', __name__)
 
-
+# =========================
+# DATABASE
+# =========================
 def connect_db():
     return pymysql.connect(
         host=os.environ.get('HOST'),
@@ -22,6 +23,9 @@ def connect_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+# =========================
+# IMAGE VALIDATION (BASE64)
+# =========================
 ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
 ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
 
@@ -33,22 +37,26 @@ def allowed_file(filename: str) -> bool:
 def file_to_data_uri(file_storage):
     if not file_storage or not file_storage.filename:
         return None
+
     if not allowed_file(file_storage.filename):
         return None
+
     mime = (file_storage.mimetype or "").lower()
     if mime not in ALLOWED_MIME:
         return None
+
     raw = file_storage.read()
     if not raw:
         return None
+
     return f"data:{mime};base64,{base64.b64encode(raw).decode('utf-8')}"
 
-
 # =====================================================
-# 1) หน้า จัดการข่าว (Admin)
+# 1) หน้า Admin จัดการข่าว
 # =====================================================
 @news_management_bp.route('/news-management')
 def news_management():
+
     user = session.get("user")
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
@@ -61,7 +69,6 @@ def news_management():
     try:
         with connection.cursor() as cursor:
 
-            # ===== นับจำนวนข่าวทั้งหมด =====
             cursor.execute("""
                 SELECT COUNT(*) AS total
                 FROM news
@@ -70,7 +77,6 @@ def news_management():
             total_news = cursor.fetchone()['total']
             total_pages = (total_news + per_page - 1) // per_page
 
-            # ===== ดึงข่าว (เฉพาะข้อมูลที่จำเป็น) =====
             cursor.execute("""
                 SELECT
                     n.news_id,
@@ -90,7 +96,6 @@ def news_management():
 
             news_list = cursor.fetchall()
 
-            # ===== หมวดหมู่ข่าว =====
             cursor.execute("""
                 SELECT cat_id, cat_name
                 FROM news_category
@@ -109,35 +114,50 @@ def news_management():
         total_pages=total_pages
     )
 
-
 # =====================================================
-# 2) API ดึงข้อมูลข่าวตาม ID (Admin)
+# 2) ดึงข่าวตาม ID
 # =====================================================
-@news_management_bp.route('/news-management/<int:news_id>', methods=['GET'])
+@news_management_bp.route('/news-management/<int:news_id>')
 def get_news_by_id(news_id):
+
     user = session.get("user")
     if not user or not user.get("id"):
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
+        return jsonify(success=False, message="Unauthorized"), 401
 
-    connection = connect_db()
+    conn = connect_db()
     try:
-        with connection.cursor() as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("""
                 SELECT
                     n.news_id,
                     n.news_title,
+                    n.news_content,
                     n.status,
                     n.created_at,
-                    n.news_content,
                     n.cover_image,
                     n.cat_id,
                     n.subcat_id,
-                    e.emp_fname,
-                    e.emp_lname,
-                    c.cat_name
+
+                    -- ผู้เขียน
+                    IFNULL(e.emp_fname, '') AS emp_fname,
+                    IFNULL(e.emp_lname, '') AS emp_lname,
+
+                    -- หมวดหลัก
+                    IFNULL(c.cat_name, '-') AS cat_name,
+
+                    -- หมวดย่อย
+                    IFNULL(s.subcat_name, '') AS subcat_name
+
                 FROM news n
-                LEFT JOIN employee e ON n.created_by = e.emp_id
-                LEFT JOIN news_category c ON n.cat_id = c.cat_id
+                LEFT JOIN employee e 
+                    ON n.created_by = e.emp_id
+                LEFT JOIN news_category c 
+                    ON n.cat_id = c.cat_id
+                    AND c.del_flg = 0
+                LEFT JOIN news_subcategory s
+                    ON n.subcat_id = s.subcat_id
+                    AND s.del_flg = 0
+
                 WHERE n.news_id = %s
                   AND n.del_flg = 0
                 LIMIT 1
@@ -146,24 +166,19 @@ def get_news_by_id(news_id):
             news = cursor.fetchone()
 
             if not news:
-                return jsonify({
-                    "success": False,
-                    "message": "ไม่พบข้อมูลข่าว"
-                }), 404
+                return jsonify(success=False, message="ไม่พบข่าว"), 404
 
     finally:
-        connection.close()
+        conn.close()
 
-    return jsonify({
-        "success": True,
-        "data": news
-    })
+    return jsonify(success=True, data=news)
 
 # =====================================================
-# 3) API ดึงหมวดย่อยตามหมวดหลัก (Admin)
-# ====================================================
+# 3) ดึงหมวดย่อย
+# =====================================================
 @news_management_bp.route('/admin/categories/<int:cat_id>/subcategories')
 def get_subcategories(cat_id):
+
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
@@ -179,183 +194,66 @@ def get_subcategories(cat_id):
 
     return jsonify(success=True, data=rows)
 
-
-
 # =====================================================
-# 1) AJAX ค้นหาข่าว (Admin)
+# 4) ลบข่าว (Soft Delete)
 # =====================================================
-@news_management_bp.route('/news-management/ajax-search')
-def ajax_search_news_management():
-    user = session.get("user")
-    if not user or not user.get("id"):
-        return jsonify({
-            "success": False,
-            "message": "Unauthorized"
-        }), 401
-
-    page = request.args.get('page', 1, type=int)
-    per_page = 5
-    offset = (page - 1) * per_page
-
-    q = request.args.get('q', '').strip()
-    category = request.args.get('category', '').strip()
-    status = request.args.get('status', '').strip()
-
-    base_where = " WHERE n.del_flg = 0 "
-    params = []
-
-    if q:
-        base_where += " AND n.news_title LIKE %s "
-        params.append(f"%{q}%")
-
-    if category:
-        base_where += " AND n.cat_id = %s "
-        params.append(category)
-
-    if status:
-        base_where += " AND n.status = %s "
-        params.append(status)
-
-    connection = connect_db()
-    try:
-        with connection.cursor() as cursor:
-
-            # นับจำนวนทั้งหมด
-            cursor.execute(f"""
-                SELECT COUNT(*) AS total
-                FROM news n
-                {base_where}
-            """, params)
-            total_news = cursor.fetchone()['total']
-            total_pages = (total_news + per_page - 1) // per_page
-
-            # ดึงข้อมูลหน้า
-            cursor.execute(f"""
-                SELECT
-                    n.news_id,
-                    n.news_title,
-                    n.status,
-                    n.created_at,
-                    e.emp_fname,
-                    e.emp_lname,
-                    c.cat_name
-                FROM news n
-                LEFT JOIN employee e ON n.created_by = e.emp_id
-                LEFT JOIN news_category c ON n.cat_id = c.cat_id
-                {base_where}
-                ORDER BY n.created_at DESC
-                LIMIT %s OFFSET %s
-            """, params + [per_page, offset])
-
-            rows = cursor.fetchall()
-
-    finally:
-        connection.close()
-
-    return jsonify({
-        "success": True,
-        "data": rows,
-        "page": page,
-        "total_pages": total_pages,
-        "total": total_news
-    })
-
-# ======================================================
-# 1) API ลบข่าว (Admin)
-# ======================================================
 @news_management_bp.route('/admin/news/delete/<int:news_id>', methods=['POST'])
 def delete_news(news_id):
+
     user = session.get("user")
     if not user or not user.get("id"):
-        return jsonify({
-            "success": False,
-            "message": "Unauthorized"
-        }), 401
+        return jsonify(success=False, message="Unauthorized"), 401
 
-    users_id = user.get("id")
-
-    connection = connect_db()
+    conn = connect_db()
     try:
-        with connection.cursor() as cursor:
-            # เช็กว่ามีข่าวจริง และยังไม่ถูกลบ
-            cursor.execute("""
-                SELECT news_id
-                FROM news
-                WHERE news_id = %s AND del_flg = 0
-                LIMIT 1
-            """, (news_id,))
-            row = cursor.fetchone()
-
-            if not row:
-                return jsonify({
-                    "success": False,
-                    "message": "ไม่พบข่าว หรือข่าวถูกลบไปแล้ว"
-                }), 404
-
-            # Soft delete + เก็บคนลบ + เวลา
+        with conn.cursor() as cursor:
             cursor.execute("""
                 UPDATE news
                 SET del_flg = 1,
                     updated_at = NOW(),
                     updated_by = %s
                 WHERE news_id = %s
-            """, (users_id, news_id))
-
-        connection.commit()
-
+            """, (user.get("id"), news_id))
+        conn.commit()
     except Exception as e:
-        connection.rollback()
-        return jsonify({
-            "success": False,
-            "message": "ลบข่าวไม่สำเร็จ",
-            "error": str(e)
-        }), 500
-
+        conn.rollback()
+        return jsonify(success=False, message=str(e)), 500
     finally:
-        connection.close()
+        conn.close()
 
-    return jsonify({
-        "success": True,
-        "message": "ลบข่าวเรียบร้อยแล้ว"
-    })
+    return jsonify(success=True, message="ลบสำเร็จ")
 
-# ======================================================
-# 3) API แก้ไขข่าว (Admin)
-# ====================================================
+# =====================================================
+# 5) แก้ไขข่าว
+# =====================================================
 @news_management_bp.route('/admin/news/<int:news_id>/update', methods=['POST'])
-def update_news_modal(news_id):
+def update_news(news_id):
+
     user = session.get("user")
     if not user or not user.get("id"):
         return jsonify(success=False, message="Unauthorized"), 401
 
-    title = (request.form.get("title") or "").strip()
-    content = (request.form.get("content") or "").strip()
-    status = (request.form.get("status") or "").strip()
+    title = request.form.get("title")
+    content = request.form.get("content")
+    status = request.form.get("status")
     cat_id = request.form.get("cat_id", type=int)
-
-    # ✅ แก้ตรงนี้
-    subcat_raw = request.form.get("subcat_id")
-    subcat_id = int(subcat_raw) if subcat_raw else None
-
+    subcat_id = request.form.get("subcat_id", type=int)
     main_image = request.files.get("main_image")
 
     if not title or not content:
-        return jsonify(success=False, message="กรุณากรอกข้อมูลให้ครบ"), 400
+        return jsonify(success=False, message="กรอกข้อมูลไม่ครบ"), 400
 
-    connection = connect_db()
+    conn = connect_db()
     try:
-        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-            cursor.execute("""
-                SELECT cover_image
-                FROM news
-                WHERE news_id = %s AND del_flg = 0
-            """, (news_id,))
-            old = cursor.fetchone()
+        with conn.cursor() as cursor:
 
+            cursor.execute("SELECT cover_image FROM news WHERE news_id=%s", (news_id,))
+            old = cursor.fetchone()
             if not old:
                 return jsonify(success=False, message="ไม่พบข่าว"), 404
 
             cover_image = old["cover_image"]
+
             if main_image and main_image.filename:
                 new_cover = file_to_data_uri(main_image)
                 if not new_cover:
@@ -364,48 +262,47 @@ def update_news_modal(news_id):
 
             cursor.execute("""
                 UPDATE news
-                SET news_title = %s,
-                    news_content = %s,
-                    status = %s,
-                    cat_id = %s,
-                    subcat_id = %s,
-                    cover_image = %s,
-                    updated_at = NOW(),
-                    updated_by = %s
-                WHERE news_id = %s
+                SET news_title=%s,
+                    news_content=%s,
+                    status=%s,
+                    cat_id=%s,
+                    subcat_id=%s,
+                    cover_image=%s,
+                    updated_at=NOW(),
+                    updated_by=%s
+                WHERE news_id=%s
             """, (
-                title, content, status, cat_id, subcat_id,
+                title, content, status,
+                cat_id, subcat_id,
                 cover_image,
                 user.get("id"),
                 news_id
             ))
 
-        connection.commit()
-        return jsonify(success=True, message="แก้ไขข่าวสำเร็จ")
-    
+        conn.commit()
 
     except Exception as e:
-        connection.rollback()
-        print("❌ UPDATE ERROR:", e)   #  จะได้เห็น error ชัด ๆ
+        conn.rollback()
         return jsonify(success=False, message=str(e)), 500
-
     finally:
-        connection.close()
+        conn.close()
 
+    return jsonify(success=True, message="แก้ไขสำเร็จ")
 
-# ======================================================
-# 4) API: สถิติข่าว "วันนี้" แยกตามหมวดหมู่ (Admin Dashboard / Chart.js)
+# =====================================================
+# 6) Dashboard Chart API
+# =====================================================
 @news_management_bp.route('/api/news/today-by-category')
 def api_news_today_by_category():
+
     user = session.get("user")
     if not user or not user.get("id"):
         return jsonify(success=False, message="Unauthorized"), 401
 
-    range_type = request.args.get("range", "month")  # day | week | month | year | all
+    range_type = request.args.get("range", "all")  # day | week | month | year | all
 
-    if range_type == "all":
-        date_condition = "1=1"
-    elif range_type == "day":
+    # ===== เงื่อนไขวันที่ =====
+    if range_type == "day":
         date_condition = """
             n.created_at >= CURDATE()
             AND n.created_at < CURDATE() + INTERVAL 1 DAY
@@ -413,30 +310,29 @@ def api_news_today_by_category():
     elif range_type == "week":
         date_condition = """
             n.created_at >= CURDATE() - INTERVAL 7 DAY
-            AND n.created_at < CURDATE() + INTERVAL 1 DAY
+        """
+    elif range_type == "month":
+        date_condition = """
+            n.created_at >= CURDATE() - INTERVAL 30 DAY
         """
     elif range_type == "year":
         date_condition = """
             n.created_at >= CURDATE() - INTERVAL 1 YEAR
-            AND n.created_at < CURDATE() + INTERVAL 1 DAY
         """
-    else:  # month (default)
-        date_condition = """
-            n.created_at >= CURDATE() - INTERVAL 1 MONTH
-            AND n.created_at < CURDATE() + INTERVAL 1 DAY
-        """
+    else:  # all
+        date_condition = "1=1"
 
     conn = connect_db()
     try:
-        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+        with conn.cursor() as cursor:
             sql = f"""
                 SELECT 
                     IFNULL(c.cat_name, 'ไม่ระบุหมวด') AS cat_name,
                     COUNT(n.news_id) AS total
                 FROM news n
                 LEFT JOIN news_category c 
-                    ON n.cat_id = c.cat_id 
-                   AND c.del_flg = 0
+                    ON n.cat_id = c.cat_id
+                    AND c.del_flg = 0
                 WHERE n.del_flg = 0
                   AND {date_condition}
                 GROUP BY n.cat_id
@@ -445,25 +341,14 @@ def api_news_today_by_category():
             cursor.execute(sql)
             rows = cursor.fetchall()
 
-            # นับรวมทั้งหมดในช่วงเวลาเดียวกัน
-            sql_total = f"""
-                SELECT COUNT(n.news_id) AS total_all
-                FROM news n
-                WHERE n.del_flg = 0
-                  AND {date_condition}
-            """
-            cursor.execute(sql_total)
-            total_all = cursor.fetchone()["total_all"]
-
         return jsonify(
             success=True,
             labels=[r["cat_name"] for r in rows],
             values=[r["total"] for r in rows],
-            total_all=total_all,   #  เพิ่มยอดรวมทั้งหมด
             range=range_type
         )
+
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
     finally:
         conn.close()
-
