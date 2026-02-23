@@ -1,0 +1,72 @@
+.site-footer {
+  background: #002d62;
+  color: #fff;
+}
+
+.footer-logo {
+  font-family: "Kanit", sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.text-red {
+  color: #ce1126;
+}
+
+.footer-desc {
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  max-width: 420px;
+}
+
+.footer-title {
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.footer-text {
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+}
+
+.footer-contact {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-contact li {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.footer-contact .label {
+  font-weight: 700;
+  margin-right: 6px;
+  color: #fff;
+}
+
+.fb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.fb-link:hover {
+  color: #ce1126;
+}
+
+.footer-bottom {
+  background: #000;
+  text-align: center;
+  padding: 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+}

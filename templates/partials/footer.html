@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/footer.css') }}"
+    />
+
+</head>
+<body>
+    <footer class="site-footer">
+  <div class="container-xl py-5">
+    <div class="row g-4">
+
+      <!-- Brand -->
+      <div class="col-md-5">
+        <div class="footer-logo">
+          <span>BANGKOK</span><span class="text-red">TODAY</span>
+        </div>
+
+        <p class="footer-desc">
+          สำนักข่าวสารที่ส่งตรงความจริงถึงหน้าจอคุณ ตลอด 24 ชั่วโมง
+          ข่าวรวดเร็ว รอบด้าน ทันสถานการณ์
+        </p>
+
+        <!-- Facebook -->
+        {% if contact.facebook_url %}
+        <a href="{{ contact.facebook_url }}" target="_blank" class="fb-link">
+          <i class="bi bi-facebook"></i> Facebook
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Address -->
+      <div class="col-md-4">
+        <h5 class="footer-title">ที่อยู่</h5>
+        <p class="footer-text">
+          {{ contact.address }}
+        </p>
+      </div>
+
+      <!-- Phones -->
+      <div class="col-md-3">
+        <h5 class="footer-title">ติดต่อ</h5>
+
+        <ul class="footer-contact">
+          {% for p in phones %}
+          <li>
+            {% if p.label %}
+              <span class="label">{{ p.label }}</span>
+            {% endif %}
+            {{ p.phone_number }}
+          </li>
+          {% endfor %}
+        </ul>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © 2026 Bangkok Today
+  </div>
+</footer>
+</body>
+</html>
