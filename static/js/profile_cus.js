@@ -26,71 +26,135 @@ $(function () {
     });
 
 
-    /* =========================
-       CHANGE PASSWORD
-    ========================== */
-    $("#changePasswordBtn").click(function () {
+ /* =========================
+   CHANGE PASSWORD (ONE ROUTE)
+========================== */
+$("#changePasswordBtn").click(function () {
 
-        Swal.fire({
-            title: "ยืนยันรหัสผ่านปัจจุบัน",
-            input: "password",
-            showCancelButton: true,
-            confirmButtonColor: "#0b1c3d"
-        }).then(function (result) {
+    Swal.fire({
+        title: "ยืนยันรหัสผ่านปัจจุบัน",
+        input: "password",
+        inputAttributes: {
+            autocapitalize: "off",
+            autocorrect: "off"
+        },
+        showCancelButton: true,
+        confirmButtonColor: "#0b1c3d",
+        confirmButtonText: "ถัดไป"
+    }).then(function (result) {
 
-            if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return;
 
-            const currentPass = result.value;
+        const currentPass = result.value;
 
-            Swal.fire({
-                title: "ตั้งรหัสผ่านใหม่",
-                html:
-                    '<input type="password" id="newPass" class="swal2-input" placeholder="รหัสผ่านใหม่">' +
-                    '<input type="password" id="confirmPass" class="swal2-input" placeholder="ยืนยันรหัสผ่านใหม่">',
-                showCancelButton: true,
-                confirmButtonColor: "#0b1c3d",
-                preConfirm: function () {
+        if (!currentPass) {
+            Swal.fire("ผิดพลาด", "กรุณากรอกรหัสผ่าน", "warning");
+            return;
+        }
 
-                    const newPass = $("#newPass").val();
-                    const confirmPass = $("#confirmPass").val();
+        // 🔐 STEP 1: VERIFY PASSWORD
+        $.ajax({
+            url: "/change_password",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                step: "verify",
+                password: currentPass
+            }),
 
-                    if (!newPass || !confirmPass)
-                        return Swal.showValidationMessage("กรอกข้อมูลให้ครบ");
+            success: function (res) {
 
-                    if (newPass.length < 6)
-                        return Swal.showValidationMessage("รหัสผ่านต้องอย่างน้อย 6 ตัว");
-
-                    if (newPass !== confirmPass)
-                        return Swal.showValidationMessage("รหัสผ่านไม่ตรงกัน");
-
-                    return { currentPass, newPass };
+                if (!res.ok) {
+                    Swal.fire("ผิดพลาด", res.message || "รหัสผ่านไม่ถูกต้อง", "error");
+                    return;
                 }
-            }).then(function (res2) {
 
-                if (!res2.isConfirmed) return;
+                // ✅ รหัสถูก → ให้ตั้งรหัสใหม่
+                Swal.fire({
+                    title: "ตั้งรหัสผ่านใหม่",
+                    html:
+                        '<input type="password" id="newPass" class="swal2-input" placeholder="รหัสผ่านใหม่">' +
+                        '<input type="password" id="confirmPass" class="swal2-input" placeholder="ยืนยันรหัสผ่านใหม่">',
+                    showCancelButton: true,
+                    confirmButtonColor: "#0b1c3d",
+                    confirmButtonText: "เปลี่ยนรหัส",
+                    preConfirm: () => {
 
-                $.ajax({
-                    url: "/change_password",
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify({
-                        old_password: res2.value.currentPass,
-                        new_password: res2.value.newPass
-                    }),
-                    success: function (res3) {
-                        if (res3.ok) {
-                            Swal.fire("สำเร็จ", "เปลี่ยนรหัสผ่านแล้ว", "success");
-                        } else {
-                            Swal.fire("ผิดพลาด", res3.message, "error");
-                        }
+                        const newPass = $("#newPass").val();
+                        const confirmPass = $("#confirmPass").val();
+
+                        if (!newPass || !confirmPass)
+                            return Swal.showValidationMessage("กรอกข้อมูลให้ครบ");
+
+                        if (newPass.length < 6)
+                            return Swal.showValidationMessage("รหัสผ่านต้องอย่างน้อย 6 ตัว");
+
+                        if (newPass !== confirmPass)
+                            return Swal.showValidationMessage("รหัสผ่านไม่ตรงกัน");
+
+                        if (newPass === currentPass)
+                            return Swal.showValidationMessage("ห้ามใช้รหัสเดิม");
+
+                        return { newPass };
                     }
+                }).then(function (res2) {
+
+                    if (!res2.isConfirmed) return;
+
+                    // 🔐 STEP 2: CHANGE PASSWORD
+                    $.ajax({
+                        url: "/change_password",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            step: "change",
+                            old_password: currentPass,
+                            new_password: res2.value.newPass
+                        }),
+
+                        beforeSend: () => {
+                            Swal.fire({
+                                title: "กำลังเปลี่ยนรหัส...",
+                                allowOutsideClick: false,
+                                didOpen: () => Swal.showLoading()
+                            });
+                        },
+
+                        success: function (res3) {
+                            if (res3.ok) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "เปลี่ยนรหัสผ่านสำเร็จ"
+                                });
+                            } else {
+                                Swal.fire("ผิดพลาด", res3.message, "error");
+                            }
+                        },
+
+                        error: function (xhr) {
+                            let msg = "เกิดข้อผิดพลาด";
+
+                            if (xhr.responseJSON?.message) {
+                                msg = xhr.responseJSON.message;
+                            }
+
+                            Swal.fire("ผิดพลาด", msg, "error");
+                        }
+                    });
+
                 });
 
-            });
+            },
+
+            error: function () {
+                Swal.fire("ผิดพลาด", "รหัสผ่านปัจจุบันไม่ถูกต้อง", "error");
+            }
 
         });
 
     });
+
+});
 
 
     /* =========================

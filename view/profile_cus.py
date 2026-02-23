@@ -121,39 +121,74 @@ def update_profile():
 def change_password():
 
     if "front_user" not in session:
-        return jsonify(ok=False), 401
+        return jsonify(ok=False, message="กรุณาเข้าสู่ระบบ"), 401
 
     user_id = session["front_user"]["id"]
     data = request.get_json(silent=True) or {}
-    old_password = data.get("old_password")
-    new_password = data.get("new_password")
+    step = data.get("step")
 
     conn = connect_db()
+
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT cus_password_hash
             FROM customer
-            WHERE cus_id=%s
+            WHERE cus_id=%s AND del_flg=0
         """, (user_id,))
         user = cursor.fetchone()
 
-        if not user:
-            return jsonify(ok=False), 404
+    conn.close()
 
-        if not bcrypt.checkpw(old_password.encode(), user["cus_password_hash"].encode()):
+    if not user:
+        return jsonify(ok=False, message="ไม่พบผู้ใช้"), 404
+
+    stored_hash = user["cus_password_hash"]
+    if isinstance(stored_hash, str):
+        stored_hash = stored_hash.encode()
+
+    # =====================
+    # STEP 1: VERIFY
+    # =====================
+    if step == "verify":
+
+        password = (data.get("password") or "").strip()
+
+        if not bcrypt.checkpw(password.encode(), stored_hash):
+            return jsonify(ok=False, message="รหัสผ่านไม่ถูกต้อง"), 400
+
+        return jsonify(ok=True)
+
+    # =====================
+    # STEP 2: CHANGE
+    # =====================
+    if step == "change":
+
+        old_password = (data.get("old_password") or "").strip()
+        new_password = (data.get("new_password") or "").strip()
+
+        if not bcrypt.checkpw(old_password.encode(), stored_hash):
             return jsonify(ok=False, message="รหัสผ่านเดิมไม่ถูกต้อง"), 400
+
+        if len(new_password) < 6:
+            return jsonify(ok=False, message="รหัสใหม่ต้อง ≥ 6 ตัว"), 400
+
+        if bcrypt.checkpw(new_password.encode(), stored_hash):
+            return jsonify(ok=False, message="ห้ามใช้รหัสเดิม"), 400
 
         new_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
 
-        cursor.execute("""
-            UPDATE customer
-            SET cus_password_hash=%s,
-                updated_by=%s
-            WHERE cus_id=%s
-        """, (new_hash, user_id, user_id))
+        conn = connect_db()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                UPDATE customer
+                SET cus_password_hash=%s,
+                    updated_by=%s,
+                    updated_at=NOW()
+                WHERE cus_id=%s
+            """, (new_hash, user_id, user_id))
+        conn.commit()
+        conn.close()
 
-    conn.commit()
-    conn.close()
+        return jsonify(ok=True, message="เปลี่ยนรหัสผ่านสำเร็จ")
 
-    return jsonify(ok=True)
-
+    return jsonify(ok=False, message="invalid request"), 400
