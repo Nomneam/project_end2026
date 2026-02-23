@@ -15,11 +15,50 @@
         <p class="text-muted small mb-0">จัดการและเพิ่มข่าวในระบบ</p>
     </div>
     
-    <button type="button" class="btn-add-news" onclick="location.href='#'">
+    <button type="button" class="btn-add-news" onclick="location.href='/admin-write-new'">
         <i class="bi bi-plus-lg"></i>
         <span>เพิ่มข่าวสารใหม่</span>
     </button>
 </div>
+<!-- ===== Chart: News Today by Category (Compact) ===== -->
+<div class="card card-custom mb-3 stat-card">
+  <div class="card-header-custom d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-bar-chart-fill text-danger"></i>
+      <span>สถิติข่าว (แยกตามประเภท)</span>
+    </div>
+
+    <!-- Range Buttons -->
+    <div class="d-flex align-items-center gap-2">
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-range active" data-range="all">ทั้งหมด</button>
+            <button class="btn btn-range" data-range="day">วันนี้</button>
+            <button class="btn btn-range" data-range="week">7 วัน</button>
+            <button class="btn btn-range" data-range="month">30 วัน</button>
+            <button class="btn btn-range" data-range="year">1 ปี</button>
+        </div>
+        <span class="badge range-badge">ทั้งหมด</span>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="row align-items-center g-3">
+      <div class="col-md-5 d-flex justify-content-center">
+        <div class="chart-wrap w-100">
+          <canvas id="newsTodayChart"></canvas>
+        </div>
+      </div>
+
+      <div class="col-md-7">
+        <div class="legend-wrap" id="newsLegend">
+          <p class="text-muted small text-center">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= News Table ================= -->
 
     <div class="card card-custom">
         <div class="card-header-custom d-flex justify-content-between align-items-center">
@@ -37,13 +76,13 @@
     <div class="card-body p-0">
         <!-- ===== Search ===== -->
         <div class="collapse p-3 border-bottom" id="searchForm">
-            <form action="" method="GET" class="row g-3">
+            <form id="searchFormAjax" class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label small">ค้นหาจากหัวข้อ</label>
                     <input type="text"
-                           name="q"
-                           class="form-control form-control-sm"
-                           placeholder="กรอกหัวข้อข่าว">
+                        name="q"
+                        class="form-control form-control-sm"
+                        placeholder="กรอกหัวข้อข่าว">
                 </div>
 
                 <div class="col-md-3">
@@ -72,6 +111,7 @@
                 </div>
             </form>
         </div>
+
 
         <!-- ===== Table ===== -->
         <div class="table-responsive">
@@ -106,10 +146,11 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-1">
-                                <!-- ลิงค์ไปยังหน้าแก้ไขข่าว -->
-                                <a href="#"  
-                                   class="btn-action btn-edit"
-                                   title="แก้ไข">
+                                <!-- ปุ่มแก้ไขข่าว (เปิด Modal) -->
+                                <a href="#"
+                                class="btn-action btn-edit"
+                                data-id="{{ news.news_id }}"
+                                title="แก้ไข">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                                 <button type="button"
@@ -179,71 +220,154 @@
 <!-- ===================== View Modal ===================== -->
 
 <div class="modal fade" id="viewNewsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modal-content-custom">
-            <div class="modal-header modal-header-custom">
-                <h5 class="modal-title d-flex align-items-center">
-                    <i class="bi bi-file-earmark-text-fill me-2"></i>
-                    รายละเอียดข่าวสาร
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 950px; margin-top: 50px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            
+            <div class="modal-header py-3 px-4 border-0 bg-danger text-white">
+                <h5 class="modal-title fw-bold m-0">
+                    <i class="bi bi-file-earmark-text-fill me-2"></i>รายละเอียดข่าวสาร
                 </h5>
-                <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-7 border-end pe-4">
+                        <h4 id="v-title" class="fw-bold mb-3" style="color: #d32f2f; line-height: 1.4; font-size: 1.25rem;"></h4>
+                        
+                        <div class="rounded-3 overflow-hidden shadow-sm border mb-0 bg-light">
+                            <img id="v-cover-image"
+                                 class="img-fluid w-100"
+                                 style="max-height: 350px; object-fit: cover; display: none;">
+                        </div>
+                    </div>
 
-        <div class="modal-body p-4">
-            <h3 id="v-title" class="fw-bold mb-4"></h3>
+                    <div class="col-md-5 d-flex flex-column">
+                        <div class="card border-0 bg-light p-3 mb-3 rounded-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">ผู้เขียน</small>
+                                    <strong class="text-dark" id="v-author"></strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">หมวดหมู่</small>
+                                    <span class="badge bg-danger rounded-pill px-3" id="v-category"></span>
+                                </div>
+                                <div class="col-7">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">วันที่เผยแพร่</small>
+                                    <span class="fw-bold text-dark" id="v-date-thai"></span>
+                                    <small class="text-muted d-block" id="v-time-thai"></small>
+                                </div>
+                                <div class="col-5 text-end">
+                                    <small class="text-muted d-block mb-1 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">สถานะ</small>
+                                    <div id="v-status-container"></div>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="text-center mb-4">
-                <img id="v-cover-image"
-                     class="img-fluid rounded-3 shadow-sm"
-                     style="max-height:400px;width:100%;object-fit:cover;display:none;border:1px solid #eee;">
+                        <div class="flex-grow-1">
+                            <label class="fw-bold text-muted mb-2 small text-uppercase" style="letter-spacing: 1px;">เนื้อหาข่าวสาร</label>
+                            <div id="v-content"
+                                 class="rounded-3 p-3 bg-white border border-light shadow-sm custom-scrollbar"
+                                 style="font-size: 0.95rem; max-height: 220px; overflow-y: auto; line-height: 1.6; color: #444;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="row g-3 mb-4 py-3 border-top border-bottom bg-light rounded-2">
-                <div class="col-md-3">
-                    <small class="text-muted d-block mb-1">ผู้เขียน</small>
-                    <span class="fw-bold" id="v-author"></span>
-                </div>
-                <div class="col-md-3">
-                    <small class="text-muted d-block mb-1">หมวดหมู่</small>
-                    <span class="fw-bold" id="v-category"></span>
-                </div>
-                <div class="col-md-4">
-                    <small class="text-muted d-block mb-1">วันที่สร้าง</small>
-                    <div id="v-date-thai"></div>
-                    <div id="v-time-thai"></div>
-                </div>
-                <div class="col-md-2">
-                    <small class="text-muted d-block mb-1">สถานะ</small>
-                    <div id="v-status-container"></div>
-                </div>
+            <div class="modal-footer py-3 px-4 border-0 bg-light">
+                <button class="btn btn-secondary px-4 rounded-pill fw-bold"
+                        style="font-size: 0.9rem;"
+                        data-bs-dismiss="modal">
+                    ปิดหน้าต่าง
+                </button>
             </div>
-
-            <div>
-                <p class="text-muted fw-bold small mb-2">เนื้อหาข่าว</p>
-                <div id="v-content"
-                     class="rounded shadow-sm p-3 bg-white border-start border-danger border-4"></div>
-            </div>
-        </div>
-
-        <div class="modal-footer border-0">
-            <button class="btn btn-red-outline"
-                    data-bs-dismiss="modal">
-                ปิดหน้าต่าง
-            </button>
         </div>
     </div>
 </div>
-```
 
+<!-- ===================== Edit Modal (RED THEME) ===================== -->
+<div class="modal fade" id="editNewsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 800px; margin-top: 40px;">
+    <form id="editNewsForm" class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;" enctype="multipart/form-data">
+      <input type="hidden" id="editNewsId" name="news_id">
+
+      <!-- Header สีแดง -->
+      <div class="modal-header py-2 px-3 border-0 bg-danger text-white">
+        <h5 class="modal-title fw-bold m-0">
+          <i class="bi bi-pencil-square me-2"></i>แก้ไขข่าวสาร
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-3">
+        <div class="row g-3">
+          <div class="col-md-7">
+            <label class="form-label fw-bold">หัวข้อข่าว</label>
+            <input type="text" class="form-control mb-2" id="editTitle" name="title">
+
+            <label class="form-label fw-bold">เนื้อหา</label>
+            <textarea class="form-control mb-2" id="editContent" name="content" rows="5"></textarea>
+
+            <label class="form-label fw-bold">เปลี่ยนรูปปก (ถ้าไม่เลือก = ใช้รูปเดิม)</label>
+            <input type="file" class="form-control mb-2" name="main_image" accept="image/*">
+            <img id="editPreview" class="img-fluid rounded shadow-sm mt-2" style="max-height:160px; display:none;">
+          </div>
+
+          <div class="col-md-5">
+            <label class="form-label fw-bold">หมวดหมู่</label>
+            <select id="editCategory" name="cat_id" class="form-select mb-2">
+              {% for cat in categories %}
+                <option value="{{ cat.cat_id }}">{{ cat.cat_name }}</option>
+              {% endfor %}
+            </select>
+
+            <!-- หมวดย่อย -->
+            <label class="form-label fw-bold">หมวดย่อย</label>
+            <select id="editSubCategory" name="subcat_id" class="form-select mb-2">
+              <option value="">-- เลือกหมวดย่อย --</option>
+            </select>
+
+            <label class="form-label fw-bold">สถานะ</label>
+            <select id="editStatus" name="status" class="form-select mb-2">
+              <option value="publish">เผยแพร่</option>
+              <option value="draft">ฉบับร่าง</option>
+            </select>
+
+            <label class="form-label fw-bold">ประเภทข่าว</label>
+            <select id="editFeatured" name="is_featured" class="form-select mb-2">
+              <option value="0">ข่าวทั่วไป</option>
+              <option value="1">ข่าวเด่น (Featured)</option>
+            </select>
+
+            <label class="form-label fw-bold">Video URL (ถ้ามี)</label>
+            <input type="text" id="editVideoUrl" name="video_url" class="form-control" placeholder="https://...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer py-2 px-3 border-0 bg-light">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+          ยกเลิก
+        </button>
+        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+          บันทึกการแก้ไข
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
+
+
+
 {% endblock %}
 
 {% block scripts %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/news_management.js') }}"></script>
 {% endblock %}

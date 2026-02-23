@@ -1,0 +1,73 @@
+:root{
+  --sidebar-w: 260px;
+  --navbar-h: 64px;
+}
+
+/* โครงหลัก */
+.app-shell{
+  display: flex;
+  min-height: calc(100vh - var(--navbar-h));
+}
+
+/* Sidebar */
+.sidebar{
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+
+  /* ❌ ถ้ามี fixed ให้ลบทิ้ง */
+  position: sticky;  
+  top: var(--navbar-h);
+  height: calc(100vh - var(--navbar-h));
+  overflow-y: auto;
+  z-index: 5;
+}
+
+/* Main content */
+.main{
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 16px 20px;
+  overflow-x: hidden;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card {
+  min-height: 120px;        /* บังคับความสูงขั้นต่ำให้การ์ดเท่ากัน */
+  display: flex;
+  align-items: center;
+}
+
+.stat-label {
+  line-height: 1.2;
+  max-height: 2.4em;       /* ประมาณ 2 บรรทัด */
+  overflow: hidden;
+  text-overflow: ellipsis;   /* จำกัด 2 บรรทัด */
+  -webkit-box-orient: vertical;
+}
+
+
+
+/* Mobile */
+@media (max-width: 991px){
+  .sidebar{
+    position: fixed;
+    left: -100%;
+    top: var(--navbar-h);
+    height: calc(100vh - var(--navbar-h));
+    transition: left .25s ease;
+    z-index: 1040;
+  }
+
+  .sidebar.show{
+    left: 0;
+  }
+}

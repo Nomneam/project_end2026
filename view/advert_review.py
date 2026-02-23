@@ -18,6 +18,9 @@ def connect_db():
         port=int(os.environ.get('PORT')),
         cursorclass=pymysql.cursors.DictCursor
     )
+# ==============================
+#  Advert Review Page
+# ==============================
 
 @advert_review_bp.route('/ad-review')
 def advert_review():
