@@ -301,8 +301,15 @@ header {
   color: #ce1126;
 }
 
+/* ===== USER AVATAR ===== */
 .avatar-img {
   width: 40px;
   height: 40px;
-  object-fit: cover;
+  min-width: 40px;      /* กัน flex บีบ */
+  min-height: 40px;
+  border-radius: 50%;   /* วงกลม */
+  object-fit: cover;    /* ครอปไม่ยืด */
+  object-position: center;
+  display: block;
 }
+
