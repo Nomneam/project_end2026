@@ -2,7 +2,7 @@ $(function () {
 
   if ($("#slideMonth").length === 0) return;
 
-  const SLIDE_PRICE = 500;
+  const SLIDE_PRICE = +$("#footerPriceBox").data("price");
 
   const swiper = new Swiper(".footerAdSwiper", {
     loop: true,
