@@ -4,13 +4,17 @@ import os
 import pymysql
 import pymysql.cursors
 from datetime import datetime
-import base64
 import json
+import uuid
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
 admin_writenew_bp = Blueprint('admin_writenew', __name__)
 
+# =========================
+# DATABASE
+# =========================
 def connect_db():
     return pymysql.connect(
         host=os.environ.get('HOST'),
@@ -22,8 +26,14 @@ def connect_db():
         autocommit=False
     )
 
+# =========================
+# FILE CONFIG
+# =========================
+UPLOAD_FOLDER = "static/uploads/news"
 ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
-ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 def allowed_file(filename: str) -> bool:
     if not filename or "." not in filename:
@@ -31,32 +41,26 @@ def allowed_file(filename: str) -> bool:
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXT
 
-def file_to_data_uri(file_storage):
+def save_file(file_storage):
     if not file_storage or not file_storage.filename:
         return None
 
     if not allowed_file(file_storage.filename):
         return None
 
-    mime = (file_storage.mimetype or "").lower()
-    if mime not in ALLOWED_MIME:
-        return None
+    filename = secure_filename(file_storage.filename)
+    ext = filename.rsplit(".", 1)[1].lower()
 
-    try:
-        raw = file_storage.read()
-        if not raw:
-            return None
-        b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:{mime};base64,{b64}"
-    finally:
-        try:
-            file_storage.seek(0)
-        except Exception:
-            pass
+    new_filename = f"{uuid.uuid4().hex}.{ext}"
+    save_path = os.path.join(UPLOAD_FOLDER, new_filename)
+
+    file_storage.save(save_path)
+
+    return f"/{UPLOAD_FOLDER}/{new_filename}"
 
 
 # ======================================================
-# 1) GET เปิดหน้าเขียนข่าว (Admin)
+# 1) GET หน้าเขียนข่าว
 # ======================================================
 @admin_writenew_bp.route('/admin-write-new', methods=["GET"])
 def admin_writenew():
@@ -80,7 +84,7 @@ def admin_writenew():
 
 
 # ======================================================
-# 2) POST บันทึกข่าว (Admin)
+# 2) POST บันทึกข่าว
 # ======================================================
 @admin_writenew_bp.route('/admin-write-new', methods=["POST"])
 def admin_writenew_post():
@@ -108,16 +112,18 @@ def admin_writenew_post():
     if not main_image or not main_image.filename:
         return jsonify(ok=False, message="กรุณาเลือกรูปหลัก"), 400
 
-    cover_data_uri = file_to_data_uri(main_image)
-    if not cover_data_uri:
+    # 🔥 บันทึกรูปหลักเป็น path
+    cover_path = save_file(main_image)
+    if not cover_path:
         return jsonify(ok=False, message="ไฟล์รูปหลักไม่ถูกต้อง"), 400
 
+    # 🔥 บันทึกรูปย่อย
     sub_list = []
     for f in sub_images:
         if f and f.filename:
-            data_uri = file_to_data_uri(f)
-            if data_uri:
-                sub_list.append(data_uri)
+            path = save_file(f)
+            if path:
+                sub_list.append(path)
 
     sub_images_json = json.dumps(sub_list, ensure_ascii=False)
 
@@ -140,14 +146,19 @@ def admin_writenew_post():
                %s, %s, 0)
         """, (
             cat_id, subcat_id, title, is_featured,
-            content, cover_data_uri, sub_images_json,
+            content, cover_path, sub_images_json,
             status, status,
             created_by, updated_by
         ))
 
         news_id = cur.lastrowid
         conn.commit()
-        return jsonify(ok=True, message="เพิ่มข่าวสำเร็จ", data={"news_id": news_id, "status": status})
+
+        return jsonify(
+            ok=True,
+            message="เพิ่มข่าวสำเร็จ",
+            data={"news_id": news_id, "status": status}
+        )
 
     except Exception as e:
         conn.rollback()

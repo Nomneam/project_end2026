@@ -26,11 +26,20 @@ function preloadImage(src) {
 
 function buildImageSrc(raw) {
   if (!raw) return null;
-  if (raw.startsWith("data:image")) return raw;
-  if (raw.length > 100) return "data:image/jpeg;base64," + raw;
-  return "/static/" + raw;
-}
 
+  // ถ้าเป็น base64
+  if (raw.startsWith("data:image")) return raw;
+
+  // ถ้าเป็น path ที่มี /static อยู่แล้ว
+  if (raw.startsWith("/static/")) return raw;
+
+  // ถ้าเป็น uploads/...
+  if (raw.startsWith("uploads/")) {
+    return "/static/" + raw;
+  }
+
+  return raw;
+}
 /* =========================================================
    View Modal Helpers
 ========================================================= */
