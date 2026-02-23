@@ -30,6 +30,11 @@ from view.ADS.sidebar import sidebar_ads_bp
 from view.ADS.footer_ads import footer_ads_bp
 from view.ADS.bighero import bighero_ads_bp
 from view.ads_overview import ads_overview_bp
+from view.admin_writenew import admin_writenew_bp
+from view.admin_profile import admin_profile_bp
+from view.Advertising_revenue import advertising_revenue_bp
+from view.advert_dashbord import advert_dashbord_bp
+from view.owner_profile import owner_profile_bp
 
 
 
@@ -57,6 +62,11 @@ app.register_blueprint(sidebar_ads_bp)
 app.register_blueprint(footer_ads_bp)
 app.register_blueprint(bighero_ads_bp)
 app.register_blueprint(ads_overview_bp)
+app.register_blueprint(admin_writenew_bp)
+app.register_blueprint(admin_profile_bp)
+app.register_blueprint(advertising_revenue_bp)
+app.register_blueprint(advert_dashbord_bp)
+app.register_blueprint(owner_profile_bp)
 
 @app.route('/')
 def home():
