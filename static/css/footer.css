@@ -70,3 +70,10 @@
   font-size: 13px;
   color: rgba(255,255,255,0.6);
 }
+
+
+.footer-icon {
+  margin-right: 8px;
+  color: #ce1126;
+  font-size: 16px;
+}

@@ -23,7 +23,7 @@ def load_footer_data():
 
             # ข้อมูลหลักเว็บ
             cur.execute("""
-                SELECT address
+                SELECT email, address
                 FROM site_contact
                 LIMIT 1
             """)
