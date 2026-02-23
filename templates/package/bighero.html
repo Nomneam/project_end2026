@@ -36,7 +36,10 @@
         </p>
 
         <!-- เลือกตำแหน่ง -->
-        <select id="heroPlace" class="form-select mb-2">
+        <select id="heroPlace"
+        class="form-select mb-2"
+        data-price-home="{{ prices.get('INDEX_PAGE', 0) }}"
+        data-price-category="{{ prices.get('CATEGORY_PAGE', 0) }}">
           <option value="home">หน้าแรก</option>
           <option value="category">หน้าหมวดข่าว</option>
         </select>
@@ -71,6 +74,7 @@
     </div>
 
 </main>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>

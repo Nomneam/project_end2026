@@ -30,7 +30,26 @@ def connect_db():
 def footer_ads_page():
     if "front_user" not in session:
         return redirect(url_for("index.index_news", auth="required"))
-    return render_template('package/footer.html')
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT price_per_month
+        FROM advert_position_price
+        WHERE LOWER(position_name) = 'footer'
+        LIMIT 1
+    """)
+
+    result = cursor.fetchone()
+    conn.close()
+
+    footer_price = result["price_per_month"] if result else 0
+
+    return render_template(
+        'package/footer.html',
+        footer_price=footer_price
+    )
 
 # ===============================
 # CREATE FOOTER SLIDE AD
@@ -38,7 +57,6 @@ def footer_ads_page():
 @footer_ads_bp.route('/api/footer_ads', methods=['POST'])
 def create_footer_ad():
 
-    # 🔐 ต้อง login ก่อน
     if "front_user" not in session:
         return jsonify({"error": "กรุณาเข้าสู่ระบบก่อน"}), 401
 
@@ -48,7 +66,6 @@ def create_footer_ad():
     url = request.form.get("url")
     months = request.form.get("months")
 
-    # ตรวจสอบข้อมูล
     if not image or not title or not url or not months:
         return jsonify({"error": "กรอกข้อมูลไม่ครบ"}), 400
 
@@ -56,69 +73,81 @@ def create_footer_ad():
         months = int(months)
         if months < 1 or months > 12:
             return jsonify({"error": "เลือกได้ 1-12 เดือน"}), 400
-        
-        ICON_PRICE = 500
-        total_price = ICON_PRICE * months
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
-
-    # ===============================
-    # UPLOAD IMAGE
-    # ===============================
-    folder = "static/uploads/ads"
-    os.makedirs(folder, exist_ok=True)
-
-    filename = f"{int(datetime.now().timestamp())}_{image.filename}"
-    filepath = os.path.join(folder, filename)
-    image.save(filepath)
-
-    image_url = f"/static/uploads/ads/{filename}"
-
-    # ===============================
-    # DATE RANGE
-    # ===============================
-    valid_from = datetime.now()
-    valid_to = valid_from + relativedelta(months=months)
 
     conn = None
     try:
         conn = connect_db()
+        cursor = conn.cursor()
 
-        with conn.cursor() as cur:
-            sql = """
-            INSERT INTO advert
-            (
-                cus_id,
-                adc_cat_id,
-                adv_name,
-                adv_description,
-                adv_image_url,
-                target_url,
-                adv_price,
-                adv_position,
-                valid_from,
-                valid_to,
-                status,
-                created_at,
-                del_flg
-            )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
-            """
+        # ✅ ดึงราคาจริงจาก DB
+        cursor.execute("""
+            SELECT price_per_month
+            FROM advert_position_price
+            WHERE LOWER(position_name) = 'footer'
+            LIMIT 1
+        """)
+        result = cursor.fetchone()
 
-            cur.execute(sql, (
-                session["front_user"]["id"],
-                3,  # ⭐ FOOTER CATEGORY
-                title,
-                description,
-                image_url,
-                url,
-                total_price,
-                "FOOTER_HOME",
-                valid_from,
-                valid_to
-            ))
+        if not result:
+            return jsonify({"error": "ไม่พบราคาจากระบบ"}), 500
 
-            conn.commit()
+        footer_price = float(result["price_per_month"])
+        total_price = footer_price * months
+
+        # ===============================
+        # อัปโหลดรูป
+        # ===============================
+        folder = "static/uploads/ads"
+        os.makedirs(folder, exist_ok=True)
+
+        filename = f"{int(datetime.now().timestamp())}_{image.filename}"
+        filepath = os.path.join(folder, filename)
+        image.save(filepath)
+
+        image_url = f"/static/uploads/ads/{filename}"
+
+        # ===============================
+        # DATE RANGE
+        # ===============================
+        valid_from = datetime.now()
+        valid_to = valid_from + relativedelta(months=months)
+
+        sql = """
+        INSERT INTO advert
+        (
+            cus_id,
+            adc_cat_id,
+            adv_name,
+            adv_description,
+            adv_image_url,
+            target_url,
+            adv_price,
+            adv_position,
+            valid_from,
+            valid_to,
+            status,
+            created_at,
+            del_flg
+        )
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'draft',NOW(),0)
+        """
+
+        cursor.execute(sql, (
+            session["front_user"]["id"],
+            3,
+            title,
+            description,
+            image_url,
+            url,
+            total_price,
+            "FOOTER_HOME",
+            valid_from,
+            valid_to
+        ))
+
+        conn.commit()
 
     except Exception as e:
         print("DB ERROR:", e)
@@ -130,5 +159,6 @@ def create_footer_ad():
 
     return jsonify({
         "success": True,
-        "message": "ส่งโฆษณาเรียบร้อย รออนุมัติ"
+        "message": "ส่งโฆษณาเรียบร้อย รออนุมัติ",
+        "total_price": total_price
     })

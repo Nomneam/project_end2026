@@ -4,7 +4,7 @@ import os
 import pymysql
 import pymysql.cursors
 from datetime import datetime
-from dateutil.relativedelta import relativedelta   # ⭐ สำคัญ
+from dateutil.relativedelta import relativedelta
 
 load_dotenv()
 
@@ -24,13 +24,33 @@ def connect_db():
     )
 
 # ===============================
+# GET SIDEBAR PRICE (ใช้ซ้ำได้)
+# ===============================
+def get_sidebar_price():
+    conn = connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT price_per_month
+                FROM advert_position_price
+                WHERE LOWER(position_name)='sidebar'
+                LIMIT 1
+            """)
+            row = cur.fetchone()
+            return int(row["price_per_month"]) if row else 150
+    finally:
+        conn.close()
+
+# ===============================
 # PAGE ROUTE
 # ===============================
 @sidebar_ads_bp.route('/sidebar_ads')
 def sidebar_ads_page():
     if "front_user" not in session:
         return redirect(url_for("index.index_news", auth="required"))
-    return render_template('package/sidebar.html')
+
+    price = get_sidebar_price()
+    return render_template('package/sidebar.html', price=price)
 
 # ===============================
 # CREATE SIDEBAR AD
@@ -44,23 +64,24 @@ def create_sidebar_ad():
 
     image = request.files.get("image")
     name = request.form.get("title")
-    description = request.form.get("description", "")  # optional
+    description = request.form.get("description", "")
     url = request.form.get("url")
     months = request.form.get("months")
 
-    # ตรวจข้อมูล
     if not image or not name or not url or not months:
         return jsonify({"error": "กรอกข้อมูลไม่ครบ"}), 400
 
+    # ตรวจจำนวนเดือน
     try:
         months = int(months)
         if months < 1 or months > 12:
             return jsonify({"error": "เลือกได้ 1-12 เดือน"}), 400
-        
-        SIDEBAR_PRICE = 150
-        total_price = SIDEBAR_PRICE * months
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
+
+    # ✅ ใช้ราคาจริงจาก DB
+    sidebar_price = get_sidebar_price()
+    total_price = sidebar_price * months
 
     # ===============================
     # UPLOAD IMAGE
@@ -107,12 +128,12 @@ def create_sidebar_ad():
 
             cur.execute(sql, (
                 session["front_user"]["id"],
-                1,   # ⭐ SIDEBAR CATEGORY
+                1,
                 name,
                 description,
                 image_url,
                 url,
-                total_price,       # ⭐ ราคาที่คำนวณ
+                total_price,   # ✅ ราคาที่คำนวณจาก DB จริง
                 "SIDEBAR",
                 valid_from,
                 valid_to

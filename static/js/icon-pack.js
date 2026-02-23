@@ -2,7 +2,7 @@ $(function () {
 
   if ($("#iconMonth").length === 0) return;
 
-  const ICON_PRICE = 300;
+  const ICON_PRICE = Number($("#priceBox").text().replace(/\D/g, ""));
 
   // =========================
   // คำนวณราคารวม

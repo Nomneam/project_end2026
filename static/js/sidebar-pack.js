@@ -1,5 +1,5 @@
 $(function () {
-  const PRICE = 150;
+  const PRICE = Number($("#priceBox").data("price"));
 
   function updateTotal() {
     const m = +$("#sideMonth").val();

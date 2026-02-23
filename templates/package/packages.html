@@ -37,7 +37,7 @@
                         </div>
                         <h3 class="font-kanit fw-bold fs-4">Side News Ad</h3>
                         <div class="pkg-price mb-3">
-                            <span class="currency mx-1">฿</span><span class="amount">150</span><span class="period mx-1">/เดือน</span>
+                            <span class="currency mx-1">฿</span><span class="amount">{{ prices.get('sidebar', 0) }}</span><span class="period mx-1">/เดือน</span>
                         </div>
                         <p class="small text-muted mb-4">โฆษณาด้านข้างในหน้าอ่านข่าว เจาะจงกลุ่มเป้าหมายที่กำลังอ่านเนื้อหา</p>
                         <ul class="pkg-features list-unstyled mb-auto">
@@ -57,7 +57,7 @@
                         </div>
                         <h3 class="font-kanit fw-bold fs-4">Icon Logo</h3>
                         <div class="pkg-price mb-3">
-                            <span class="currency mx-1">฿</span><span class="amount">300</span><span class="period mx-1">/เดือน</span>
+                            <span class="currency mx-1">฿</span><span class="amount">{{ prices.get('icon', 0) }}</span><span class="period mx-1">/เดือน</span>
                         </div>
                         <p class="small text-muted mb-4">ลงโฆษณาแบบไอคอนเล็กๆ ในหน้า Index เลื่อนไปเรื่อยๆ ก็เจอ</p>
                         <ul class="pkg-features list-unstyled mb-auto">
@@ -80,7 +80,7 @@
                         </div>
                         <h3 class="font-kanit fw-bold fs-4">Auto-Slide</h3>
                         <div class="pkg-price mb-3">
-                            <span class="currency mx-1">฿</span><span class="amount">500</span><span class="period mx-1">/เดือน</span>
+                            <span class="currency mx-1">฿</span><span class="amount">{{ prices.get('footer', 0) }}</span><span class="period mx-1">/เดือน</span>
                         </div>
                         <p class="small text-muted mb-4">โฆษณาสไลด์อัตโนมัติ ล่างสุดหน้า Index พร้อมระบบ Pause on Hover</p>
                         <ul class="pkg-features list-unstyled mb-auto">
@@ -106,7 +106,7 @@
                         </div>
                         <h3 class="font-kanit fw-bold fs-4">Big Hero Ad</h3>
                         <div class="pkg-price mb-3">
-                            <span class="period currency mx-1">เริ่มต้น฿</span><span class="amount">700</span><span class="period mx-1">/เดือน</span>
+                            <span class="period currency mx-1">เริ่มต้น฿</span><span class="amount">{{ prices.get('bighero', 0) }}</span><span class="period mx-1">/เดือน</span>
                         </div>
                         <p class="small text-muted mb-4">โฆษณาขนาดใหญ่แบบ Impact เลือกตำแหน่งหน้าหลักหรือหมวดหมู่ได้</p>
                         <ul class="pkg-features list-unstyled mb-auto">
