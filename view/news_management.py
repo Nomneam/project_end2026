@@ -5,6 +5,7 @@ import pymysql
 import pymysql.cursors
 from datetime import datetime
 import base64
+import json
 
 load_dotenv()
 
@@ -135,6 +136,8 @@ def get_news_by_id(news_id):
                     n.status,
                     n.created_at,
                     n.cover_image,
+                    n.sub_images,
+                    n.video_url,
                     n.cat_id,
                     n.subcat_id,
 
@@ -238,7 +241,10 @@ def update_news(news_id):
     status = request.form.get("status")
     cat_id = request.form.get("cat_id", type=int)
     subcat_id = request.form.get("subcat_id", type=int)
+    video_url = request.form.get("video_url")
+
     main_image = request.files.get("main_image")
+    sub_images = request.files.getlist("sub_images")
 
     if not title or not content:
         return jsonify(success=False, message="กรอกข้อมูลไม่ครบ"), 400
@@ -247,19 +253,67 @@ def update_news(news_id):
     try:
         with conn.cursor() as cursor:
 
-            cursor.execute("SELECT cover_image FROM news WHERE news_id=%s", (news_id,))
+            cursor.execute("""
+                SELECT cover_image, sub_images 
+                FROM news 
+                WHERE news_id=%s
+            """, (news_id,))
             old = cursor.fetchone()
+
             if not old:
                 return jsonify(success=False, message="ไม่พบข่าว"), 404
 
             cover_image = old["cover_image"]
+            old_sub_images = old["sub_images"]
 
+            # ==========================
+            # รูปปก
+            # ==========================
             if main_image and main_image.filename:
                 new_cover = file_to_data_uri(main_image)
                 if not new_cover:
                     return jsonify(success=False, message="ไฟล์รูปไม่ถูกต้อง"), 400
                 cover_image = new_cover
 
+            # ==========================
+            # รูปย่อย (หลายรูป)
+            # ==========================
+
+            deleted_sub_images = request.form.get("deleted_sub_images")
+
+            # โหลดรูปเก่า
+            if old_sub_images:
+                try:
+                    current_images = json.loads(old_sub_images)
+                except:
+                    current_images = []
+            else:
+                current_images = []
+
+            # ลบรูปที่ถูกเลือก
+            if deleted_sub_images:
+                try:
+                    deleted_list = json.loads(deleted_sub_images)
+                    current_images = [
+                        img for img in current_images
+                        if img not in deleted_list
+                    ]
+                except:
+                    pass
+
+            # เพิ่มรูปใหม่
+            for img in sub_images:
+                if img and img.filename:
+                    img_data = file_to_data_uri(img)
+                    if img_data:
+                        current_images.append(img_data)
+
+            # แปลงกลับเป็น JSON
+            final_sub_images = json.dumps(current_images) if current_images else None
+
+            # ==========================
+            # UPDATE
+            # ==========================
             cursor.execute("""
                 UPDATE news
                 SET news_title=%s,
@@ -268,13 +322,20 @@ def update_news(news_id):
                     cat_id=%s,
                     subcat_id=%s,
                     cover_image=%s,
+                    sub_images=%s,
+                    video_url=%s,
                     updated_at=NOW(),
                     updated_by=%s
                 WHERE news_id=%s
             """, (
-                title, content, status,
-                cat_id, subcat_id,
+                title,
+                content,
+                status,
+                cat_id,
+                subcat_id,
                 cover_image,
+                final_sub_images,
+                video_url,
                 user.get("id"),
                 news_id
             ))
@@ -288,6 +349,7 @@ def update_news(news_id):
         conn.close()
 
     return jsonify(success=True, message="แก้ไขสำเร็จ")
+
 
 # =====================================================
 # 6) Dashboard Chart API
