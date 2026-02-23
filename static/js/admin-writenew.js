@@ -4,33 +4,48 @@ $(function () {
 
   const MAX_SUB_IMAGES = 5;
 
-  // ===============================
-  // SweetAlert helpers
-  // ===============================
+  // ======================================================
+  // SweetAlert Premium Setup
+  // ======================================================
   function hasSwal() {
-    return typeof window.Swal !== "undefined" && typeof window.Swal.fire === "function";
+    return typeof window.Swal !== "undefined";
   }
 
-  function swalFire(opts) {
-    if (hasSwal()) return window.Swal.fire(opts);
-    if (opts && (opts.text || opts.title)) {
-      alert((opts.title ? opts.title + "\n" : "") + (opts.text || ""));
-    }
-    return Promise.resolve();
-  }
+  const Toast = hasSwal()
+    ? Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      })
+    : null;
+
+  const ModalSwal = hasSwal()
+    ? Swal.mixin({
+        customClass: {
+          popup: "rounded-4 shadow-lg",
+          confirmButton: "btn btn-primary px-4",
+          cancelButton: "btn btn-secondary px-4",
+        },
+        buttonsStyling: false,
+      })
+    : null;
 
   function swalLoading(title) {
     if (!hasSwal()) return;
-    window.Swal.fire({
-      title: title || "กำลังบันทึก...",
+    Swal.fire({
+      title: title || "กำลังบันทึกข่าว...",
+      html: "กรุณารอสักครู่",
       allowOutsideClick: false,
-      didOpen: () => window.Swal.showLoading(),
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
     });
   }
 
-  // ===============================
+  // ======================================================
   // Elements
-  // ===============================
+  // ======================================================
   const $mainCategory = $("#mainCategory");
   const $subCategory = $("#subCategory");
   const $subcatHint = $("#subcatHint");
@@ -50,9 +65,9 @@ $(function () {
   const $btnDraft = $("#btnSaveDraft");
   const $btnPublish = $("#btnPublish");
 
-  // ===============================
-  // Action (draft / publish)
-  // ===============================
+  // ======================================================
+  // Draft / Publish
+  // ======================================================
   let lastAction = "publish";
 
   function setAction(action) {
@@ -61,21 +76,20 @@ $(function () {
   }
   setAction("publish");
 
-  // ===============================
+  // ======================================================
   // Utils
-  // ===============================
+  // ======================================================
   function updateTitleCount() {
     $titleCount.text(($title.val() || "").length);
   }
 
   function isValidImageFile(file) {
-    if (!file) return false;
     return ["image/png", "image/jpeg", "image/webp"].includes(file.type);
   }
 
-  // ===============================
+  // ======================================================
   // Subcategory
-  // ===============================
+  // ======================================================
   function resetSubcat() {
     $subCategory
       .html(`<option value="" selected disabled>เลือกประเภทย่อย</option>`)
@@ -86,22 +100,31 @@ $(function () {
   function fillSubcats(rows) {
     $subCategory.html(`<option value="" selected disabled>เลือกประเภทย่อย</option>`);
     rows.forEach((r) => {
-      $subCategory.append(`<option value="${r.subcat_id}">${r.subcat_name}</option>`);
+      $subCategory.append(
+        `<option value="${r.subcat_id}">${r.subcat_name}</option>`
+      );
     });
     $subCategory.prop("disabled", false);
     $subcatHint.hide();
   }
 
   const cache = {};
+
   async function preloadAllSubcategories() {
-    const catIds = $mainCategory.find("option").map(function () {
-      const v = $(this).val();
-      return v ? v : null;
-    }).get().filter(Boolean);
+    const catIds = $mainCategory
+      .find("option")
+      .map(function () {
+        const v = $(this).val();
+        return v ? v : null;
+      })
+      .get()
+      .filter(Boolean);
 
     for (const catId of catIds) {
       try {
-        const res = await fetch(`/api/admin/news/subcategories?cat_id=${catId}`);
+        const res = await fetch(
+          `/api/admin/news/subcategories?cat_id=${catId}`
+        );
         const json = await res.json();
         cache[catId] = json && json.ok ? json.data || [] : [];
       } catch (e) {
@@ -122,9 +145,9 @@ $(function () {
     fillSubcats(rows);
   });
 
-  // ===============================
-  // Main image preview
-  // ===============================
+  // ======================================================
+  // Main Image Preview
+  // ======================================================
   function clearMainImage() {
     $mainImage.val("");
     $mainImagePreview.attr("src", "");
@@ -137,7 +160,10 @@ $(function () {
 
     if (!isValidImageFile(file)) {
       clearMainImage();
-      swalFire({ icon: "warning", title: "ไฟล์รูปหลักไม่ถูกต้อง", text: "รองรับ PNG / JPG / WEBP เท่านั้น" });
+      Toast?.fire({
+        icon: "warning",
+        title: "รองรับเฉพาะ PNG / JPG / WEBP",
+      });
       return;
     }
 
@@ -148,9 +174,9 @@ $(function () {
 
   $btnRemoveMainImage.on("click", clearMainImage);
 
-  // ===============================
-  // Sub images (max 5)
-  // ===============================
+  // ======================================================
+  // Sub Images (max 5)
+  // ======================================================
   let subFiles = [];
 
   function rebuildSubInput() {
@@ -161,61 +187,68 @@ $(function () {
 
   function renderSubPreview() {
     $subImagesPreview.empty();
-    if (!subFiles.length) return;
 
     subFiles.forEach((file, idx) => {
       const url = URL.createObjectURL(file);
       $subImagesPreview.append(`
         <div class="position-relative preview-540x360">
-          <img src="${url}">
-          <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" data-idx="${idx}">
+          <img src="${url}" class="rounded-3 shadow-sm">
+          <button type="button"
+            class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+            data-idx="${idx}">
             <i class="bi bi-x"></i>
           </button>
         </div>
       `);
     });
+
+    rebuildSubInput();
   }
 
   $subImages.on("change", function () {
     const files = Array.from(this.files || []);
+
     for (const f of files) {
-      if (!isValidImageFile(f)) continue;
+      if (!isValidImageFile(f)) {
+        Toast?.fire({
+          icon: "warning",
+          title: "รองรับเฉพาะ PNG / JPG / WEBP",
+        });
+        continue;
+      }
 
       if (subFiles.length >= MAX_SUB_IMAGES) {
-        swalFire({
+        Toast?.fire({
           icon: "info",
-          title: "เลือกรูปรองเกินจำนวน",
-          text: `อัปโหลดได้สูงสุด ${MAX_SUB_IMAGES} รูป`,
+          title: `อัปโหลดได้สูงสุด ${MAX_SUB_IMAGES} รูป`,
         });
         break;
       }
 
-      const dup = subFiles.some(x => x.name === f.name && x.size === f.size);
+      const dup = subFiles.some(
+        (x) => x.name === f.name && x.size === f.size
+      );
       if (!dup) subFiles.push(f);
     }
 
-    rebuildSubInput();
     renderSubPreview();
   });
 
   $subImagesPreview.on("click", "button[data-idx]", function () {
     const idx = Number($(this).data("idx"));
-    if (Number.isNaN(idx)) return;
-
     subFiles.splice(idx, 1);
-    rebuildSubInput();
     renderSubPreview();
   });
 
-  // ===============================
-  // Title counter
-  // ===============================
+  // ======================================================
+  // Title Counter
+  // ======================================================
   updateTitleCount();
   $title.on("input", updateTitleCount);
 
-  // ===============================
-  // Draft / Publish
-  // ===============================
+  // ======================================================
+  // Draft / Publish Buttons
+  // ======================================================
   $btnDraft.on("click", function () {
     setAction("draft");
     $form.trigger("submit");
@@ -225,9 +258,9 @@ $(function () {
     setAction("publish");
   });
 
-  // ===============================
+  // ======================================================
   // Submit
-  // ===============================
+  // ======================================================
   $form.on("submit", function (e) {
     e.preventDefault();
 
@@ -235,17 +268,19 @@ $(function () {
       $form.addClass("was-validated");
       return;
     }
-    $form.addClass("was-validated");
 
     const mainFile = $mainImage[0].files[0];
     if (!mainFile) {
-      swalFire({ icon: "warning", title: "กรุณาเลือกรูปหลัก" });
+      Toast?.fire({
+        icon: "warning",
+        title: "กรุณาเลือกรูปหลัก",
+      });
       return;
     }
 
     const formData = new FormData(this);
 
-    swalLoading("กำลังบันทึก...");
+    swalLoading("กำลังบันทึกข่าว...");
 
     $.ajax({
       url: $form.attr("action"),
@@ -253,25 +288,32 @@ $(function () {
       data: formData,
       processData: false,
       contentType: false,
+
       success(json) {
         if (!json || !json.ok) {
-          swalFire({ icon: "error", title: "ไม่สำเร็จ", text: json?.message || "เกิดข้อผิดพลาด" });
+          ModalSwal.fire({
+            icon: "error",
+            title: "บันทึกไม่สำเร็จ",
+            text: json?.message || "เกิดข้อผิดพลาด",
+          });
           return;
         }
 
-        swalFire({
+        ModalSwal.fire({
           icon: "success",
-          title: "สำเร็จ",
-          text: json.message || "บันทึกข่าวเรียบร้อย",
+          title: "บันทึกสำเร็จ ",
+          text: json.message || "ข่าวถูกบันทึกเรียบร้อยแล้ว",
+          confirmButtonText: "ไปหน้าจัดการข่าว",
         }).then(() => {
           window.location.href = "/admin-write-new";
         });
       },
+
       error(xhr) {
-        swalFire({
+        ModalSwal.fire({
           icon: "error",
-          title: "ไม่สำเร็จ",
-          text: xhr?.responseJSON?.message || "เกิดข้อผิดพลาด",
+          title: "เกิดข้อผิดพลาด",
+          text: xhr?.responseJSON?.message || "ไม่สามารถบันทึกข้อมูลได้",
         });
       },
     });

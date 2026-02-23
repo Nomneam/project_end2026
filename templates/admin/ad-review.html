@@ -10,141 +10,216 @@
   <h2 class="mb-2">Ads Management</h2>
   <p class="text-muted">ตรวจสอบ อนุมัติ และจัดการโฆษณาในระบบ</p>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-danger text-white">
-            รายการโฆษณาที่ต้องตรวจสอบ
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="table-layout: fixed;">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:120px">รูป</th>
-                            <th>ข้อมูลโฆษณา</th>
-                            <th style="width:180px">ตำแหน่ง</th>
-                            <th style="width:140px">ราคา</th>
-                            <th style="width:200px">ระยะเวลา</th>
-                            <th style="width:120px">สถานะ</th>
-                            <th style="width:140px" class="text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if adverts %}
-                            {% for ad in adverts %}
-                            <tr>
-                                <td>
-                                    <img src="https://picsum.photos/seed/ad{{ ad.adv_id }}/600/300.jpg"
-                                        class="rounded border"
-                                        style="width:100px;height:56px;object-fit:cover">
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-danger">{{ ad.adv_name }}</div>
-                                    <div class="small text-muted">
-                                        {{ ad.cus_fname }} {{ ad.cus_lname }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-light text-dark border">
-                                        {{ ad.advert_area_name or '-' }}
-                                    </span>
-                                </td>
-                                <td class="fw-bold">
-                                    ฿{{ "{:,.2f}".format(ad.total_amount or 0) }}
-                                </td>
-                                <td class="small">
-                                    {{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}
-                                </td>
-                                <td><span class="badge bg-warning text-dark">รออนุมัติ</span></td>
-                                <td class="text-center">
-                                    <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>
-                                         ดูรายละเอียด
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    ไม่มีโฆษณารอการตรวจสอบ
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- ========================= -->
+  <!-- ตารางรอตรวจสอบ -->
+  <!-- ========================= -->
+   
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-danger text-white">
+      รายการโฆษณาที่ต้องตรวจสอบ
     </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" style="table-layout: fixed;">
+          <thead class="table-light">
+            <tr>
+              <th style="width:120px">รูป</th>
+              <th>ข้อมูลโฆษณา</th>
+              <th style="width:180px">ตำแหน่ง</th>
+              <th style="width:140px">ราคา</th>
+              <th style="width:200px">ระยะเวลา</th>
+              <th style="width:120px">สถานะ</th>
+              <th style="width:140px" class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if adverts %}
+              {% for ad in adverts %}
+              <tr>
+                <td>
+                  <img src="{{ ad.adv_image_url if ad.adv_image_url else url_for('static', filename='images/no-image.png') }}"
+                       class="rounded border"
+                       style="width:100px;height:56px;object-fit:cover">
+                </td>
+                <td>
+                  <div class="fw-bold text-danger">{{ ad.adv_name }}</div>
+                  <div class="small text-muted">
+                    {{ ad.cus_fname }} {{ ad.cus_lname }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">
+                    {{ ad.adc_cat_name or '-' }}
+                  </span>
+                </td>
+                <td class="fw-bold">
+                  ฿{{ "{:,.2f}".format((ad.adv_price or 0)|float) }}
+                </td>
+                <td class="small">
+                  {{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}
+                </td>
+                <td><span class="badge bg-warning text-dark">รออนุมัติ</span></td>
+                <td class="text-center">
+                  <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>
+                    ดูรายละเอียด
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  ไม่มีโฆษณารอการตรวจสอบ
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
 
-    <div class="card shadow-sm border-0 mt-4">
-        <div class="card-header bg-success text-white">
-            รายการโฆษณาที่อนุมัติ / ปฏิเสธแล้ว
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="table-layout: fixed;">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:120px">รูป</th>
-                            <th>ข้อมูลโฆษณา</th>
-                            <th style="width:180px">ตำแหน่ง</th>
-                            <th style="width:140px">ราคา</th>
-                            <th style="width:200px">ระยะเวลา</th>
-                            <th style="width:120px">สถานะ</th>
-                            <th style="width:140px" class="text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if approved_ads %}
-                            {% for ad in approved_ads %}
-                            <tr>
-                                <td>
-                                    <img src="https://picsum.photos/seed/ad{{ ad.adv_id }}/600/300.jpg"
-                                        class="rounded border"
-                                        style="width:100px;height:56px;object-fit:cover">
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-dark">{{ ad.adv_name }}</div>
-                                    <div class="small text-muted">
-                                        {{ ad.cus_fname }} {{ ad.cus_lname }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-light text-dark border">
-                                        {{ ad.advert_area_name or '-' }}
-                                    </span>
-                                </td>
-                                <td class="fw-bold">
-                                    ฿{{ "{:,.2f}".format(ad.total_amount or 0) }}
-                                </td>
-                                <td class="small">
-                                    {{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}
-                                </td>
-                                <td>
-                                    {% if ad.status == 'approved' %}
-                                        <span class="badge bg-success">อนุมัติ</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">ปฏิเสธ</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>
-                                         ดูรายละเอียด
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    ไม่มีโฆษณาที่อนุมัติหรือปฏิเสธ
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      <!-- Pagination Draft -->
+      {% if total_pages_draft > 1 %}
+      <nav class="p-3 border-top">
+        <ul class="pagination justify-content-end mb-0">
+          {% if page_draft > 1 %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page_draft={{ page_draft-1 }}&page_approved={{ page_approved }}">
+              ก่อนหน้า
+            </a>
+          </li>
+          {% endif %}
+
+          {% for p in range(1, total_pages_draft+1) %}
+          <li class="page-item {% if p == page_draft %}active{% endif %}">
+            <a class="page-link"
+               href="?page_draft={{ p }}&page_approved={{ page_approved }}">
+              {{ p }}
+            </a>
+          </li>
+          {% endfor %}
+
+          {% if page_draft < total_pages_draft %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page_draft={{ page_draft+1 }}&page_approved={{ page_approved }}">
+              ถัดไป
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
     </div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- ตารางอนุมัติแล้ว -->
+  <!-- ========================= -->
+  <div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-success text-white">
+      รายการโฆษณาที่อนุมัติ / ปฏิเสธแล้ว
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" style="table-layout: fixed;">
+          <thead class="table-light">
+            <tr>
+              <th style="width:120px">รูป</th>
+              <th>ข้อมูลโฆษณา</th>
+              <th style="width:180px">ปะเภท</th>
+              <th style="width:140px">ราคา</th>
+              <th style="width:200px">ระยะเวลา</th>
+              <th style="width:120px">สถานะ</th>
+              <th style="width:140px" class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if approved_ads %}
+              {% for ad in approved_ads %}
+              <tr>
+                <td>
+                  <img src="{{ ad.adv_image_url if ad.adv_image_url else url_for('static', filename='images/no-image.png') }}"
+                       class="rounded border"
+                       style="width:100px;height:56px;object-fit:cover">
+                </td>
+                <td>
+                  <div class="fw-bold text-dark">{{ ad.adv_name }}</div>
+                  <div class="small text-muted">
+                    {{ ad.cus_fname }} {{ ad.cus_lname }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">
+                   {{ ad.adc_cat_name or '-' }}
+                  </span>
+                </td>
+                <td class="fw-bold">
+                  ฿{{ "{:,.2f}".format(ad.adv_price or 0) }}
+                </td>
+                <td class="small">
+                  {{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}
+                </td>
+                <td>
+                  {% if ad.status == 'approved' %}
+                    <span class="badge bg-success">อนุมัติ</span>
+                  {% else %}
+                    <span class="badge bg-danger">ปฏิเสธ</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>
+                    ดูรายละเอียด
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  ไม่มีโฆษณาที่อนุมัติหรือปฏิเสธ
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Approved -->
+      {% if total_pages_approved > 1 %}
+      <nav class="p-3 border-top">
+        <ul class="pagination justify-content-end mb-0">
+          {% if page_approved > 1 %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page_draft={{ page_draft }}&page_approved={{ page_approved-1 }}">
+              ก่อนหน้า
+            </a>
+          </li>
+          {% endif %}
+
+          {% for p in range(1, total_pages_approved+1) %}
+          <li class="page-item {% if p == page_approved %}active{% endif %}">
+            <a class="page-link"
+               href="?page_draft={{ page_draft }}&page_approved={{ p }}">
+              {{ p }}
+            </a>
+          </li>
+          {% endfor %}
+
+          {% if page_approved < total_pages_approved %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page_draft={{ page_draft }}&page_approved={{ page_approved+1 }}">
+              ถัดไป
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 <div class="modal fade" id="adDetailModal" tabindex="-1">
@@ -174,7 +249,7 @@
 
                         <div class="data-highlight-box row mx-0 g-0">
                             <div class="col-6 border-end">
-                                <div class="info-label">ตำแหน่ง</div>
+                                <div class="info-label">ประเภท</div>
                                 <div><span id="modalArea" class="badge-custom"></span></div>
                             </div>
                             <div class="col-6 ps-3">
@@ -226,7 +301,7 @@
 
                         <div class="data-highlight-box row mx-0 g-0">
                             <div class="col-6 border-end">
-                                <div class="info-label">ตำแหน่ง</div>
+                                <div class="info-label">ประเภท</div>
                                 <div><span id="approvedModalArea" class="badge-custom"></span></div>
                             </div>
                             <div class="col-6 ps-3">

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import pymysql
 import pymysql.cursors
+from datetime import datetime
 
 load_dotenv()
 
@@ -38,14 +39,14 @@ def api_owner_dashboard():
     try:
         with conn.cursor() as cur:
 
-            # ===== รายรับเดือนนี้ =====
+            # ===== รายรับเดือนนี้ (ใช้ valid_from แบบช่วงวันที่) =====
             cur.execute("""
                 SELECT IFNULL(SUM(adv_price),0) AS total
                 FROM advert
                 WHERE status IN ('approved','running','expired')
-                AND MONTH(valid_from) = MONTH(CURDATE())
-                AND YEAR(valid_from) = YEAR(CURDATE())
-                AND del_flg = 0
+                  AND valid_from >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                  AND valid_from < DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+                  AND del_flg = 0
             """)
             revenue_month = cur.fetchone()["total"] or 0
 
@@ -58,7 +59,7 @@ def api_owner_dashboard():
             cur.execute("SELECT COUNT(*) AS total FROM role WHERE del_flg = 0")
             total_role = cur.fetchone()["total"] or 0
 
-            # ===== รายรับแยกตามประเภทโฆษณา =====
+            # ===== รายรับแยกตามประเภทโฆษณา (ทั้งปีปัจจุบันตาม valid_from) =====
             cur.execute("""
                 SELECT 
                     c.adc_cat_name AS name,
@@ -66,12 +67,12 @@ def api_owner_dashboard():
                 FROM advert_category c
                 LEFT JOIN advert a
                     ON a.adc_cat_id = c.adc_cat_id
-                AND a.status IN ('approved','running','expired')
-                AND a.del_flg = 0
+                   AND a.status IN ('approved','running','expired')
+                   AND a.del_flg = 0
+                   AND YEAR(a.valid_from) = YEAR(CURDATE())
                 GROUP BY c.adc_cat_id, c.adc_cat_name
                 ORDER BY total DESC
             """)
-
             revenue_by_cat = cur.fetchall() or []
 
 
@@ -87,6 +88,7 @@ def api_owner_dashboard():
                 ORDER BY total DESC
             """)
             emp_by_role = cur.fetchall() or []
+
 
             # ===== รายชื่อพนักงาน + สถานะออนไลน์/ออฟไลน์ =====
             cur.execute("""
@@ -119,9 +121,11 @@ def api_owner_dashboard():
             """)
             employees = cur.fetchall() or []
 
+
             # ===== จำนวนลูกค้า =====
             cur.execute("SELECT COUNT(*) AS total FROM customer WHERE del_flg = 0")
             total_customer = cur.fetchone()["total"] or 0
+
 
             # ===== จำนวนข่าวเดือนปัจจุบัน =====
             cur.execute("""
@@ -134,9 +138,11 @@ def api_owner_dashboard():
             """)
             total_news_month = cur.fetchone()["total"] or 0
 
+
             # ===== จำนวนประเภทข่าวทั้งหมด =====
             cur.execute("SELECT COUNT(*) AS total FROM news_category WHERE del_flg = 0")
             total_news_category = cur.fetchone()["total"] or 0
+
 
             # ===== ประเภทข่าวที่มีข่าวมากที่สุด =====
             cur.execute("""
@@ -154,20 +160,24 @@ def api_owner_dashboard():
             """)
             news_by_category = cur.fetchall() or []
 
-            # ===== จำนวนโฆษณาที่ Approve เดือนนี้ =====
+
+            # ===== จำนวนโฆษณาที่ Approve เดือนนี้ (แก้ให้ใช้ valid_from) =====
             cur.execute("""
                 SELECT COUNT(*) AS total
                 FROM advert
                 WHERE del_flg = 0
                   AND status = 'approved'
-                  AND YEAR(created_at) = YEAR(CURDATE())
-                  AND MONTH(created_at) = MONTH(CURDATE())
+                  AND valid_from >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                  AND valid_from < DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
             """)
             total_ads_approved_month = cur.fetchone()["total"] or 0
 
+
+        print("Revenue from DB =", revenue_month)
+
         return jsonify(
             success=True,
-            revenue_month=revenue_month,
+            revenue_month=float(revenue_month),
             total_ads_approved_month=total_ads_approved_month,
             total_emp=total_emp,
             total_customer=total_customer,

@@ -71,13 +71,13 @@
 
             <ul class="dropdown-menu dropdown-menu-end p-2">
               <li>
-                <a class="dropdown-item rounded-3" href="#" id="ddProfile">
+                <a class="dropdown-item rounded-3" href="{{ url_for('admin_profile.profile_page') }}" id="ddProfile">
                   ⚙️ ตั้งค่าโปรไฟล์
                 </a>
               </li>
               <li><hr class="dropdown-divider" /></li>
               <li>
-                <a class="dropdown-item rounded-3 text-danger" href="#" id="ddLogout">
+                <a class="dropdown-item rounded-3 text-danger" href="{{ url_for('login_emp.logout_emp') }}" id="ddLogout">
                   🚪 Logout
                 </a>
               </li>

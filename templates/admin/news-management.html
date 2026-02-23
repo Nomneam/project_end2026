@@ -66,51 +66,8 @@
                 <i class="bi bi-grid-fill me-2"></i>
                 <span>รายชื่อข่าวในระบบ</span>
             </div>
-            <button class="btn btn-sm btn-outline-light"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#searchForm">
-                <i class="bi bi-search"></i> ค้นหา
-            </button>
         </div>
-    <!-- ================= Body ================= -->
-    <div class="card-body p-0">
-        <!-- ===== Search ===== -->
-        <div class="collapse p-3 border-bottom" id="searchForm">
-            <form id="searchFormAjax" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label small">ค้นหาจากหัวข้อ</label>
-                    <input type="text"
-                        name="q"
-                        class="form-control form-control-sm"
-                        placeholder="กรอกหัวข้อข่าว">
-                </div>
 
-                <div class="col-md-3">
-                    <label class="form-label small">ประเภทข่าว</label>
-                    <select class="form-select form-select-sm" name="category">
-                        <option value="">ทั้งหมด</option>
-                        {% for cat in categories %}
-                            <option value="{{ cat.cat_id }}">{{ cat.cat_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label small">สถานะ</label>
-                    <select class="form-select form-select-sm" name="status">
-                        <option value="">ทั้งหมด</option>
-                        <option value="publish">เผยแพร่แล้ว</option>
-                        <option value="draft">ฉบับร่าง</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-sm w-100">
-                        ค้นหา
-                    </button>
-                </div>
-            </form>
-        </div>
 
 
         <!-- ===== Table ===== -->
@@ -240,6 +197,17 @@
                                  class="img-fluid w-100"
                                  style="max-height: 350px; object-fit: cover; display: none;">
                         </div>
+                        <!-- 🔥 รูปภาพเพิ่มเติม -->
+                        <div class="mt-3">
+                            <label class="fw-bold text-muted small text-uppercase"
+                                style="letter-spacing: 1px;">
+                                รูปภาพเพิ่มเติม
+                            </label>
+
+                            <div id="v-sub-images"
+                                class="d-flex flex-wrap gap-2 mt-2">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-md-5 d-flex flex-column">
@@ -290,76 +258,134 @@
 <!-- ===================== Edit Modal (RED THEME) ===================== -->
 <div class="modal fade" id="editNewsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 800px; margin-top: 40px;">
-    <form id="editNewsForm" class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;" enctype="multipart/form-data">
+    <form id="editNewsForm" class="modal-content border-0 shadow-lg"
+          style="border-radius: 16px; overflow: hidden;"
+          enctype="multipart/form-data">
+
       <input type="hidden" id="editNewsId" name="news_id">
 
-      <!-- Header สีแดง -->
+      <!-- 🔥 ใช้เก็บรายการรูปที่ถูกลบ -->
+      <input type="hidden"
+             id="deletedSubImages"
+             name="deleted_sub_images">
+
+      <!-- Header -->
       <div class="modal-header py-2 px-3 border-0 bg-danger text-white">
         <h5 class="modal-title fw-bold m-0">
           <i class="bi bi-pencil-square me-2"></i>แก้ไขข่าวสาร
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body p-3">
         <div class="row g-3">
+
+          <!-- LEFT -->
           <div class="col-md-7">
             <label class="form-label fw-bold">หัวข้อข่าว</label>
-            <input type="text" class="form-control mb-2" id="editTitle" name="title">
+            <input type="text" class="form-control mb-2"
+                   id="editTitle" name="title">
 
             <label class="form-label fw-bold">เนื้อหา</label>
-            <textarea class="form-control mb-2" id="editContent" name="content" rows="5"></textarea>
+            <textarea class="form-control mb-2"
+                      id="editContent"
+                      name="content"
+                      rows="5"></textarea>
 
-            <label class="form-label fw-bold">เปลี่ยนรูปปก (ถ้าไม่เลือก = ใช้รูปเดิม)</label>
-            <input type="file" class="form-control mb-2" name="main_image" accept="image/*">
-            <img id="editPreview" class="img-fluid rounded shadow-sm mt-2" style="max-height:160px; display:none;">
+            <label class="form-label fw-bold">
+              เปลี่ยนรูปปก (ถ้าไม่เลือก = ใช้รูปเดิม)
+            </label>
+            <input type="file"
+                   class="form-control mb-2"
+                   name="main_image"
+                   accept="image/*">
+
+            <img id="editPreview"
+                 class="img-fluid rounded shadow-sm mt-2"
+                 style="max-height:160px; display:none;">
+
+            <!-- ===================== SUB IMAGES ===================== -->
+            <label class="form-label fw-bold mt-3">รูปภาพเพิ่มเติม</label>
+
+            <input type="file"
+                   id="editSubImages"
+                   name="sub_images"
+                   class="form-control mb-2"
+                   multiple
+                   accept="image/*">
+
+            <div id="editSubPreview"
+                 class="d-flex flex-wrap gap-2"></div>
           </div>
 
+          <!-- RIGHT -->
           <div class="col-md-5">
             <label class="form-label fw-bold">หมวดหมู่</label>
-            <select id="editCategory" name="cat_id" class="form-select mb-2">
+            <select id="editCategory"
+                    name="cat_id"
+                    class="form-select mb-2">
               {% for cat in categories %}
-                <option value="{{ cat.cat_id }}">{{ cat.cat_name }}</option>
+                <option value="{{ cat.cat_id }}">
+                  {{ cat.cat_name }}
+                </option>
               {% endfor %}
             </select>
 
-            <!-- หมวดย่อย -->
             <label class="form-label fw-bold">หมวดย่อย</label>
-            <select id="editSubCategory" name="subcat_id" class="form-select mb-2">
+            <select id="editSubCategory"
+                    name="subcat_id"
+                    class="form-select mb-2">
               <option value="">-- เลือกหมวดย่อย --</option>
             </select>
 
             <label class="form-label fw-bold">สถานะ</label>
-            <select id="editStatus" name="status" class="form-select mb-2">
+            <select id="editStatus"
+                    name="status"
+                    class="form-select mb-2">
               <option value="publish">เผยแพร่</option>
               <option value="draft">ฉบับร่าง</option>
             </select>
 
             <label class="form-label fw-bold">ประเภทข่าว</label>
-            <select id="editFeatured" name="is_featured" class="form-select mb-2">
+            <select id="editFeatured"
+                    name="is_featured"
+                    class="form-select mb-2">
               <option value="0">ข่าวทั่วไป</option>
               <option value="1">ข่าวเด่น (Featured)</option>
             </select>
 
-            <label class="form-label fw-bold">Video URL (ถ้ามี)</label>
-            <input type="text" id="editVideoUrl" name="video_url" class="form-control" placeholder="https://...">
+            <label class="form-label fw-bold">
+              Video URL (ถ้ามี)
+            </label>
+            <input type="text"
+                   id="editVideoUrl"
+                   name="video_url"
+                   class="form-control"
+                   placeholder="https://...">
           </div>
+
         </div>
       </div>
 
       <!-- Footer -->
       <div class="modal-footer py-2 px-3 border-0 bg-light">
-        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+        <button type="button"
+                class="btn btn-outline-secondary rounded-pill px-4"
+                data-bs-dismiss="modal">
           ยกเลิก
         </button>
-        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+
+        <button type="submit"
+                class="btn btn-danger rounded-pill px-4 fw-bold">
           บันทึกการแก้ไข
         </button>
       </div>
+
     </form>
   </div>
 </div>
-
 
 
 {% endblock %}

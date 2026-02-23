@@ -21,79 +21,96 @@ def connect_db():
 # ==============================
 #  Advert Review Page
 # ==============================
-
 @advert_review_bp.route('/ad-review')
 def advert_review():
     user = session.get("user")
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
+
+    page_draft = request.args.get("page_draft", 1, type=int)
+    page_approved = request.args.get("page_approved", 1, type=int)
+
+    per_page = 5
+    offset_draft = (page_draft - 1) * per_page
+    offset_approved = (page_approved - 1) * per_page
+
     conn = connect_db()
     try:
         with conn.cursor() as cur:
-            # ----------------------------
-            # โฆษณาที่รอตรวจสอบ (submitted)
-            # ----------------------------
+
+            # ===============================
+            # นับจำนวน draft
+            # ===============================
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM advert
+                WHERE status='draft' AND del_flg=0
+            """)
+            total_draft = cur.fetchone()["total"]
+            total_pages_draft = (total_draft + per_page - 1) // per_page
+
+            # ===============================
+            # ดึง draft ตามหน้า
+            # ===============================
             cur.execute("""
                 SELECT 
-                    a.adv_id,
-                    a.adv_name,
-                    a.valid_from,
-                    a.valid_to,
-                    a.status,        
+                    a.*,
                     c.cus_fname,
                     c.cus_lname,
-                    ar.advert_area_name,
-                    ao.total_amount,
                     ac.adc_cat_name
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
-                LEFT JOIN advert_order ao ON a.adv_id = ao.adv_id
-                LEFT JOIN advert_area ar ON ao.advert_area_id = ar.advert_area_id
                 LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
-                WHERE a.status = 'submitted'
-                  AND a.del_flg = 0
+                WHERE a.status='draft' 
+                  AND a.del_flg=0
                 ORDER BY a.created_at DESC
-                LIMIT 5
-            """)
+                LIMIT %s OFFSET %s
+            """, (per_page, offset_draft))
             adverts = cur.fetchall()
 
-            # ----------------------------
-            # โฆษณาที่อนุมัติหรือปฏิเสธแล้ว
-            # ----------------------------
+            # ===============================
+            # นับ approved / rejected
+            # ===============================
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM advert
+                WHERE status IN ('approved','rejected')
+                  AND del_flg=0
+            """)
+            total_approved = cur.fetchone()["total"]
+            total_pages_approved = (total_approved + per_page - 1) // per_page
+
+            # ===============================
+            # ดึง approved / rejected
+            # ===============================
             cur.execute("""
                 SELECT 
-                    a.adv_id,
-                    a.adv_name,
-                    a.valid_from,
-                    a.valid_to,
-                    a.status,
+                    a.*,
                     c.cus_fname,
                     c.cus_lname,
-                    ar.advert_area_name,
-                    ao.total_amount,
                     ac.adc_cat_name
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
-                LEFT JOIN advert_order ao ON a.adv_id = ao.adv_id
-                LEFT JOIN advert_area ar ON ao.advert_area_id = ar.advert_area_id
                 LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
                 WHERE a.status IN ('approved','rejected')
-                  AND a.del_flg = 0
+                  AND a.del_flg=0
                 ORDER BY a.reviewed_at DESC
-                LIMIT 5
-            """)
+                LIMIT %s OFFSET %s
+            """, (per_page, offset_approved))
             approved_ads = cur.fetchall()
 
-        # ส่ง template พร้อมทั้งสองตัวแปร
         return render_template(
-            'admin/ad-review.html',
+            "admin/ad-review.html",
             adverts=adverts,
-            approved_ads=approved_ads
+            approved_ads=approved_ads,
+            page_draft=page_draft,
+            page_approved=page_approved,
+            total_pages_draft=total_pages_draft,
+            total_pages_approved=total_pages_approved
         )
+
     finally:
         conn.close()
-
-
 
 
 #  Approve

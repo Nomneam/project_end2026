@@ -11,6 +11,7 @@ const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
    Abort controller (กันกดรัว)
 ========================================================= */
 let currentAbortController = null;
+let deletedSubImages = [];
 
 /* =========================================================
    Utils
@@ -27,8 +28,9 @@ function preloadImage(src) {
 function buildImageSrc(raw) {
   if (!raw) return null;
   if (raw.startsWith("data:image")) return raw;
-  if (raw.length > 100) return "data:image/jpeg;base64," + raw;
-  return "/static/" + raw;
+  if (raw.startsWith("/static/")) return raw;
+  if (raw.startsWith("uploads/")) return "/static/" + raw;
+  return raw;
 }
 
 /* =========================================================
@@ -52,6 +54,8 @@ function resetViewModal() {
   `);
 
   hideImage("v-cover-image");
+  setHTML("v-sub-images", "");
+  setHTML("v-video-container", "");
 }
 
 function showViewError(message) {
@@ -131,8 +135,73 @@ async function renderViewModal(news) {
     }
   }
 
+  renderSubImages(news.sub_images);
+  renderVideo(news.video_url);
   renderThaiDate(news.created_at);
   renderStatus(news.status);
+}
+
+/* =========================================================
+   Sub Images (View)
+========================================================= */
+function renderSubImages(subImagesRaw) {
+  const container = document.getElementById("v-sub-images");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!subImagesRaw) {
+    container.innerHTML = `<small class="text-muted">ไม่มีรูปเพิ่มเติม</small>`;
+    return;
+  }
+
+  try {
+    const images = JSON.parse(subImagesRaw);
+
+    if (!Array.isArray(images) || !images.length) {
+      container.innerHTML = `<small class="text-muted">ไม่มีรูปเพิ่มเติม</small>`;
+      return;
+    }
+
+    images.forEach(raw => {
+      const src = buildImageSrc(raw);
+      const img = document.createElement("img");
+      img.src = src;
+      img.className = "rounded shadow-sm";
+      img.style.width = "90px";
+      img.style.height = "90px";
+      img.style.objectFit = "cover";
+      img.style.cursor = "pointer";
+
+      img.onclick = () => {
+        const cover = document.getElementById("v-cover-image");
+        cover.src = src;
+        cover.style.display = "block";
+      };
+
+      container.appendChild(img);
+    });
+
+  } catch {
+    container.innerHTML = `<small class="text-muted">ไม่มีรูปเพิ่มเติม</small>`;
+  }
+}
+
+/* =========================================================
+   Video (View)
+========================================================= */
+function renderVideo(videoUrl) {
+  const container = document.getElementById("v-video-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (!videoUrl) return;
+
+  container.innerHTML = `
+    <div class="ratio ratio-16x9 mt-3">
+      <iframe src="${videoUrl}" allowfullscreen frameborder="0"></iframe>
+    </div>
+  `;
 }
 
 function renderThaiDate(createdAt) {
@@ -157,58 +226,6 @@ function renderStatus(status) {
 }
 
 /* =========================================================
-   Subcategories
-========================================================= */
-async function loadSubcategories(catId, selectedSubcatId = null) {
-  const subSelect = document.getElementById("editSubCategory");
-  if (!subSelect) return;
-
-  // ถ้าไม่เลือกหมวดหลัก
-  if (!catId) {
-    subSelect.innerHTML = `<option value="">-- ไม่มีหมวดย่อย --</option>`;
-    subSelect.disabled = true;
-    return;
-  }
-
-  subSelect.disabled = true;
-  subSelect.innerHTML = `<option value="">กำลังโหลด...</option>`;
-
-  try {
-    const res = await fetch(`/admin/categories/${catId}/subcategories`);
-    const result = await res.json();
-
-    // reset
-    subSelect.innerHTML = "";
-
-    if (result.success && Array.isArray(result.data) && result.data.length) {
-      // มีหมวดย่อย
-      subSelect.disabled = false;
-      subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย (ไม่บังคับ) --</option>`;
-
-      result.data.forEach(sub => {
-        const opt = document.createElement("option");
-        opt.value = sub.subcat_id;
-        opt.textContent = sub.subcat_name;
-        if (String(selectedSubcatId) === String(sub.subcat_id)) {
-          opt.selected = true;
-        }
-        subSelect.appendChild(opt);
-      });
-    } else {
-      // ไม่มีหมวดย่อย
-      subSelect.innerHTML = `<option value="">-- หมวดนี้ไม่มีหมวดย่อย --</option>`;
-      subSelect.disabled = true;
-    }
-
-  } catch (err) {
-    console.error(err);
-    subSelect.innerHTML = `<option value="">โหลดหมวดย่อยไม่สำเร็จ</option>`;
-    subSelect.disabled = true;
-  }
-}
-
-
-/* =========================================================
    Edit News
 ========================================================= */
 async function editNews(newsId) {
@@ -225,8 +242,8 @@ async function editNews(newsId) {
     }
 
     fillEditForm(result.data);
-    await loadSubcategories(result.data.cat_id, result.data.subcat_id);
     renderEditPreview(result.data.cover_image);
+    renderEditSubImages(result.data.sub_images);
 
     editModal.show();
 
@@ -259,23 +276,81 @@ function renderEditPreview(rawImage) {
   preview.style.display = "block";
 }
 
+function renderEditSubImages(subImagesRaw) {
+  const container = document.getElementById("editSubPreview");
+  const hiddenInput = document.getElementById("deletedSubImages");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+  deletedSubImages = [];
+  if (hiddenInput) hiddenInput.value = "";
+
+  if (!subImagesRaw) return;
+
+  try {
+    const images = JSON.parse(subImagesRaw);
+
+    images.forEach(raw => {
+
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+      wrapper.style.display = "inline-block";
+
+      const img = document.createElement("img");
+      img.src = buildImageSrc(raw);
+      img.className = "rounded shadow-sm";
+      img.style.width = "70px";
+      img.style.height = "70px";
+      img.style.objectFit = "cover";
+
+      // 🔥 ปุ่มลบ
+      const btn = document.createElement("button");
+      btn.innerHTML = "×";
+      btn.type = "button";
+      btn.style.position = "absolute";
+      btn.style.top = "-5px";
+      btn.style.right = "-5px";
+      btn.style.background = "red";
+      btn.style.color = "white";
+      btn.style.border = "none";
+      btn.style.borderRadius = "50%";
+      btn.style.width = "20px";
+      btn.style.height = "20px";
+      btn.style.fontSize = "14px";
+      btn.style.cursor = "pointer";
+
+      btn.onclick = () => {
+        deletedSubImages.push(raw);
+        if (hiddenInput) {
+          hiddenInput.value = JSON.stringify(deletedSubImages);
+        }
+        wrapper.remove();
+      };
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(btn);
+      container.appendChild(wrapper);
+    });
+
+  } catch {}
+}
+
 function setValue(id, val) {
   const el = document.getElementById(id);
   if (el) el.value = val;
 }
 
 /* =========================================================
-   Submit Edit Form
+   Submit Edit
 ========================================================= */
-document.getElementById("editNewsForm")?.addEventListener("submit", submitEditForm);
-
-async function submitEditForm(e) {
+document.getElementById("editNewsForm")?.addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const id = document.getElementById("editNewsId")?.value;
   if (!id) return;
 
-  const formData = new FormData(e.target);
+  const formData = new FormData(this);
 
   try {
     const res = await fetch(`/admin/news/${id}/update`, {
@@ -290,20 +365,23 @@ async function submitEditForm(e) {
       return;
     }
 
-    Swal?.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1200, showConfirmButton: false });
+    await Swal.fire({
+      icon: "success",
+      title: "บันทึกสำเร็จ",
+      text: "แก้ไขข่าวเรียบร้อยแล้ว",
+      timer: 2500,               // อยู่ 2.5 วินาที
+      timerProgressBar: true,    // มีแถบเวลาวิ่ง
+      showConfirmButton: false,
+      allowOutsideClick: false
+    });
     editModal?.hide();
-
-    if (typeof fetchNewsAjax === "function") {
-      fetchNewsAjax(window.currentPage || 1);
-    } else {
-      location.reload();
-    }
+    location.reload();
 
   } catch (err) {
     console.error(err);
     Swal?.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
   }
-}
+});
 
 /* =========================================================
    Delete News
