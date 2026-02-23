@@ -38,6 +38,9 @@ def api_advertising_revenue_summary():
     except (ValueError, TypeError):
         year = datetime.now().year
 
+    start_date = f"{year}-01-01"
+    end_date = f"{year+1}-01-01"
+
     conn = connect_db()
     with conn.cursor() as cur:
 
@@ -46,10 +49,11 @@ def api_advertising_revenue_summary():
                 COALESCE(SUM(adv_price),0) AS total_revenue,
                 COUNT(*) AS total_orders
             FROM advert
-            WHERE YEAR(created_at) = %s
+            WHERE valid_from >= %s
+              AND valid_from < %s
               AND status IN ('approved','running','expired')
               AND del_flg = 0
-        """, (year,))
+        """, (start_date, end_date))
         summary = cur.fetchone()
 
         cur.execute("""
@@ -58,13 +62,14 @@ def api_advertising_revenue_summary():
             FROM advert a
             JOIN advert_category c 
                 ON a.adc_cat_id = c.adc_cat_id
-            WHERE YEAR(a.created_at) = %s
+            WHERE a.valid_from >= %s
+              AND a.valid_from < %s
               AND a.status IN ('approved','running','expired')
               AND a.del_flg = 0
             GROUP BY c.adc_cat_id
             ORDER BY total DESC
             LIMIT 1
-        """, (year,))
+        """, (start_date, end_date))
         top_cat = cur.fetchone()
 
     conn.close()
@@ -74,7 +79,6 @@ def api_advertising_revenue_summary():
         "totalOrders": summary["total_orders"] or 0,
         "topCategory": top_cat["adc_cat_name"] if top_cat else "-"
     })
-
 
 # ======================================================
 # 3) MONTHLY (รายได้รายเดือน)
@@ -86,18 +90,22 @@ def api_advertising_revenue_monthly():
     except (ValueError, TypeError):
         year = datetime.now().year
 
+    start_date = f"{year}-01-01"
+    end_date = f"{year+1}-01-01"
+
     conn = connect_db()
     with conn.cursor() as cur:
         cur.execute("""
             SELECT 
-                MONTH(created_at) AS month,
+                MONTH(valid_from) AS month,
                 COALESCE(SUM(adv_price),0) AS total
             FROM advert
-            WHERE YEAR(created_at) = %s
+            WHERE valid_from >= %s
+              AND valid_from < %s
               AND status IN ('approved','running','expired')
               AND del_flg = 0
-            GROUP BY MONTH(created_at)
-        """, (year,))
+            GROUP BY MONTH(valid_from)
+        """, (start_date, end_date))
         rows = cur.fetchall()
     conn.close()
 
@@ -118,6 +126,9 @@ def api_advertising_revenue_by_category():
     except (ValueError, TypeError):
         year = datetime.now().year
 
+    start_date = f"{year}-01-01"
+    end_date = f"{year+1}-01-01"
+
     conn = connect_db()
     with conn.cursor() as cur:
         cur.execute("""
@@ -126,12 +137,13 @@ def api_advertising_revenue_by_category():
             FROM advert a
             JOIN advert_category c 
                 ON a.adc_cat_id = c.adc_cat_id
-            WHERE YEAR(a.created_at) = %s
+            WHERE a.valid_from >= %s
+              AND a.valid_from < %s
               AND a.status IN ('approved','running','expired')
               AND a.del_flg = 0
             GROUP BY c.adc_cat_id
             ORDER BY total DESC
-        """, (year,))
+        """, (start_date, end_date))
         rows = cur.fetchall()
     conn.close()
 
@@ -151,21 +163,25 @@ def api_compare_revenue_by_type():
     except (ValueError, TypeError):
         year = datetime.now().year
 
+    start_date = f"{year}-01-01"
+    end_date = f"{year+1}-01-01"
+
     conn = connect_db()
     with conn.cursor() as cur:
         cur.execute("""
             SELECT 
-                MONTH(a.created_at) AS month,
+                MONTH(a.valid_from) AS month,
                 c.adc_cat_name AS type,
                 COALESCE(SUM(a.adv_price),0) AS total
             FROM advert a
             JOIN advert_category c 
                 ON a.adc_cat_id = c.adc_cat_id
-            WHERE YEAR(a.created_at) = %s
+            WHERE a.valid_from >= %s
+              AND a.valid_from < %s
               AND a.status IN ('approved','running','expired')
               AND a.del_flg = 0
-            GROUP BY MONTH(a.created_at), c.adc_cat_id
-        """, (year,))
+            GROUP BY MONTH(a.valid_from), c.adc_cat_id
+        """, (start_date, end_date))
         rows = cur.fetchall()
     conn.close()
 
@@ -194,8 +210,8 @@ def api_advertising_revenue_years():
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT 
-                    MIN(YEAR(created_at)) AS min_year,
-                    MAX(YEAR(created_at)) AS max_year
+                    MIN(YEAR(valid_from)) AS min_year,
+                    MAX(YEAR(valid_from)) AS max_year
                 FROM advert
                 WHERE status IN ('approved','running','expired')
                   AND del_flg = 0
