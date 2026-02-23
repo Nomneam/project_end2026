@@ -33,7 +33,11 @@
           <div class="ad-pack">
             <h3 class="pack-title">Sidebar Ad</h3>
             <p class="pack-desc">แสดงในหน้าอ่านข่าว ใต้ข่าวเด่น</p>
-            <div class="pack-price">150 บาท / เดือน</div>
+            <div class="pack-price"
+                id="priceBox"
+                data-price="{{ price }}">
+              {{ price|int }} บาท / เดือน
+            </div>
 
             <input
               type="file"
@@ -66,6 +70,10 @@
               <option value="6">6 เดือน</option>
               <option value="12">12 เดือน</option>
             </select>
+
+            <div id="sideTotal" class="fw-bold text-primary text-center mt-2">
+              รวม {{ price }} บาท
+            </div>
 
             <div class="preview-box mt-3">
             <div class="preview-label">พรีวิวตำแหน่งจริง</div>
