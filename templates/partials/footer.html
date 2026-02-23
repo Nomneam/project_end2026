@@ -41,7 +41,7 @@
           </div>
 
           <!-- Address -->
-          <div class="col-md-4">
+          <div class="col-6 col-md-4">
             <h5 class="footer-title">ที่อยู่</h5>
             <p class="footer-text">
               <i class="bi bi-geo-alt-fill footer-icon"></i>
@@ -50,7 +50,7 @@
           </div>
 
           <!-- Phones -->
-          <div class="col-md-3">
+          <div class="col-6 col-md-3">
             <h5 class="footer-title">ติดต่อ</h5>
 
             <ul class="footer-contact">
@@ -61,10 +61,7 @@
                 <span class="label">{{ p.label }}</span>
                 {% endif %} {{ p.phone_number }}
               </li>
-              {% endfor %}
-
-              <!-- EMAIL -->
-              {% if contact.email %}
+              {% endfor %} {% if contact.email %}
               <li>
                 <i class="bi bi-envelope-fill footer-icon"></i>
                 {{ contact.email }}
