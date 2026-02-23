@@ -21,10 +21,27 @@ def connect_db():
     )
     
 @bighero_ads_bp.route('/bighero_ads')
-def bighero_ads_page ():
+def bighero_ads_page():
     if "front_user" not in session:
         return redirect(url_for("index.index_news", auth="required"))
-    return render_template('package/bighero.html')
+
+    conn = connect_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT position_name, price_per_month
+            FROM advert_position_price
+            WHERE adc_cat_id = 4
+        """)
+        rows = cur.fetchall()
+    conn.close()
+
+    prices = {r["position_name"]: r["price_per_month"] for r in rows}
+
+    return render_template(
+        'package/bighero.html',
+        prices=prices
+    )
+    
 
 @bighero_ads_bp.route('/api/bighero_ads', methods=['POST'])
 def create_bighero_ad():
@@ -47,7 +64,35 @@ def create_bighero_ad():
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
 
-    # upload
+    # map ตำแหน่ง
+    if place == "home":
+        position = "INDEX_PAGE"
+    elif place == "category":
+        position = "CATEGORY_PAGE"
+    else:
+        return jsonify({"error": "ตำแหน่งไม่ถูกต้อง"}), 400
+
+    # ===== ดึงราคาจาก DB =====
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT price_per_month
+        FROM advert_position_price
+        WHERE position_name=%s
+        LIMIT 1
+    """, (position,))
+
+    result = cursor.fetchone()
+
+    if not result:
+        conn.close()
+        return jsonify({"error": "ไม่พบราคาตำแหน่งโฆษณา"}), 500
+
+    price = result["price_per_month"]
+    total_price = price * months
+
+    # ===== upload =====
     folder = "static/uploads/ads"
     os.makedirs(folder, exist_ok=True)
 
@@ -59,21 +104,6 @@ def create_bighero_ad():
 
     valid_from = datetime.now()
     valid_to = valid_from + relativedelta(months=months)
-
-    # map ตำแหน่ง + ราคา
-    if place == "home":
-        position = "INDEX_PAGE"
-        price = 900
-    elif place == "category":
-        position = "CATEGORY_PAGE"
-        price = 700
-    else:
-        return jsonify({"error": "ตำแหน่งไม่ถูกต้อง"}), 400
-
-    total_price = price * months
-
-
-    conn = connect_db()
 
     try:
         with conn.cursor() as cur:
@@ -99,7 +129,7 @@ def create_bighero_ad():
 
             cur.execute(sql, (
                 session["front_user"]["id"],
-                4,  # ⭐ HERO CATEGORY
+                4,
                 title,
                 description,
                 image_url,

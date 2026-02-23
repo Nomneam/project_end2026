@@ -1,17 +1,24 @@
-$(function (){
+$(function () {
 
-  const PRICE_INDEX = 900;
-  const PRICE_PAGECAT = 700;
+  const placeSelect = document.getElementById("heroPlace");
+
+  const PRICE_INDEX = Number(placeSelect.dataset.priceHome);
+  const PRICE_PAGECAT = Number(placeSelect.dataset.priceCategory);
 
   function updateTotal() {
     const months = +$("#heroMonth").val();
     const place = $("#heroPlace").val();
-    const price = place === "home" ? PRICE_INDEX : PRICE_PAGECAT;
+
+    const price = place === "home"
+      ? PRICE_INDEX
+      : PRICE_PAGECAT;
+
     $("#heroTotal").text(`รวม ${price * months} บาท`);
   }
-  $("#heroPlace,#heroMonth").on("change", updateTotal);
+
+  $("#heroPlace, #heroMonth").on("change", updateTotal);
   updateTotal();
-})
+});
 
 $("#heroImage, #heroTitle, #heroSub, #heroUrl, #heroPlace").on("change input", function () {
   const file = $("#heroImage")[0].files[0];

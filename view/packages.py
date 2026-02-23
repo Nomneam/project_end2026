@@ -47,8 +47,8 @@ def packages_page():
         elif name == "footer":
             prices["footer"] = price
 
-        # bighero → เลือกราคาต่ำสุด
-        elif "bighero" in name:
+       # big hero (index + category)
+        elif name in ("index_page", "category_page"):
             if "bighero" not in prices or price < prices["bighero"]:
                 prices["bighero"] = price
 
