@@ -2,8 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 import pymysql
 import os
 from dotenv import load_dotenv
-from view.navbar import load_nav_categories
-from view.footer_context import load_footer_data
+
 
 load_dotenv()
 
@@ -23,13 +22,9 @@ def connect_db():
 
 @index_bp.route("/index")
 def index_news():
-    categories = load_nav_categories()   # ✅ ใช้ของกลาง
-    return render_template("index.html", categories=categories)
+    return render_template("index.html")
 
-@index_bp.route("/index_footer")
-def index_footer():
-    footer = load_footer_data()
-    return render_template("index.html", footer=footer)
+
 
 
 @index_bp.get("/api/news/featured")
