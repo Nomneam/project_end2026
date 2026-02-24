@@ -1,0 +1,167 @@
+{% extends "layout/admin-layout.html" %}
+{% block title %}ตั้งค่าระบบ{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/setting_system.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="main-content py-4">
+
+<form id="settingForm">
+
+  <!-- ================= HEADER ================= -->
+  <div class="settings-header mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">System Settings</h3>
+      <p class="text-muted mb-0">จัดการข้อมูลระบบและโครงสร้างรายได้เว็บไซต์</p>
+    </div>
+  </div>
+
+  {% if site_contact %}
+  <input type="hidden" name="contact_id" value="{{ site_contact.contact_id }}">
+  {% endif %}
+
+  <!-- ================= Tabs ================= -->
+  <ul class="nav nav-pills custom-tabs mb-4">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#ads-tab" type="button">
+        <i class="bi bi-megaphone me-1"></i> ราคาโฆษณา
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#contact-tab" type="button">
+        <i class="bi bi-globe2 me-1"></i> ข้อมูลเว็บไซต์
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- ================= Ads Pricing ================= -->
+    <div class="tab-pane fade show active" id="ads-tab">
+      <div class="card-pro">
+
+        <h6 class="section-title mb-4">
+          <i class="bi bi-cash-coin me-2"></i> กำหนดราคาแพ็กเกจโฆษณา
+        </h6>
+
+        <div class="row g-4">
+          {% for item in advert_prices %}
+          <div class="col-md-4">
+            <div class="pricing-card position-relative">
+
+              <!-- ปุ่มปลดล็อค -->
+              <button type="button"
+                      class="btn btn-sm btn-outline-danger unlock-price position-absolute"
+                      style="top: 12px; right: 12px;">
+                  <i class="bi bi-lock-fill"></i>
+              </button>
+
+              <div class="pricing-header">
+                <h6>{{ item.position_name }}</h6>
+                <span>{{ item.adc_cat_name }}</span>
+              </div>
+
+              <div class="pricing-body">
+                <div class="price-input">
+                  <input type="number"
+                         class="form-control price-input-field"
+                         name="price_{{ item.app_id }}"
+                         value="{{ item.price_per_month }}"
+                         data-original="{{ item.price_per_month }}"
+                         min="0"
+                         step="0.01"
+                         inputmode="decimal"
+                         readonly>
+                  <span class="ms-2">บาท / เดือน</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="text-end mt-4">
+          <button type="button"
+                  class="btn btn-primary px-4"
+                  id="saveAdsBtn">
+              <i class="bi bi-save me-1"></i> บันทึกราคาโฆษณา
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= Contact Info ================= -->
+    <div class="tab-pane fade" id="contact-tab">
+      <div class="card-pro">
+
+        <h6 class="section-title mb-4">
+          <i class="bi bi-building me-2"></i> ข้อมูลติดต่อเว็บไซต์
+        </h6>
+
+        <div class="row g-4">
+
+          <!-- Email -->
+          <div class="col-md-6">
+            <label class="form-label">อีเมล</label>
+            <input type="email"
+                   name="email"
+                   class="form-control form-modern"
+                   value="{{ site_contact.email if site_contact }}"
+                   data-original="{{ site_contact.email if site_contact }}"
+                   required>
+          </div>
+
+          <!-- Phones -->
+          {% for phone in contact_phones %}
+          <div class="col-md-6">
+            <label class="form-label">{{ phone.label }}</label>
+            <input type="tel"
+                  name="phone_{{ phone.contact_phone_id }}"
+                  value="{{ phone.phone_number }}"
+                  data-original="{{ phone.phone_number }}"
+                  class="form-control form-modern"
+                  maxlength="12"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  required>
+          </div>
+          {% endfor %}
+
+          <!-- Address -->
+          <div class="col-12">
+            <label class="form-label">ที่อยู่</label>
+            <textarea name="address"
+                      class="form-control form-modern"
+                      rows="3"
+                      data-original="{{ site_contact.address if site_contact }}"
+                      required>{{ site_contact.address if site_contact }}</textarea>
+          </div>
+
+        </div>
+
+        <div class="text-end mt-4">
+          <button type="button"
+                  class="btn btn-primary px-4"
+                  id="saveContactBtn">
+              <i class="bi bi-save me-1"></i> บันทึกข้อมูลเว็บไซต์
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/setting_system.js') }}"></script>
+{% endblock %}
