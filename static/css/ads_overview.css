@@ -313,3 +313,26 @@
         margin-bottom: .75rem;
       }
     }
+
+
+.ad-card-item {
+  border-left: 4px solid transparent;
+}
+
+.ad-card-item[data-status="running"] {
+  border-left-color: #198754;
+}
+
+.ad-card-item[data-status="approved"] {
+  border-left-color: #ffc107;
+}
+
+.ad-card-item[data-status="expired"] {
+  border-left-color: #6c757d;
+}
+
+
+
+.ad-card-item[data-status="rejected"] {
+  border-left: 4px solid #dc3545;
+}

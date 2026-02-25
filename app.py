@@ -37,6 +37,8 @@ from view.advert_dashbord import advert_dashbord_bp
 from view.owner_profile import owner_profile_bp
 from view.footer_context import load_footer_data
 from view.setting_system import setting_system_bp
+from view.payment_routes import payment_bp
+
 
 
 
@@ -71,6 +73,7 @@ app.register_blueprint(advertising_revenue_bp)
 app.register_blueprint(advert_dashbord_bp)
 app.register_blueprint(owner_profile_bp)
 app.register_blueprint(setting_system_bp)
+app.register_blueprint(payment_bp)
 
 @app.route('/')
 def home():
