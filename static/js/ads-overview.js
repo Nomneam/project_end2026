@@ -89,29 +89,47 @@ $(document).ready(function () {
   }
 
 
-  $(document).on("click", ".pay-btn", function () {
-    const advId = $(this).data("id");
+$(document).on("click", ".pay-btn", function () {
+  const advId = $(this).data("id");
 
+  // เก็บ id ให้ปุ่ม confirm ใช้
+  $("#confirmPayment").data("id", advId);
+
+  // แสดง loading ชั่วคราว
+  $("#qrImage").attr("src", "");
+  $("#payAmount").text("กำลังโหลด...");
+
+  // โหลด QR จาก backend
+  $.get(`/payment/create-charge/${advId}`, function (res) {
+    $("#qrImage").attr("src", res.qr);
+    $("#payAmount").text(res.amount + " บาท");
+
+    // เปิด modal หลังโหลดเสร็จ
     $("#paymentModal").modal("show");
-
-    // โหลดข้อมูล QR จาก backend
-    $.get(`/payment/${advId}`, function (res) {
-        $("#qrImage").attr("src", res.qr_url);
-        $("#payAmount").text(res.amount + " บาท");
-        $("#confirmPayment").data("id", advId);
-    });
+  }).fail(function () {
+    alert("ไม่สามารถสร้าง QR ได้");
+  });
 });
 
-
+// เมื่อผู้ใช้กดยืนยันว่าชำระเงินแล้ว
 $("#confirmPayment").click(function () {
-    const advId = $(this).data("id");
+  const advId = $(this).data("id");
 
-    $.post(`/payment/confirm/${advId}`, function () {
-        alert("ชำระเงินเรียบร้อย");
-        location.reload();
+  $.post(`/payment/confirm/${advId}`, function () {
+    Swal.fire({
+      icon: "success",
+      title: "ชำระเงินเรียบร้อย",
+      text: "โฆษณาของคุณกำลังเริ่มแสดงผล",
+      confirmButtonText: "ตกลง"
+    }).then(() => location.reload());
+  }).fail(function () {
+    Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถยืนยันการชำระเงินได้"
     });
+  });
 });
-
 
 
   // Event Listeners

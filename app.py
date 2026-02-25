@@ -76,7 +76,7 @@ app.register_blueprint(advertising_revenue_bp)
 app.register_blueprint(advert_dashbord_bp)
 app.register_blueprint(owner_profile_bp)
 app.register_blueprint(setting_system_bp)
-app.register_blueprint(payment_bp)
+app.register_blueprint(payment_bp, url_prefix="/payment")
 
 @app.route('/')
 def home():
