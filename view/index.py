@@ -284,3 +284,56 @@ def api_ads_hero():
         db.close()
 
     return jsonify({"ok": True, "item": ad})
+
+
+@index_bp.route("/api/categories")
+def categories():
+    conn = connect_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT cat_id, cat_name
+            FROM news_category
+            WHERE cat_id IN (2,3,4)
+            AND is_active = 1
+            AND del_flg = 0
+            ORDER BY cat_id
+        """)
+        rows = cur.fetchall()
+    conn.close()
+
+    return jsonify(ok=True, items=rows)
+
+
+@index_bp.get("/api/news/by-category")
+def api_news_by_category():
+    cat_id = request.args.get("cat_id", type=int)
+    limit = min(int(request.args.get("limit", 12)), 20)
+
+    if not cat_id:
+        return jsonify(ok=False, error="missing cat_id"), 400
+
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                  n.news_id,
+                  n.news_title,
+                  n.cover_image,
+                  n.published_at,
+                  c.cat_name,
+                  LEFT(COALESCE(n.news_content,''),160) AS excerpt
+                FROM news n
+                LEFT JOIN news_category c ON c.cat_id = n.cat_id
+                WHERE n.status='publish'
+                  AND n.del_flg=0
+                  AND n.cat_id=%s
+                ORDER BY n.published_at DESC
+                LIMIT %s
+            """, (cat_id, limit))
+
+            items = cur.fetchall()
+    finally:
+        db.close()
+
+    return jsonify(ok=True, items=items)

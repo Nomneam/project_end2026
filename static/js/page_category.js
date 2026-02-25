@@ -217,7 +217,7 @@
                 </div>
           <div class="cat-card-body">
             <div class="d-flex align-items-center justify-content-between gap-2">
-              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.subcat_name))}</span>
+              <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.subcat_name || state.categoryName))}</span>
               <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
             </div>
               <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.title))}</div>
