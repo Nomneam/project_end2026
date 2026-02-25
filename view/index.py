@@ -286,33 +286,31 @@ def api_ads_hero():
     return jsonify({"ok": True, "item": ad})
 
 
-@index_bp.get("/api/categories")
-def api_categories():
-    db = connect_db()
-    try:
-        with db.cursor() as cur:
-            cur.execute("""
-                SELECT cat_id, cat_name
-                FROM news_category
-                WHERE is_active = 1
-                ORDER BY cat_id
-            """)
-            cats = cur.fetchall()
-    finally:
-        db.close()
+@index_bp.route("/api/categories")
+def categories():
+    conn = connect_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT cat_id, cat_name
+            FROM news_category
+            WHERE cat_id IN (2,3,4)
+            AND is_active = 1
+            AND del_flg = 0
+            ORDER BY cat_id
+        """)
+        rows = cur.fetchall()
+    conn.close()
 
-    return jsonify(ok=True, items=cats)
-
-
-
-
-
+    return jsonify(ok=True, items=rows)
 
 
 @index_bp.get("/api/news/by-category")
 def api_news_by_category():
-    cat_id = request.args.get("cat_id")
-    limit = int(request.args.get("limit", 12))
+    cat_id = request.args.get("cat_id", type=int)
+    limit = min(int(request.args.get("limit", 12)), 20)
+
+    if not cat_id:
+        return jsonify(ok=False, error="missing cat_id"), 400
 
     db = connect_db()
     try:
@@ -323,8 +321,10 @@ def api_news_by_category():
                   n.news_title,
                   n.cover_image,
                   n.published_at,
-                  LEFT(COALESCE(n.news_content,''), 160) AS excerpt
+                  c.cat_name,
+                  LEFT(COALESCE(n.news_content,''),160) AS excerpt
                 FROM news n
+                LEFT JOIN news_category c ON c.cat_id = n.cat_id
                 WHERE n.status='publish'
                   AND n.del_flg=0
                   AND n.cat_id=%s
