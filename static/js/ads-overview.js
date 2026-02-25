@@ -88,6 +88,32 @@ $(document).ready(function () {
     $pagination.html(html);
   }
 
+
+  $(document).on("click", ".pay-btn", function () {
+    const advId = $(this).data("id");
+
+    $("#paymentModal").modal("show");
+
+    // โหลดข้อมูล QR จาก backend
+    $.get(`/payment/${advId}`, function (res) {
+        $("#qrImage").attr("src", res.qr_url);
+        $("#payAmount").text(res.amount + " บาท");
+        $("#confirmPayment").data("id", advId);
+    });
+});
+
+
+$("#confirmPayment").click(function () {
+    const advId = $(this).data("id");
+
+    $.post(`/payment/confirm/${advId}`, function () {
+        alert("ชำระเงินเรียบร้อย");
+        location.reload();
+    });
+});
+
+
+
   // Event Listeners
   $("#searchInput").on("input", function () {
     currentPage = 1;

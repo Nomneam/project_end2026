@@ -1,6 +1,7 @@
 from flask import Flask
 from dotenv import load_dotenv
 import os
+import omise
 
 
 load_dotenv()
@@ -45,6 +46,8 @@ from view.payment_routes import payment_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
+omise.api_public = os.getenv("OMISE_PUBLIC_KEY")
+omise.api_secret = os.getenv("OMISE_SECRET_KEY")
 # register blueprints
 app.register_blueprint(login_emp_bp)
 app.register_blueprint(dashboard_admin_bp)
