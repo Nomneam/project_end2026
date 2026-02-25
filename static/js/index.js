@@ -9,6 +9,14 @@ $(function () {
   const POPULAR_COUNT = 7;     // ยอดนิยมโชว์ 7
   const SLIDE_COUNT = 3;       // สไลด์โชว์ 3
   const MUST_READ_COUNT = 4;   // ไม่ควรพลาดโชว์ 4
+  // ==============================
+// หมวดข่าวใต้ Watch Rail
+// ==============================
+const CATEGORY_LIST = [
+  { id: 2, name: "ข่าวต่างประเทศ" },
+  { id: 3, name: "ข่าวเศรษฐกิจ" },
+  { id: 4, name: "ข่าวบันเทิง" }
+];
 
   // ======================================================
   // Utils
@@ -658,6 +666,83 @@ async function loadFooterAds() {
     });
   }
 
+
+
+
+
+  // ข่าวตามประเภท
+  async function renderCategorySections() {
+  const container = $("#categorySections");
+  if (!container.length) return;
+
+  container.html("");
+
+  for (const cat of CATEGORY_LIST) {
+    const res = await fetch(`/api/news/by-category?cat_id=${cat.id}&limit=12`);
+    const data = await res.json();
+    const items = data.items || [];
+
+    const grid = items.map(n => {
+      const url = `/news/${n.news_id}`;
+      const img = coverUrl(n.cover_image || "");
+
+      return `
+        <div class="col-md-6 col-lg-4">
+          <a href="${url}" 
+             class="bg-white rounded-4 overflow-hidden shadow-sm border h-100 d-block text-decoration-none text-dark">
+
+            <div class="position-relative">
+              <img src="${escapeHtml(img)}" class="w-100 more-img" alt="">
+              
+              <div class="position-absolute top-0 start-0 p-3">
+                <span class="ad-badge ad-badge-news">
+                  NEWS
+                </span>
+              </div>
+            </div>
+
+            <div class="p-3 latest-body">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <span class="text-red-bkk fw-bold text-uppercase latest-cat">
+                  ${escapeHtml(cat.name)}
+                </span>
+                <span class="small text-muted">
+                  ${escapeHtml(timeAgo(n.published_at))}
+                </span>
+              </div>
+
+              <div class="fw-bold mt-1 line-clamp-2">
+                ${escapeHtml(n.news_title)}
+              </div>
+
+              <div class="text-secondary small mt-2 line-clamp-2">
+                ${escapeHtml(n.excerpt || "")}
+              </div>
+
+              <div class="small text-muted mt-3">
+                ${escapeHtml(fmtDateTH(n.published_at))}
+              </div>
+            </div>
+
+          </a>
+        </div>
+      `;
+    }).join("");
+
+    container.append(`
+      <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+          <h2 class="font-kanit fw-bold m-0">${cat.name}</h2>
+        </div>
+        <div class="row g-3">
+          ${grid}
+        </div>
+      </div>
+    `);
+  }
+}
+
+
   function renderTopicSections() {
     if (!$("#topicSections").length) return;
     $("#topicSections").html(`<div class="text-muted small">โซน Topics ยังเป็น mock (ถ้าจะทำ DB จริง เดี๋ยวผมจัด API ให้ครบ)</div>`);
@@ -675,12 +760,10 @@ async function loadFooterAds() {
     safeCall(() => loadSponsorIcons());
     safeCall(() => loadFooterAds());
     safeCall(() => loadHeroAd());
+    safeCall(() => renderCategorySections());
 
     // Mock sections
-    safeCall(() => renderEditorsPicks());
-    safeCall(() => renderInPictures());
     safeCall(() => renderWatchRail());
-    safeCall(() => renderTopicSections());
 
   }
 
