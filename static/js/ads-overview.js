@@ -16,17 +16,9 @@ $(document).ready(function () {
       const name = $card.data("name") || "";
       const status = $card.data("status") || "";
       
-      // แมปสถานะจาก DB ให้ตรงกับ Filter
-      // running -> running
-      // submitted, approved, draft -> pending
-      // rejected, paused, expired -> ended
-      let mappedStatus = "";
-      if (["running"].includes(status)) mappedStatus = "running";
-      else if (["submitted", "approved", "draft"].includes(status)) mappedStatus = "pending";
-      else if (["rejected", "paused", "expired"].includes(status)) mappedStatus = "ended";
 
       const matchesSearch = !term || name.includes(term);
-      const matchesStatus = !statusFilter || mappedStatus === statusFilter;
+      const matchesStatus = !statusFilter || status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -129,6 +121,71 @@ $("#confirmPayment").click(function () {
       text: "ไม่สามารถยืนยันการชำระเงินได้"
     });
   });
+});
+
+
+
+// เปิด modal แก้ไข
+$(document).on("click", ".edit-ad-btn", function () {
+  $("#editAdId").val($(this).data("id"));
+  $("#editAdName").val($(this).data("name"));
+  $("#editAdDesc").val($(this).data("desc"));
+  $("#editAdUrl").val($(this).data("url"));
+
+  $("#imagePreview").addClass("d-none").attr("src", "");
+
+  const modal = new bootstrap.Modal(document.getElementById('editAdModal'));
+  modal.show();
+});
+
+
+
+// preview รูป
+$("#editAdImage").on("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    $("#imagePreview")
+      .attr("src", e.target.result)
+      .removeClass("d-none");
+  };
+  reader.readAsDataURL(file);
+});
+
+
+$("#saveAdChanges").click(function () {
+
+  const formData = new FormData();
+  formData.append("id", $("#editAdId").val());
+  formData.append("name", $("#editAdName").val());
+  formData.append("desc", $("#editAdDesc").val());
+  formData.append("url", $("#editAdUrl").val());
+
+  const file = $("#editAdImage")[0].files[0];
+  if (file) {
+    formData.append("image", file);
+  }
+
+  $.ajax({
+    url: "/ads/update",
+    method: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function () {
+      Swal.fire({
+        icon: "success",
+        title: "บันทึกสำเร็จ",
+        text: "โฆษณาถูกส่งตรวจสอบอีกครั้ง"
+      }).then(() => location.reload());
+    },
+    error: function () {
+      Swal.fire("ผิดพลาด", "ไม่สามารถบันทึกได้", "error");
+    }
+  });
+
 });
 
 

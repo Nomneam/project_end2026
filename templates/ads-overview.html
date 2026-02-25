@@ -52,12 +52,12 @@
             <div class="filter-pill-label mb-1">สถานะ</div>
             <select id="statusFilter" class="form-select form-select-sm">
               <option value="">ทั้งหมด</option>
-              <option value="running">กำลังรัน</option>
-              <option value="draft">รอตรวจสอบ</option>
-              <option value="approved">รอชำระเงิน</option>
-              <option value="paused">หยุดชั่วคราว</option>
-              <option value="expired">หมดอายุ</option>
-              <option value="rejected">ถูกปฏิเสธ</option>
+                <option value="running">กำลังแสดงผล</option>
+                <option value="draft">รอการตรวจสอบ</option>
+                <option value="approved">รอการชำระเงิน</option>
+                <option value="paused">หยุดชั่วคราว</option>
+                <option value="expired">หมดอายุ</option>
+                <option value="rejected">ไม่ผ่านการอนุมัติ</option>
             </select>
           </div>
         </div>
@@ -100,9 +100,17 @@
                   <div>
                     <h5 class="mb-1 ad-title">{{ ad.adv_name }}</h5>
                     <div class="text-muted small mb-1">
+                      {% set pos_map = {
+                        'HOME_ICON': 'ไอคอนข่าวหน้าหลัก',
+                        'FOOTER_HOME': 'ข้างล่างหน้าหลัก',
+                        'CATEGORY_PAGE': 'บนสุดหน้าประเภทข่าว',
+                        'SIDEBAR': 'ข้างหน้าอ่านข่าว',
+                        'INDEX_PAGE': 'หน้าหลักข้างบนสุด'
+                      } %}
+
                       ตำแหน่งแสดงผล:
                       <span class="fw-semibold">
-                        {{ ad.adv_position or '-' }}
+                        {{ pos_map.get(ad.adv_position, ad.adv_position) }}
                       </span>
                     </div>
                     {% if ad.adv_description %}
@@ -142,8 +150,12 @@
 
                       <!-- ปุ่มแก้ไข -->
                       <div class="mt-2">
-                        <a href="#"
-                          class="btn btn-sm btn-outline-danger w-100">
+                       <a class="btn btn-sm btn-outline-danger w-100 edit-ad-btn"
+                          data-id="{{ ad.adv_id }}"
+                          data-name="{{ ad.adv_name }}"
+                          data-desc="{{ ad.adv_description }}"
+                          data-url="{{ ad.target_url }}"
+                          data-position="{{ ad.adv_position }}">
                           <i class="bi bi-pencil-square me-1"></i>
                           แก้ไขโฆษณา
                         </a>
@@ -231,6 +243,44 @@
     </div>
 
 
+<div class="modal fade" id="editAdModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">แก้ไขโฆษณา</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="editAdId">
+
+        <label class="form-label">ชื่อโฆษณา</label>
+        <input type="text" id="editAdName" class="form-control mb-2">
+
+        <label class="form-label">รายละเอียด</label>
+        <textarea id="editAdDesc" class="form-control mb-2"></textarea>
+
+        <label class="form-label">URL ปลายทาง</label>
+        <input type="text" id="editAdUrl" class="form-control mb-3">
+
+        <label class="form-label">เปลี่ยนรูปโฆษณา</label>
+        <input type="file" id="editAdImage" class="form-control mb-2" accept="image/*">
+
+        <img id="imagePreview" class="img-fluid rounded mt-2 d-none"
+             style="max-height:150px;">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button class="btn btn-primary" id="saveAdChanges">
+          บันทึก
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
     {% include "partials/footer.html" %}
 
