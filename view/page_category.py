@@ -95,7 +95,7 @@ def api_page_category():
             s.subcat_id,
             s.subcat_name
         FROM news n
-        JOIN news_subcategory s ON n.subcat_id = s.subcat_id
+        LEFT JOIN news_subcategory s ON n.subcat_id = s.subcat_id
         WHERE n.cat_id = %s
           AND n.status = 'publish'
           AND n.del_flg = 0
