@@ -537,3 +537,49 @@ header {
   background: var(--bkk-red);
   border-radius: 2px;
 }
+
+
+
+/* ===============================
+   TABLET RESPONSIVE (768px–991px)
+=============================== */
+@media (min-width: 768px) and (max-width: 991px) {
+
+  /* ให้ header จัดเรียงแบบ 2 ชั้น */
+  .header-right {
+    width: 100%;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px;
+    margin-top: 10px;
+  }
+
+  /* search เต็มบรรทัด */
+  .top-search-wrap {
+    max-width: 100% !important;
+  }
+
+  /* ปุ่ม auth จัดขวา */
+  .header-right > div:last-child {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* ลดขนาดปุ่มให้พอดี tablet */
+  .header-right .btn {
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+
+  /* ลดขนาดโลโก้นิดนึง */
+  .display-6 {
+    font-size: 1.6rem;
+  }
+
+  /* ซ่อนวันที่ถ้าพื้นที่แคบ */
+  .d-sm-block {
+    display: none !important;
+  }
+}

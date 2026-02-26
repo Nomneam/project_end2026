@@ -52,7 +52,8 @@
           <div
             class="header-right w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2"
           >
-            <!-- Search -->
+            <!-- Search (แสดงเฉพาะหน้า index) -->
+            {% if request.endpoint == 'index.index_news' %}
             <div
               class="top-search-wrap position-relative flex-grow-1"
               style="max-width: 360px; width: 100%"
@@ -65,6 +66,7 @@
               />
               <span class="top-search-icon">⌕</span>
             </div>
+            {% endif %}
 
             <!-- ================= AUTH SECTION ================= -->
 
