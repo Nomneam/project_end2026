@@ -202,7 +202,18 @@ function startCheckingPayment() {
 
 // หยุด polling ถ้าปิด modal
 $('#paymentModal').on('hidden.bs.modal', function () {
-  if (checkInterval) clearInterval(checkInterval);
+
+  if (checkInterval) {
+    clearInterval(checkInterval);
+    checkInterval = null;
+  }
+
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+
+  remainingSeconds = 0;
   currentIdPay = null;
 });
 
