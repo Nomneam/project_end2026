@@ -196,7 +196,7 @@ def api_ads_icons():
                     adv_image_url,
                     target_url
                 FROM advert
-                WHERE status = 'approved'
+                WHERE status = 'running'
                   AND adv_position = 'HOME_ICON'
                   AND (valid_from IS NULL OR valid_from <= NOW())
                   AND (valid_to IS NULL OR valid_to >= NOW())
@@ -224,7 +224,7 @@ def api_ads_footer():
                     adv_image_url,
                     target_url
                 FROM advert
-                WHERE status = 'approved'
+                WHERE status = 'running'
                   AND adv_position = 'FOOTER_HOME'
                   AND (valid_from IS NULL OR valid_from <= NOW())
                   AND (valid_to IS NULL OR valid_to >= NOW())
@@ -255,7 +255,7 @@ def api_ads_hero():
                     adv_image_url,
                     target_url
                 FROM advert
-                WHERE status = 'approved'
+                WHERE status = 'running'
                   AND adv_position = 'INDEX_PAGE'
                   AND del_flg = 0
                   AND (valid_from IS NULL OR valid_from <= NOW())

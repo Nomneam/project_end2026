@@ -382,7 +382,7 @@ def api_ads_sidebar():
                     adv_image_url,
                     target_url
                 FROM advert
-                WHERE status = 'approved'
+                WHERE status = 'running'
                   AND adv_position = 'SIDEBAR'
                   AND (valid_from IS NULL OR valid_from <= NOW())
                   AND (valid_to IS NULL OR valid_to >= NOW())
