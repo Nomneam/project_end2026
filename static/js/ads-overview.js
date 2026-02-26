@@ -1,5 +1,9 @@
 // static/js/ads-overview.js
 
+
+let countdownInterval = null;
+let remainingSeconds = 0;
+
 $(document).ready(function () {
   const pageSize = 5;
   let currentPage = 1;
@@ -109,7 +113,8 @@ $(document).on("click", ".pay-btn", function () {
           "data:image/png;base64," + qrRes.qr_image
         );
 
-        $("#payAmount").text("กรุณาชำระเงินภายใน " + qrRes.timeout + " วินาที");
+        remainingSeconds = qrRes.timeout;
+        startCountdown();
 
         $("#paymentModal").modal("show");
 
@@ -122,6 +127,45 @@ $(document).on("click", ".pay-btn", function () {
     Swal.fire("ผิดพลาด", "ไม่สามารถสร้างรายการได้", "error");
   });
 });
+
+
+
+function startCountdown() {
+
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  updateCountdownText();
+
+  countdownInterval = setInterval(function () {
+
+    remainingSeconds--;
+
+    updateCountdownText();
+
+    if (remainingSeconds <= 0) {
+      clearInterval(countdownInterval);
+      clearInterval(checkInterval);
+
+      $("#countdownText").text("หมดเวลาชำระเงิน");
+    }
+
+  }, 1000);
+}
+
+function updateCountdownText() {
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  $("#countdownText").text(
+    "กรุณาชำระเงินภายใน " +
+    minutes.toString().padStart(2, '0') +
+    ":" +
+    seconds.toString().padStart(2, '0')
+  );
+}
+
+
 
 
 let checkInterval = null;
@@ -152,7 +196,7 @@ function startCheckingPayment() {
       }
     });
 
-  }, 5000);
+  }, 2000);
 }
 
 

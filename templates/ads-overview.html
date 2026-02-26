@@ -219,24 +219,33 @@
     </main>
 
 
-        <!-- Payment Modal -->
-    <div class="modal fade" id="paymentModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center p-3">
+    <!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4 position-relative">
 
-          <h5 class="mb-2">ชำระเงินค่าโฆษณา</h5>
-          <p class="text-muted small">สแกน QR เพื่อชำระเงิน</p>
+      <!-- ปุ่มกากบาท -->
+      <button type="button"
+              class="btn-close position-absolute top-0 end-0 m-3"
+              data-bs-dismiss="modal">
+      </button>
 
-          <img id="qrImage"
-              src=""
-              class="img-fluid my-2"
-              style="max-width:250px">
+      <h5 class="mb-2 fw-bold">ชำระเงินค่าโฆษณา</h5>
+      <p class="text-muted small mb-3">สแกน QR เพื่อชำระเงิน</p>
 
-          <div class="fw-bold mt-2" id="payAmount"></div>
-
-        </div>
+      <!-- QR -->
+      <div class="d-flex justify-content-center">
+        <img id="qrImage"
+             src=""
+             class="img-fluid my-2"
+             style="max-width:280px">
       </div>
+
+      <div class="fw-bold mt-3 text-primary" id="countdownText"></div>
+
     </div>
+  </div>
+</div>
 
 
 <div class="modal fade" id="editAdModal" tabindex="-1">

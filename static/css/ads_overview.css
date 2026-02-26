@@ -336,3 +336,13 @@
 .ad-card-item[data-status="rejected"] {
   border-left: 4px solid #dc3545;
 }
+
+
+#paymentModal .modal-content {
+  border-radius: 16px;
+}
+
+#qrImage {
+  display: block;
+  margin: 0 auto;
+}
