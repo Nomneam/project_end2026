@@ -92,13 +92,13 @@ $(document).on("click", ".pay-btn", function () {
   $("#payAmount").text("กำลังสร้างรายการ...");
 
   // STEP 1: สร้าง id_pay
-  $.get(`/tmw-create/${advId}`, function (res) {
+  $.get(`/payment/tmw-create/${advId}`, function (res) {
 
     currentIdPay = res.id_pay;
 
     // STEP 2: ขอ QR
     $.ajax({
-      url: "/tmw-qr",
+      url: "/payment/tmw-qr",
       method: "POST",
       contentType: "application/json",
       data: JSON.stringify({ id_pay: currentIdPay }),
@@ -133,7 +133,7 @@ function startCheckingPayment() {
   checkInterval = setInterval(function () {
 
     $.ajax({
-      url: "/tmw-confirm",
+      url: "/payment/tmw-confirm",
       method: "POST",
       contentType: "application/json",
       data: JSON.stringify({ id_pay: currentIdPay }),
