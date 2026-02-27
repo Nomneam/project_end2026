@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session,url_for
 from dotenv import load_dotenv
 import pymysql
 import os
@@ -108,6 +108,6 @@ def register_customer():
     session.modified = True
 
     return jsonify(
-        ok=True,
-        redirect="/customer/dashboard"
-    )
+    ok=True,
+    redirect=url_for("index.index_news")
+)

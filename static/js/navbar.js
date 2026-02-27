@@ -390,13 +390,22 @@ $("#tabRegister").off("click.tab").on("click.tab", function () {
       })
         .then((r) => r.json())
         .then((res) => {
-          if (!res.ok) {
-            showAuthMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
-            return;
-          }
-          location.reload();
-        })
-        .catch(() => showAuthMsg("เกิดข้อผิดพลาด กรุณาลองใหม่"));
+  if (!res.ok) {
+    showAuthMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
+    return;
+  }
+
+  Swal.fire({
+    icon: "success",
+    title: "เข้าสู่ระบบสำเร็จ",
+    text: "กำลังพาคุณไปยังหน้าแรก...",
+    confirmButtonColor: "#002d62",
+    timer: 1500,
+    showConfirmButton: false
+  }).then(() => {
+    location.reload(); // reload เพื่อให้ session แสดง navbar แบบ logged in
+  });
+})
     });
 
   // LOGOUT
