@@ -583,3 +583,9 @@ header {
     display: none !important;
   }
 }
+
+
+/* ทำให้ SweetAlert อยู่เหนือ modal ทุกตัว */
+.swal2-container {
+  z-index: 99999 !important;
+}

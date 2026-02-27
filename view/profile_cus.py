@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, abort, session, redirect, url_for
 import base64
 from dotenv import load_dotenv
-from view.navbar import load_nav_categories
 import pymysql
 import os
 import bcrypt
