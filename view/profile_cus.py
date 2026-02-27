@@ -85,8 +85,7 @@ def update_profile():
                 cus_email=%s,
                 cus_address=%s,
                 cus_idcard=%s,
-                cus_profile=COALESCE(%s, cus_profile),
-                updated_by=%s
+                cus_profile=COALESCE(%s, cus_profile)
             WHERE cus_id=%s
         """, (
             fname,
@@ -96,7 +95,6 @@ def update_profile():
             address,
             citizen_id,
             avatar_base64,
-            user_id,
             user_id
         ))
 
