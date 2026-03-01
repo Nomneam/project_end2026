@@ -65,6 +65,7 @@
               <!-- ✅ fname จาก session -->
               <strong class="small" id="navUserName">
                 {{ session.get('user', {}).get('fname', '-') }}
+                {{ session.get('user', {}).get('lname', '') }}
               </strong>
               <span class="ms-1 text-muted" aria-hidden="true">▾</span>
             </button>
@@ -106,6 +107,7 @@
               <!-- ✅ fname -->
               <div class="profile-name" id="sideUserName">
                 {{ session.get('user', {}).get('fname', '-') }}
+                {{ session.get('user', {}).get('lname', '') }}
               </div>
               <!-- ✅ role -->
               <div class="profile-meta" id="sideUserRole">

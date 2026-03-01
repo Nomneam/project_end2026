@@ -70,6 +70,7 @@ def login_emp():
                     e.emp_username,
                     e.emp_password_hash,
                     e.emp_fname,
+                    e.emp_lname,
                     e.role_id,
                     r.role_name
                 FROM employee e
@@ -105,6 +106,7 @@ def login_emp():
             "id": user["emp_id"],
             "username": user["emp_username"],
             "fname": user.get("emp_fname") or user["emp_username"],  #  ใช้ emp_fname
+            "lname": user.get("emp_lname") or "",
             "role_id": user.get("role_id"),
             "role_name": user.get("role_name") or "",               # จาก DB (ถ้ามี)
             "avatar_url": None,                                     # ปรับได้ถ้ามีใน DB
