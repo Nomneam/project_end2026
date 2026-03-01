@@ -40,6 +40,7 @@ from view.footer_context import load_footer_data
 from view.setting_system import setting_system_bp
 from view.payment_routes import payment_bp
 from view.register_cus import register_cus_bp
+from view.reporter_profile import reporter_profile_bp
 
 
 
@@ -79,6 +80,7 @@ app.register_blueprint(owner_profile_bp)
 app.register_blueprint(setting_system_bp)
 app.register_blueprint(payment_bp, url_prefix="/payment")
 app.register_blueprint(register_cus_bp)
+app.register_blueprint(reporter_profile_bp)
 
 @app.route('/')
 def home():
