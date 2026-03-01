@@ -169,16 +169,31 @@ def update_profile():
                 if not allowed_file(emp_profile_file.filename) or emp_profile_file.mimetype not in ALLOWED_MIME:
                     return jsonify({"error": "invalid image type"}), 400
 
-                upload_dir = os.path.join("static", "uploads")
+                upload_dir = os.path.join("static", "uploads", "profile")
                 os.makedirs(upload_dir, exist_ok=True)
 
                 safe_name = secure_filename(emp_profile_file.filename)
                 filename = f"{uuid.uuid4().hex}_{safe_name}"
                 filepath = os.path.join(upload_dir, filename)
 
-                emp_profile_file.save(filepath)
-                update_fields.append("emp_profile = %s")
-                update_values.append(filepath.replace("\\", "/"))
+                if emp_profile_file and emp_profile_file.filename:
+                    if not allowed_file(emp_profile_file.filename) or emp_profile_file.mimetype not in ALLOWED_MIME:
+                        return jsonify({"error": "invalid image type"}), 400
+
+                    upload_dir = os.path.join("static", "uploads", "profile")
+                    os.makedirs(upload_dir, exist_ok=True)
+
+                    safe_name = secure_filename(emp_profile_file.filename)
+                    filename = f"{uuid.uuid4().hex}_{safe_name}"
+                    filepath = os.path.join(upload_dir, filename)
+
+                    emp_profile_file.save(filepath)
+
+                    # ✅ สร้าง relative_path ตรงนี้
+                    relative_path = filepath.replace("\\", "/")
+
+                    update_fields.append("emp_profile = %s")
+                    update_values.append(relative_path)
 
             if not update_fields:
                 return jsonify({"error": "no valid fields"}), 400
@@ -196,6 +211,29 @@ def update_profile():
 
             cursor.execute(sql, tuple(update_values))
             conn.commit()
+            
+            
+            # =========================
+            # UPDATE SESSION
+            # =========================
+
+            if emp_fname:
+                session["user"]["fname"] = emp_fname
+
+            if emp_lname:
+                session["user"]["lname"] = emp_lname
+
+            # ถ้าเก็บ full_name ใน session
+            if "fname" in session["user"] and "lname" in session["user"]:
+                session["user"]["full_name"] = (
+                    f"{session['user'].get('fname','')} {session['user'].get('lname','')}"
+                ).strip()
+
+            # ถ้ามีอัปโหลดรูป
+            if emp_profile_file and emp_profile_file.filename:
+                session["user"]["avatar_url"] = "/" + relative_path
+
+            session.modified = True
 
     except Exception as e:
         conn.rollback()
