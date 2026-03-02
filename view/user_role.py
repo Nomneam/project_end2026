@@ -55,9 +55,18 @@ def user_role():
             # 1. ดึงข้อมูลรายชื่อพนักงานพร้อมชื่อบทบาท
             cur.execute("""
                 SELECT 
-                    e.emp_id, e.emp_username, e.emp_fname, e.emp_lname, 
-                    e.emp_email, e.role_id, e.created_at, e.del_flg,
-                    r.role_name 
+                    e.emp_id,
+                    e.emp_username,
+                    e.emp_fname,
+                    e.emp_lname,
+                    e.emp_email,
+                    e.emp_phone,
+                    e.emp_idcard,
+                    e.emp_address,
+                    e.role_id,
+                    e.created_at,
+                    e.del_flg,
+                    r.role_name
                 FROM employee e
                 LEFT JOIN role r ON e.role_id = r.role_id
                 WHERE e.del_flg = 0
@@ -85,15 +94,14 @@ def user_role():
 
 @user_role_bp.route("/user-role/add", methods=["POST"])
 def add_user():
-    data = request.form
     user = session.get("user")
     if not user or not user.get("id"):
-        return redirect(url_for("login_emp.login_emp"))   
-    
-    # --- ส่วนที่เพิ่ม/แก้ไข ---
+        return redirect(url_for("login_emp.login_emp"))
+
+    data = request.form
+
     role_id = data.get("role_id")
     auto_emp_code = generate_emp_code(role_id)
-    # -----------------------
 
     password_hash = bcrypt.hashpw(
         data["password"].encode("utf-8"),
@@ -101,19 +109,27 @@ def add_user():
     ).decode("utf-8")
 
     conn = connect_db()
+
     try:
         with conn.cursor() as cur:
-            # --- เช็ค email ซ้ำเฉพาะ user ที่ยัง active ---
+
+            # ✅ เช็ค email ซ้ำ
             cur.execute("""
                 SELECT emp_id FROM employee
                 WHERE emp_email = %s AND del_flg = 0
             """, (data["emp_email"],))
-            existing = cur.fetchone()
-            if existing:
-                # มี email ซ้ำ -> คืน error หรือ flash แล้ว redirect
+            if cur.fetchone():
                 return "Email นี้ถูกใช้งานแล้ว", 400
 
-            # ถ้าไม่มีซ้ำ ค่อย insert
+            # ✅ เช็ค username ซ้ำ (แนะนำให้มี)
+            cur.execute("""
+                SELECT emp_id FROM employee
+                WHERE emp_username = %s AND del_flg = 0
+            """, (data["emp_username"],))
+            if cur.fetchone():
+                return "Username นี้ถูกใช้งานแล้ว", 400
+
+            # ✅ INSERT เพิ่ม emp_address และ emp_idcard
             cur.execute("""
                 INSERT INTO employee (
                     role_id,
@@ -124,23 +140,33 @@ def add_user():
                     emp_password_hash,
                     emp_phone,
                     emp_email,
+                    emp_address,
+                    emp_idcard,
                     created_at,
                     created_by,
                     del_flg
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,NOW(),%s,0)
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW(),%s,0)
             """, (
                 role_id,
                 auto_emp_code,
-                data["emp_fname"],
-                data["emp_lname"],
-                data["emp_username"],
+                data.get("emp_fname"),
+                data.get("emp_lname"),
+                data.get("emp_username"),
                 password_hash,
-                data["emp_phone"],
-                data["emp_email"],
-                session.get("emp_id")
+                data.get("emp_phone"),
+                data.get("emp_email"),
+                data.get("emp_address"),   
+                data.get("emp_idcard"),   
+                user.get("id")           
             ))
+
         conn.commit()
         return redirect(url_for("user_role.user_role"))
+
+    except Exception as e:
+        conn.rollback()
+        return f"เกิดข้อผิดพลาด: {str(e)}", 500
+
     finally:
         conn.close()
 
@@ -149,22 +175,27 @@ def add_user():
 def edit_user(emp_id):
     data = request.form
     user = session.get("user")
+
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
 
     conn = connect_db()
     try:
         with conn.cursor() as cur:
-            # --- เช็ค email ซ้ำสำหรับ edit (ยกเว้นตัวเอง) ---
+
+            # --- เช็ค email ซ้ำ (ยกเว้นตัวเอง) ---
             cur.execute("""
                 SELECT emp_id FROM employee
-                WHERE emp_email = %s AND emp_id != %s AND del_flg = 0
-            """, (data["emp_email"], emp_id))
+                WHERE emp_email = %s 
+                AND emp_id != %s 
+                AND del_flg = 0
+            """, (data["emp_email"].strip(), emp_id))
+
             existing = cur.fetchone()
             if existing:
                 return "Email นี้ถูกใช้งานแล้ว", 400
 
-            # ถ้าไม่มีซ้ำ ค่อย update
+            # --- UPDATE ข้อมูล ---
             cur.execute("""
                 UPDATE employee SET
                     role_id = %s,
@@ -172,20 +203,27 @@ def edit_user(emp_id):
                     emp_lname = %s,
                     emp_phone = %s,
                     emp_email = %s,
+                    emp_address = %s,
+                    emp_idcard = %s,
                     updated_at = NOW(),
                     updated_by = %s
                 WHERE emp_id = %s
             """, (
-                data["role_id"],
-                data["emp_fname"],
-                data["emp_lname"],
-                data["emp_phone"],
-                data["emp_email"],
+                data.get("role_id"),
+                data.get("emp_fname"),
+                data.get("emp_lname"),
+                data.get("emp_phone"),
+                data.get("emp_email").strip().lower(),
+                data.get("emp_address"),
+                data.get("emp_idcard"),
                 session.get("emp_id"),
                 emp_id
             ))
+
         conn.commit()
-        return redirect(url_for("user_role.user_role"))
+
+        return {"status": "success"}  #  แนะนำให้ return json ถ้าใช้ ajax
+
     finally:
         conn.close()
 

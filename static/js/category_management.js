@@ -66,7 +66,7 @@ $(document).ready(function () {
 
                     if (res.success) setTimeout(() => location.reload(), 1200);
                 })
-                .fail(() => notifyError('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
+                .fail(() => notifyError('ข้อมูลซ้ำหรือไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
         });
     });
 
@@ -219,7 +219,7 @@ $(document).ready(function () {
 
                         if (res.success) setTimeout(() => location.reload(), 1200);
                     })
-                    .fail(() => notifyError('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
+                    .fail(() => notifyError('ข้อมูลซ้ำในระบบไม่สามารถติดต่อเซิร์ฟเวอร์ได้'));
             });
     });
 });

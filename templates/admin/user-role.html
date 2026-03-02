@@ -89,7 +89,10 @@
                                 data-fname="{{ u.emp_fname }}"
                                 data-lname="{{ u.emp_lname }}"
                                 data-email="{{ u.emp_email }}"
-                                data-role="{{ u.role_id }}">
+                                data-role="{{ u.role_id }}"
+                                data-phone="{{ u.emp_phone or '' }}"
+                                data-idcard="{{ u.emp_idcard or '' }}"
+                                data-address="{{ u.emp_address or '' }}">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
                             <button class="btn-action-minimal text-danger shadow-sm" onclick="deleteUser('{{ u.emp_id }}')">
