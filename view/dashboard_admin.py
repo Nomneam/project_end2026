@@ -84,8 +84,10 @@ def admin_dashboard():
             cursor.execute("""
                 SELECT COUNT(*) as count 
                 FROM advert 
-                WHERE status = 'approved' AND del_flg = 0
+                WHERE status IN ('approved', 'running')
+                AND del_flg = 0
             """)
+
             published_ads_count = cursor.fetchone()['count']
 
             # =============================
@@ -251,7 +253,7 @@ def ads_status_by_month():
 
             cursor.execute("""
                 SELECT 
-                    COALESCE(SUM(CASE WHEN status='approved' THEN 1 END), 0) AS approved,
+                    COALESCE(SUM(CASE WHEN status IN ('approved','running') THEN 1 END), 0) AS approved,
                     COALESCE(SUM(CASE WHEN status='draft' THEN 1 END), 0) AS pending,
                     COALESCE(SUM(CASE WHEN status='expired' THEN 1 END), 0) AS expired
                 FROM advert
