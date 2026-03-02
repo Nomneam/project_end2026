@@ -1,6 +1,6 @@
 /*!
  * user-role.js
- * Version 1.5 (Production Ready - Strict Validation Lock)
+ * Version 1.6 (Production Ready - Fixed Duplicate Check)
  */
 
 $(document).ready(function () {
@@ -43,7 +43,6 @@ $(document).ready(function () {
 
         const $btn = $(btn);
 
-        // ใช้ attr() ป้องกัน data cache issue
         $('#edit_username').val($btn.attr('data-username') || '');
         $('#edit_fname').val($btn.attr('data-fname') || '');
         $('#edit_lname').val($btn.attr('data-lname') || '');
@@ -105,36 +104,36 @@ $(document).ready(function () {
         const email  = ($form.find('input[name="emp_email"]').val() || '').trim().toLowerCase();
         const empId  = $form.data('id') || null;
 
-        // Email Required
         if (!email) {
             Swal.fire('ผิดพลาด', 'กรุณากรอกอีเมล', 'error');
             return false;
         }
 
-        // Email Format
         if (!validateEmail(email)) {
             Swal.fire('ผิดพลาด', 'รูปแบบอีเมลไม่ถูกต้อง', 'error');
             return false;
         }
 
-        // Phone (optional)
         if (phone && !validatePhone(phone)) {
             Swal.fire('ผิดพลาด', 'เบอร์โทรศัพท์ต้อง 10 หลัก', 'error');
             return false;
         }
 
-        // ID Card (optional)
         if (idcard && (idcard.length !== 13 || !validateIDCard(idcard))) {
             Swal.fire('ผิดพลาด', 'เลขบัตรประชาชนไม่ถูกต้อง', 'error');
             return false;
         }
 
-        // Email Duplicate Check
+        // ===============================
+        // FIXED: Email Duplicate Check
+        // ===============================
+
         let emailExists = false;
 
-        $('#userTable tbody tr').each(function () {
-            const rowEmail = $(this).find('.user-email').text().trim().toLowerCase();
-            const rowId = $(this).data('id');
+        $('button[data-email]').each(function () {
+
+            const rowEmail = ($(this).attr('data-email') || '').trim().toLowerCase();
+            const rowId = $(this).attr('data-id');
 
             if (email === rowEmail && String(empId) !== String(rowId)) {
                 emailExists = true;
@@ -151,7 +150,7 @@ $(document).ready(function () {
     }
 
     // ===============================
-    // 5. Submit Lock (กันหลุด 100%)
+    // 5. Submit Lock
     // ===============================
 
     $('#addModal form, #editModal form').on('submit', function (e) {
@@ -163,9 +162,7 @@ $(document).ready(function () {
 
         const $form = $(this);
 
-        if (!validateForm($form)) {
-            return false;
-        }
+        if (!validateForm($form)) return false;
 
         isSubmitting = true;
 
