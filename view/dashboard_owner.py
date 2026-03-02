@@ -163,13 +163,13 @@ def api_owner_dashboard():
 
             # ===== จำนวนโฆษณาที่ Approve เดือนนี้ (แก้ให้ใช้ valid_from) =====
             cur.execute("""
-                SELECT COUNT(*) AS total
+                SELECT SUM(status IN ('approved','running')) AS total
                 FROM advert
                 WHERE del_flg = 0
-                  AND status = 'approved'
-                  AND valid_from >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                  AND valid_from < DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+                AND valid_from >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                AND valid_from < DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
             """)
+
             total_ads_approved_month = cur.fetchone()["total"] or 0
 
 
