@@ -1,6 +1,6 @@
 /*!
  * user-role.js
- * Version 1.4 (Stable Production Ready)
+ * Version 1.5 (Production Ready - Strict Validation Lock)
  */
 
 $(document).ready(function () {
@@ -43,24 +43,25 @@ $(document).ready(function () {
 
         const $btn = $(btn);
 
-        $('#edit_username').val($btn.data('username'));
-        $('#edit_fname').val($btn.data('fname'));
-        $('#edit_lname').val($btn.data('lname'));
-        $('#edit_email').val($btn.data('email'));
-        $('#edit_role').val($btn.data('role'));
-        $('#edit_phone').val($btn.data('phone'));
-        $('#edit_idcard').val($btn.data('idcard'));
-        $('#edit_address').val($btn.data('address'));
+        // ใช้ attr() ป้องกัน data cache issue
+        $('#edit_username').val($btn.attr('data-username') || '');
+        $('#edit_fname').val($btn.attr('data-fname') || '');
+        $('#edit_lname').val($btn.attr('data-lname') || '');
+        $('#edit_email').val($btn.attr('data-email') || '');
+        $('#edit_role').val($btn.attr('data-role') || '');
+        $('#edit_phone').val($btn.attr('data-phone') || '');
+        $('#edit_idcard').val($btn.attr('data-idcard') || '');
+        $('#edit_address').val($btn.attr('data-address') || '');
 
         $('#editUserForm')
-            .attr('action', '/user-role/edit/' + $btn.data('id'))
-            .data('id', $btn.data('id'));
+            .attr('action', '/user-role/edit/' + $btn.attr('data-id'))
+            .data('id', $btn.attr('data-id'));
 
         $('#editModal').modal('show');
     };
 
     // ===============================
-    // 3. Smart Real-time ID Card Check
+    // 3. Smart Real-time ID Check
     // ===============================
 
     let idCardAlertShown = false;
@@ -69,7 +70,7 @@ $(document).ready(function () {
 
         const idcard = $(this).val().trim();
 
-        if (idcard.length < 13) {
+        if (!idcard) {
             idCardAlertShown = false;
             return;
         }
@@ -82,8 +83,7 @@ $(document).ready(function () {
                 Swal.fire({
                     icon: 'error',
                     title: 'เลขบัตรประชาชนไม่ถูกต้อง',
-                    text: 'กรุณาตรวจสอบเลข 13 หลักอีกครั้ง',
-                    confirmButtonColor: '#2563eb'
+                    text: 'กรุณาตรวจสอบเลข 13 หลักอีกครั้ง'
                 });
             }
 
@@ -93,58 +93,39 @@ $(document).ready(function () {
     });
 
     // ===============================
-    // 4. Form Submit with Validation
+    // 4. Strict Form Validation
     // ===============================
 
     let isSubmitting = false;
 
     function validateForm($form) {
 
-        const phone  = $form.find('input[name="emp_phone"]').val().trim();
-        const idcard = $form.find('input[name="emp_idcard"]').val().trim();
-        const email  = $form.find('input[name="emp_email"]').val().trim().toLowerCase();
+        const phone  = ($form.find('input[name="emp_phone"]').val() || '').trim();
+        const idcard = ($form.find('input[name="emp_idcard"]').val() || '').trim();
+        const email  = ($form.find('input[name="emp_email"]').val() || '').trim().toLowerCase();
         const empId  = $form.data('id') || null;
 
         // Email Required
         if (!email) {
-            Swal.fire({
-                icon: 'error',
-                title: 'กรุณากรอกอีเมล',
-                confirmButtonColor: '#2563eb'
-            });
+            Swal.fire('ผิดพลาด', 'กรุณากรอกอีเมล', 'error');
             return false;
         }
 
         // Email Format
         if (!validateEmail(email)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'รูปแบบอีเมลไม่ถูกต้อง',
-                text: 'ตัวอย่างที่ถูกต้อง เช่น example@email.com',
-                confirmButtonColor: '#2563eb'
-            });
+            Swal.fire('ผิดพลาด', 'รูปแบบอีเมลไม่ถูกต้อง', 'error');
             return false;
         }
 
-        // Phone Validate
-        if (phone && phone !== "-" && !validatePhone(phone)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'เบอร์โทรศัพท์ไม่ถูกต้อง',
-                text: 'กรุณากรอกให้ครบ 10 หลัก',
-                confirmButtonColor: '#2563eb'
-            });
+        // Phone (optional)
+        if (phone && !validatePhone(phone)) {
+            Swal.fire('ผิดพลาด', 'เบอร์โทรศัพท์ต้อง 10 หลัก', 'error');
             return false;
         }
 
-        // ID Card Validate
-        if (idcard.length !== 13 || !validateIDCard(idcard)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'เลขบัตรประชาชนไม่ถูกต้อง',
-                text: 'กรุณากรอกเลข 13 หลักให้ถูกต้อง',
-                confirmButtonColor: '#2563eb'
-            });
+        // ID Card (optional)
+        if (idcard && (idcard.length !== 13 || !validateIDCard(idcard))) {
+            Swal.fire('ผิดพลาด', 'เลขบัตรประชาชนไม่ถูกต้อง', 'error');
             return false;
         }
 
@@ -162,19 +143,17 @@ $(document).ready(function () {
         });
 
         if (emailExists) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Email ซ้ำ',
-                text: 'มีผู้ใช้งานใช้อีเมลนี้แล้ว',
-                confirmButtonColor: '#2563eb'
-            });
+            Swal.fire('ผิดพลาด', 'มีผู้ใช้งานใช้อีเมลนี้แล้ว', 'error');
             return false;
         }
 
         return true;
     }
 
-    // 🔥 จับ form ใน modal ทั้งหมด ป้องกัน submit หลุด
+    // ===============================
+    // 5. Submit Lock (กันหลุด 100%)
+    // ===============================
+
     $('#addModal form, #editModal form').on('submit', function (e) {
 
         e.preventDefault();
@@ -182,10 +161,11 @@ $(document).ready(function () {
 
         if (isSubmitting) return false;
 
-        const form = this;
-        const $form = $(form);
+        const $form = $(this);
 
-        if (!validateForm($form)) return false;
+        if (!validateForm($form)) {
+            return false;
+        }
 
         isSubmitting = true;
 
@@ -193,11 +173,8 @@ $(document).ready(function () {
             title: 'ยืนยันการบันทึกข้อมูล?',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#2563eb',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'ตกลง, บันทึก',
-            cancelButtonText: 'ยกเลิก',
-            reverseButtons: true
+            confirmButtonText: 'บันทึก',
+            cancelButtonText: 'ยกเลิก'
         }).then((result) => {
 
             if (!result.isConfirmed) {
@@ -216,21 +193,12 @@ $(document).ready(function () {
                 method: $form.attr('method') || 'POST',
                 data: $form.serialize(),
                 success: function () {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'บันทึกสำเร็จ!',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => location.reload());
+                    Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success')
+                        .then(() => location.reload());
                 },
                 error: function (xhr) {
                     isSubmitting = false;
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: xhr.responseText || 'ไม่สามารถดำเนินการได้',
-                        confirmButtonColor: '#2563eb'
-                    });
+                    Swal.fire('ผิดพลาด', xhr.responseText || 'ไม่สามารถบันทึกได้', 'error');
                 }
             });
 
@@ -239,7 +207,7 @@ $(document).ready(function () {
     });
 
     // ===============================
-    // 5. Delete User
+    // 6. Delete User
     // ===============================
 
     window.deleteUser = function (empId) {
@@ -249,25 +217,20 @@ $(document).ready(function () {
             text: 'ผู้ใช้งานนี้จะถูกระงับการเข้าถึงระบบทันที',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#64748b',
             confirmButtonText: 'ใช่, ลบเลย',
-            cancelButtonText: 'ยกเลิก',
-            reverseButtons: true
+            cancelButtonText: 'ยกเลิก'
         }).then((result) => {
 
             if (result.isConfirmed) {
 
                 $.post('/user-role/delete/' + empId)
                     .done(function (res) {
-
                         if (res.status === 'success') {
                             Swal.fire('สำเร็จ!', 'ข้อมูลถูกลบเรียบร้อยแล้ว', 'success')
                                 .then(() => location.reload());
                         } else {
                             Swal.fire('ผิดพลาด', 'ไม่สามารถลบข้อมูลได้', 'error');
                         }
-
                     })
                     .fail(function () {
                         Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
@@ -277,7 +240,7 @@ $(document).ready(function () {
     };
 
     // ===============================
-    // 6. Restrict Numeric Input
+    // 7. Restrict Numeric Input
     // ===============================
 
     $('input[name="emp_phone"], input[name="emp_idcard"]').on('input', function () {

@@ -149,22 +149,27 @@ def add_user():
 def edit_user(emp_id):
     data = request.form
     user = session.get("user")
+
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
 
     conn = connect_db()
     try:
         with conn.cursor() as cur:
-            # --- เช็ค email ซ้ำสำหรับ edit (ยกเว้นตัวเอง) ---
+
+            # --- เช็ค email ซ้ำ (ยกเว้นตัวเอง) ---
             cur.execute("""
                 SELECT emp_id FROM employee
-                WHERE emp_email = %s AND emp_id != %s AND del_flg = 0
-            """, (data["emp_email"], emp_id))
+                WHERE emp_email = %s 
+                AND emp_id != %s 
+                AND del_flg = 0
+            """, (data["emp_email"].strip(), emp_id))
+
             existing = cur.fetchone()
             if existing:
                 return "Email นี้ถูกใช้งานแล้ว", 400
 
-            # ถ้าไม่มีซ้ำ ค่อย update
+            # --- UPDATE ข้อมูล ---
             cur.execute("""
                 UPDATE employee SET
                     role_id = %s,
@@ -172,20 +177,27 @@ def edit_user(emp_id):
                     emp_lname = %s,
                     emp_phone = %s,
                     emp_email = %s,
+                    emp_address = %s,
+                    emp_idcard = %s,
                     updated_at = NOW(),
                     updated_by = %s
                 WHERE emp_id = %s
             """, (
-                data["role_id"],
-                data["emp_fname"],
-                data["emp_lname"],
-                data["emp_phone"],
-                data["emp_email"],
+                data.get("role_id"),
+                data.get("emp_fname"),
+                data.get("emp_lname"),
+                data.get("emp_phone"),
+                data.get("emp_email").strip().lower(),
+                data.get("emp_address"),
+                data.get("emp_idcard"),
                 session.get("emp_id"),
                 emp_id
             ))
+
         conn.commit()
-        return redirect(url_for("user_role.user_role"))
+
+        return {"status": "success"}  # 🔥 แนะนำให้ return json ถ้าใช้ ajax
+
     finally:
         conn.close()
 
