@@ -20,7 +20,7 @@ def connect_db():
 def packages_page():
 
     if "front_user" not in session:
-        return redirect(url_for("login_customer.login_page"))
+        return redirect(url_for("index.index_news", auth="required"))
 
     user_id = session["front_user"]["id"]
 
