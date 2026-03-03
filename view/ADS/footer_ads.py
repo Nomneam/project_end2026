@@ -60,12 +60,17 @@ def create_footer_ad():
     if "front_user" not in session:
         return jsonify({"error": "กรุณาเข้าสู่ระบบก่อน"}), 401
 
+    user_id = session["front_user"]["id"]
+
     image = request.files.get("image")
-    title = request.form.get("title")
-    description = request.form.get("description", "")
-    url = request.form.get("url")
+    title = (request.form.get("title") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    url = (request.form.get("url") or "").strip()
     months = request.form.get("months")
 
+    # ===============================
+    # VALIDATION
+    # ===============================
     if not image or not title or not url or not months:
         return jsonify({"error": "กรอกข้อมูลไม่ครบ"}), 400
 
@@ -77,11 +82,14 @@ def create_footer_ad():
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
 
     conn = None
+
     try:
         conn = connect_db()
         cursor = conn.cursor()
 
-        # ✅ ดึงราคาจริงจาก DB
+        # ===============================
+        # 1️⃣ ดึงราคาจริงจาก DB
+        # ===============================
         cursor.execute("""
             SELECT price_per_month
             FROM advert_position_price
@@ -97,7 +105,7 @@ def create_footer_ad():
         total_price = footer_price * months
 
         # ===============================
-        # อัปโหลดรูป
+        # 2️⃣ อัปโหลดรูป
         # ===============================
         folder = "static/uploads/ads"
         os.makedirs(folder, exist_ok=True)
@@ -109,11 +117,14 @@ def create_footer_ad():
         image_url = f"/static/uploads/ads/{filename}"
 
         # ===============================
-        # DATE RANGE
+        # 3️⃣ คำนวณวันหมดอายุ
         # ===============================
         valid_from = datetime.now()
         valid_to = valid_from + relativedelta(months=months)
 
+        # ===============================
+        # 4️⃣ INSERT ADVERT
+        # ===============================
         sql = """
         INSERT INTO advert
         (
@@ -135,7 +146,7 @@ def create_footer_ad():
         """
 
         cursor.execute(sql, (
-            session["front_user"]["id"],
+            user_id,
             3,
             title,
             description,
@@ -147,7 +158,27 @@ def create_footer_ad():
             valid_to
         ))
 
+        advert_id = cursor.lastrowid
         conn.commit()
+
+        # ===============================
+        # 5️⃣ WRITE AUDIT LOG
+        # ===============================
+        try:
+            cursor.execute("""
+                INSERT INTO audit_logs_cus
+                (cus_id, action, pages, detail, ip_address)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                "Create",
+                "footer_ads",
+                f"Created FOOTER_HOME ad: {title} | {months} months | {total_price} บาท",
+                request.remote_addr
+            ))
+            conn.commit()
+        except Exception as e:
+            print("Audit Log Error:", e)
 
     except Exception as e:
         print("DB ERROR:", e)

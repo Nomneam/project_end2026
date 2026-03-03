@@ -258,6 +258,89 @@ function setAuthTab(mode) {
 }
 
 
+// พิมพ์ได้เฉพาะตัวเลขเท่านั้น
+$("#regIdCard, #regPhone").on("input", function () {
+  this.value = this.value.replace(/[^0-9]/g, "");
+});
+
+
+
+$("#registerForm").off("submit.register").on("submit.register", function (e) {
+  e.preventDefault();
+
+  const username = $("#regUsername").val().trim();
+  const fname = $("#regFirst").val().trim();
+  const lname = $("#regLast").val().trim();
+  const phone = $("#regPhone").val().trim();
+  const idcard = $("#regIdCard").val().trim();
+  const email = $("#regEmail").val().trim();
+  const password = $("#regPassword").val();
+  const password2 = $("#regPassword2").val();
+
+  // ✅ เช็คฝั่งหน้าเว็บก่อน
+  if (!username || !fname || !lname || !phone || !idcard || !email || !password || !password2) {
+    Swal.fire({
+      icon: "warning",
+      title: "กรุณากรอกข้อมูลให้ครบ",
+      confirmButtonColor: "#002d62"
+    });
+    return;
+  }
+
+  if (password !== password2) {
+    Swal.fire({
+      icon: "error",
+      title: "รหัสผ่านไม่ตรงกัน",
+      confirmButtonColor: "#c00"
+    });
+    return;
+  }
+
+  // ✅ ส่งไป Flask
+  fetch("/register_cus", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      username,
+      fname,
+      lname,
+      phone,
+      idcard,
+      email,
+      password,
+    }),
+  })
+    .then((res) => res.json())
+    .then((res) => {
+      if (!res.ok) {
+        Swal.fire({
+          icon: "error",
+          title: res.message || "สมัครสมาชิกไม่สำเร็จ",
+          confirmButtonColor: "#c00"
+        });
+        return;
+      }
+
+      // ✅ สมัครสำเร็จ
+      Swal.fire({
+        icon: "success",
+        title: "สมัครสมาชิกสำเร็จ",
+        confirmButtonColor: "#002d62"
+      }).then(() => {
+        window.location.href = res.redirect;
+      });
+    })
+    .catch(() => {
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด กรุณาลองใหม่",
+      });
+    });
+});
+
+
 
 function bindAuth() {
   $("#btnOpenLogin").off("click.auth").on("click.auth", () => openAuthModal("login"));
@@ -307,13 +390,22 @@ $("#tabRegister").off("click.tab").on("click.tab", function () {
       })
         .then((r) => r.json())
         .then((res) => {
-          if (!res.ok) {
-            showAuthMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
-            return;
-          }
-          location.reload();
-        })
-        .catch(() => showAuthMsg("เกิดข้อผิดพลาด กรุณาลองใหม่"));
+  if (!res.ok) {
+    showAuthMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
+    return;
+  }
+
+  Swal.fire({
+    icon: "success",
+    title: "เข้าสู่ระบบสำเร็จ",
+    text: "กำลังพาคุณไปยังหน้าแรก...",
+    confirmButtonColor: "#002d62",
+    timer: 1500,
+    showConfirmButton: false
+  }).then(() => {
+    location.reload(); // reload เพื่อให้ session แสดง navbar แบบ logged in
+  });
+})
     });
 
   // LOGOUT

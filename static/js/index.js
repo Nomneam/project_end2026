@@ -747,10 +747,7 @@ async function loadFooterAds() {
 }
 
 
-  function renderTopicSections() {
-    if (!$("#topicSections").length) return;
-    $("#topicSections").html(`<div class="text-muted small">โซน Topics ยังเป็น mock (ถ้าจะทำ DB จริง เดี๋ยวผมจัด API ให้ครบ)</div>`);
-  }
+  
 
   // ======================================================
   // Render all

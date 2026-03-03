@@ -110,3 +110,18 @@ body {
     background: var(--bkk-navy);
     color: white;
 }
+
+
+#confirmPolicy:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#confirmPolicy {
+    background: var(--bkk-red);
+    border: none;
+}
+
+#confirmPolicy:hover {
+    background: #a50d1f;
+}

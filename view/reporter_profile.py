@@ -13,7 +13,7 @@ import bcrypt
 
 load_dotenv()
 
-owner_profile_bp = Blueprint('owner_profile', __name__)
+reporter_profile_bp = Blueprint('reporter_profile', __name__)
 
 def connect_db():
     return pymysql.connect(
@@ -58,7 +58,7 @@ def file_to_data_uri(file_storage):
         except Exception:
             pass
 
-@owner_profile_bp.route('/owner-profile')
+@reporter_profile_bp.route('/owner-profile')
 def owner_profile():
 
     user_session = session.get("user")
@@ -93,7 +93,7 @@ def owner_profile():
 # ==============================
 #  Update Profile (OWNER)
 # ==============================
-@owner_profile_bp.route("/owner-profile/update", methods=["POST"])
+@reporter_profile_bp.route("/owner-profile/update", methods=["POST"])
 def update_profile():
 
     user_session = session.get("user")
@@ -249,7 +249,7 @@ def update_profile():
 # ==============================
 #  Change Password (OWNER)
 # ==============================
-@owner_profile_bp.route("/owner-profile/change-password", methods=["POST"])
+@reporter_profile_bp.route("/owner-profile/change-password", methods=["POST"])
 def change_password():
 
     user_session = session.get("user")

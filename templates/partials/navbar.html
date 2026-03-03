@@ -52,7 +52,8 @@
           <div
             class="header-right w-100 w-md-auto d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-end gap-2"
           >
-            <!-- Search -->
+            <!-- Search (แสดงเฉพาะหน้า index) -->
+            {% if request.endpoint == 'index.index_news' %}
             <div
               class="top-search-wrap position-relative flex-grow-1"
               style="max-width: 360px; width: 100%"
@@ -65,6 +66,7 @@
               />
               <span class="top-search-icon">⌕</span>
             </div>
+            {% endif %}
 
             <!-- ================= AUTH SECTION ================= -->
 
@@ -308,6 +310,17 @@
             <!-- REGISTER -->
             <form id="registerForm" class="d-grid gap-3 d-none mt-2">
               <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="small fw-bold text-secondary">ชื่อผู้ใช้</label>
+                  <input
+                    id="regUsername"
+                    class="form-input mt-1"
+                    type="text"
+                    placeholder="กรุณากรอกชื่อผู้ใช้"
+                    required
+                  />
+                </div>
+                
                 <div class="col-md-6">
                   <label class="small fw-bold text-secondary">ชื่อ</label>
                   <input
@@ -328,6 +341,36 @@
                     required
                   />
                 </div>
+
+
+                 <div class="col-md-6">
+                  <label class="small fw-bold text-secondary">เบอร์โทร</label>
+                 <input
+                    id="regPhone"
+                    class="form-input mt-1"
+                    type="text"
+                    maxlength="10"
+                    pattern="\d{10}"
+                    inputmode="numeric"
+                    placeholder="09XXXXXXXX"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="small fw-bold text-secondary">รหัสบัตรประชาชน 13 หลัก</label>
+                  <input
+                    id="regIdCard"
+                    class="form-input mt-1"
+                    type="text"
+                    maxlength="13"
+                    pattern="\d{13}"
+                    inputmode="numeric"
+                    placeholder="11XXXXXXXXXXX"
+                    required
+                  />
+                </div>
+
+
               </div>
 
               <div>
@@ -369,10 +412,6 @@
               <button type="submit" class="btn btn-bkk-navy">
                 สมัครสมาชิก
               </button>
-              <p class="small text-secondary mb-0">
-                *สำหรับ mock: สมัครแล้วจะเข้าสู่ระบบให้ทันที (เก็บไว้ใน
-                localStorage)
-              </p>
             </form>
 
             <div id="authMsg" class="mt-3 fw-bold text-danger d-none"></div>

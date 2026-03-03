@@ -1,5 +1,9 @@
 // static/js/ads-overview.js
 
+
+let countdownInterval = null;
+let remainingSeconds = 0;
+
 $(document).ready(function () {
   const pageSize = 5;
   let currentPage = 1;
@@ -81,48 +85,137 @@ $(document).ready(function () {
   }
 
 
+// ====== PAYMENT FLOW (TMWEASY) ======
+
+let currentIdPay = null;
+
 $(document).on("click", ".pay-btn", function () {
   const advId = $(this).data("id");
 
-  // เก็บ id ให้ปุ่ม confirm ใช้
-  $("#confirmPayment").data("id", advId);
-
-  // แสดง loading ชั่วคราว
   $("#qrImage").attr("src", "");
-  $("#payAmount").text("กำลังโหลด...");
+  $("#payAmount").text("กำลังสร้างรายการ...");
 
-  // โหลด QR จาก backend
-  $.get(`/payment/create-charge/${advId}`, function (res) {
-    $("#qrImage").attr("src", res.qr);
-    $("#payAmount").text(res.amount + " บาท");
+  // STEP 1: สร้าง id_pay
+  $.get(`/payment/tmw-create/${advId}`, function (res) {
 
-    // เปิด modal หลังโหลดเสร็จ
-    $("#paymentModal").modal("show");
-  }).fail(function () {
-    alert("ไม่สามารถสร้าง QR ได้");
-  });
-});
+    currentIdPay = res.id_pay;
 
-// เมื่อผู้ใช้กดยืนยันว่าชำระเงินแล้ว
-$("#confirmPayment").click(function () {
-  const advId = $(this).data("id");
+    // STEP 2: ขอ QR
+    $.ajax({
+      url: "/payment/tmw-qr",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ id_pay: currentIdPay }),
+      success: function (qrRes) {
 
-  $.post(`/payment/confirm/${advId}`, function () {
-    Swal.fire({
-      icon: "success",
-      title: "ชำระเงินเรียบร้อย",
-      text: "โฆษณาของคุณกำลังเริ่มแสดงผล",
-      confirmButtonText: "ตกลง"
-    }).then(() => location.reload());
-  }).fail(function () {
-    Swal.fire({
-      icon: "error",
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถยืนยันการชำระเงินได้"
+        $("#qrImage").attr(
+          "src",
+          "data:image/png;base64," + qrRes.qr_image
+        );
+
+        remainingSeconds = qrRes.timeout;
+        startCountdown();
+
+        $("#paymentModal").modal("show");
+
+        // เริ่มเช็คสถานะทุก 5 วิ
+        startCheckingPayment();
+      }
     });
+
+  }).fail(function () {
+    Swal.fire("ผิดพลาด", "ไม่สามารถสร้างรายการได้", "error");
   });
 });
 
+
+
+function startCountdown() {
+
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  updateCountdownText();
+
+  countdownInterval = setInterval(function () {
+
+    remainingSeconds--;
+
+    updateCountdownText();
+
+    if (remainingSeconds <= 0) {
+      clearInterval(countdownInterval);
+      clearInterval(checkInterval);
+
+      $("#countdownText").text("หมดเวลาชำระเงิน");
+    }
+
+  }, 1000);
+}
+
+function updateCountdownText() {
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  $("#countdownText").text(
+    "กรุณาชำระเงินภายใน " +
+    minutes.toString().padStart(2, '0') +
+    ":" +
+    seconds.toString().padStart(2, '0')
+  );
+}
+
+
+
+
+let checkInterval = null;
+
+function startCheckingPayment() {
+
+  if (checkInterval) clearInterval(checkInterval);
+
+  checkInterval = setInterval(function () {
+
+    $.ajax({
+      url: "/payment/tmw-confirm",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ id_pay: currentIdPay }),
+      success: function (res) {
+
+        if (res.status === "paid") {
+
+          clearInterval(checkInterval);
+
+          Swal.fire({
+            icon: "success",
+            title: "ชำระเงินสำเร็จ",
+            text: "โฆษณาของคุณกำลังเริ่มแสดงผล"
+          }).then(() => location.reload());
+        }
+      }
+    });
+
+  }, 2000);
+}
+
+
+// หยุด polling ถ้าปิด modal
+$('#paymentModal').on('hidden.bs.modal', function () {
+
+  if (checkInterval) {
+    clearInterval(checkInterval);
+    checkInterval = null;
+  }
+
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+
+  remainingSeconds = 0;
+  currentIdPay = null;
+});
 
 
 // เปิด modal แก้ไข

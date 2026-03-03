@@ -209,7 +209,11 @@
           <article class="cat-card h-100">
             <img
               class="cat-card-img"
-              src="${n.cover_image || "/static/img/no-image.jpg"}"
+              src="${
+                n.cover_image
+                  ? '/static/' + n.cover_image
+                  : '/static/img/no-image.jpg'
+              }"
               alt="${n.title}"
             />
             <div class="position-absolute top-0 start-0 p-3">

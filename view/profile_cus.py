@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, abort, session, redirect, url_for
 import base64
 from dotenv import load_dotenv
-from view.navbar import load_nav_categories
 import pymysql
 import os
 import bcrypt
@@ -64,10 +63,8 @@ def update_profile():
     file = request.files.get("avatar")
 
     avatar_base64 = None
-
     if file and file.filename != "":
         avatar_base64 = base64.b64encode(file.read()).decode()
-
 
     fname = (data.get("fname") or "").strip()
     lname = (data.get("lname") or "").strip()
@@ -77,6 +74,44 @@ def update_profile():
     citizen_id = (data.get("citizen_id") or "").strip()
 
     conn = connect_db()
+
+    # ==========================
+    # 1️⃣ ดึงข้อมูลเก่า
+    # ==========================
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT cus_fname, cus_lname, cus_phone,
+                   cus_email, cus_address, cus_idcard
+            FROM customer
+            WHERE cus_id=%s
+        """, (user_id,))
+        old_data = cursor.fetchone()
+
+    # ==========================
+    # 2️⃣ เทียบข้อมูล
+    # ==========================
+    changes = []
+
+    field_map = {
+        "cus_fname": fname,
+        "cus_lname": lname,
+        "cus_phone": phone,
+        "cus_email": email,
+        "cus_address": address,
+        "cus_idcard": citizen_id,
+    }
+
+    for field, new_value in field_map.items():
+        old_value = (old_data.get(field) or "").strip()
+        if old_value != new_value:
+            changes.append(f"{field}: {old_value} → {new_value}")
+
+    if avatar_base64:
+        changes.append("Avatar updated")
+
+    # ==========================
+    # 3️⃣ UPDATE DB
+    # ==========================
     with conn.cursor() as cursor:
         cursor.execute("""
             UPDATE customer
@@ -86,8 +121,7 @@ def update_profile():
                 cus_email=%s,
                 cus_address=%s,
                 cus_idcard=%s,
-                cus_profile=COALESCE(%s, cus_profile),
-                updated_by=%s
+                cus_profile=COALESCE(%s, cus_profile)
             WHERE cus_id=%s
         """, (
             fname,
@@ -97,20 +131,38 @@ def update_profile():
             address,
             citizen_id,
             avatar_base64,
-            user_id,
             user_id
         ))
 
     conn.commit()
+
+    # ==========================
+    # 4️⃣ เขียน Audit Log
+    # ==========================
+    if changes:
+        detail_text = " | ".join(changes)
+
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO audit_logs_cus
+                    (cus_id, action, pages, detail, ip_address)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    user_id,
+                    "Update",
+                    "profile_customer",
+                    detail_text,
+                    request.remote_addr
+                ))
+            conn.commit()
+        except Exception as e:
+            print("Audit Error:", e)
+
     conn.close()
 
-    # ✅ อัปเดตแค่ชื่อใน session (ไม่เก็บรูป)
-    session["front_user"] = {
-        "id": user_id,
-        "username": session["front_user"]["username"],
-        "name": f"{fname} {lname}".strip(),
-    }
-
+    # อัปเดต session
+    session["front_user"]["name"] = f"{fname} {lname}".strip()
     session.modified = True
 
     return jsonify(ok=True)
@@ -182,12 +234,33 @@ def change_password():
             cursor.execute("""
                 UPDATE customer
                 SET cus_password_hash=%s,
-                    updated_by=%s,
                     updated_at=NOW()
                 WHERE cus_id=%s
-            """, (new_hash, user_id, user_id))
+            """, (new_hash,user_id))
         conn.commit()
         conn.close()
+
+        # =========================
+        # เขียน Audit Log - Change Password
+        # =========================
+        try:
+            conn = connect_db()
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO audit_logs_cus
+                    (cus_id, action, pages, detail, ip_address)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    user_id,
+                    "Update",
+                    "change_password",
+                    "Customer changed password",
+                    request.remote_addr
+                ))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("Audit Change Password Error:", e)
 
         return jsonify(ok=True, message="เปลี่ยนรหัสผ่านสำเร็จ")
 

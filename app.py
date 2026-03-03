@@ -1,8 +1,6 @@
 from flask import Flask
 from dotenv import load_dotenv
 import os
-import omise
-
 
 load_dotenv()
 
@@ -39,6 +37,8 @@ from view.owner_profile import owner_profile_bp
 from view.footer_context import load_footer_data
 from view.setting_system import setting_system_bp
 from view.payment_routes import payment_bp
+from view.register_cus import register_cus_bp
+from view.reporter_profile import reporter_profile_bp
 
 
 
@@ -46,8 +46,6 @@ from view.payment_routes import payment_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
-omise.api_public = os.getenv("OMISE_PUBLIC_KEY")
-omise.api_secret = os.getenv("OMISE_SECRET_KEY")
 # register blueprints
 app.register_blueprint(login_emp_bp)
 app.register_blueprint(dashboard_admin_bp)
@@ -77,6 +75,8 @@ app.register_blueprint(advert_dashbord_bp)
 app.register_blueprint(owner_profile_bp)
 app.register_blueprint(setting_system_bp)
 app.register_blueprint(payment_bp, url_prefix="/payment")
+app.register_blueprint(register_cus_bp)
+app.register_blueprint(reporter_profile_bp)
 
 @app.route('/')
 def home():

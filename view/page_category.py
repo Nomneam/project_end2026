@@ -174,7 +174,7 @@ def api_ads_hero():
                     adv_image_url,
                     target_url
                 FROM advert
-                WHERE status = 'approved'
+                WHERE status = 'running'
                   AND adv_position = 'CATEGORY_PAGE'
                   AND del_flg = 0
                   AND (valid_from IS NULL OR valid_from <= NOW())

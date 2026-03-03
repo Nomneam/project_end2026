@@ -61,28 +61,34 @@ def create_icon_ad():
     if "front_user" not in session:
         return jsonify({"error": "กรุณาเข้าสู่ระบบก่อนลงโฆษณา"}), 401
 
-    name = request.form.get("name")
-    url = request.form.get("url")
+    user_id = session["front_user"]["id"]
+
+    name = (request.form.get("name") or "").strip()
+    url = (request.form.get("url") or "").strip()
     months = request.form.get("months")
     image = request.files.get("image")
 
-    # ✅ ตรวจสอบข้อมูล
+    # ===============================
+    # VALIDATION
+    # ===============================
     if not name or not url or not months or not image:
         return jsonify({"error": "กรอกข้อมูลไม่ครบ"}), 400
 
     try:
         months = int(months)
-        if months <= 0:
-            raise ValueError
+        if months < 1 or months > 12:
+            return jsonify({"error": "เลือกได้ 1-12 เดือน"}), 400
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
+
+    conn = None
 
     try:
         conn = connect_db()
         cursor = conn.cursor()
 
         # ===============================
-        # ✅ ดึงราคา Icon จาก DB
+        # 1️⃣ ดึงราคา Icon จาก DB
         # ===============================
         cursor.execute("""
             SELECT price_per_month
@@ -99,7 +105,7 @@ def create_icon_ad():
         total_price = icon_price * months
 
         # ===============================
-        # ✅ อัปโหลดรูป
+        # 2️⃣ อัปโหลดรูป
         # ===============================
         upload_folder = "static/uploads/ads"
         os.makedirs(upload_folder, exist_ok=True)
@@ -111,13 +117,13 @@ def create_icon_ad():
         image_url = f"/static/uploads/ads/{filename}"
 
         # ===============================
-        # ✅ คำนวณวันหมดอายุ
+        # 3️⃣ คำนวณวันหมดอายุ
         # ===============================
         valid_from = datetime.now()
         valid_to = valid_from + relativedelta(months=months)
 
         # ===============================
-        # ✅ บันทึกโฆษณา
+        # 4️⃣ INSERT ADVERT
         # ===============================
         sql = """
             INSERT INTO advert
@@ -139,8 +145,8 @@ def create_icon_ad():
         """
 
         cursor.execute(sql, (
-            session["front_user"]["id"],
-            2,                # Icon category
+            user_id,
+            2,
             name,
             image_url,
             url,
@@ -151,14 +157,35 @@ def create_icon_ad():
             "draft"
         ))
 
+        advert_id = cursor.lastrowid
         conn.commit()
+
+        # ===============================
+        # 5️⃣ WRITE AUDIT LOG
+        # ===============================
+        try:
+            cursor.execute("""
+                INSERT INTO audit_logs_cus
+                (cus_id, action, pages, detail, ip_address)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                "Create",
+                "icon_ads",
+                f"Created HOME_ICON ad: {name} | {months} months | {total_price} บาท",
+                request.remote_addr
+            ))
+            conn.commit()
+        except Exception as e:
+            print("Audit Log Error:", e)
 
     except Exception as e:
         print("DB ERROR:", e)
         return jsonify({"error": "บันทึกข้อมูลไม่สำเร็จ"}), 500
 
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
     return jsonify({
         "success": True,
