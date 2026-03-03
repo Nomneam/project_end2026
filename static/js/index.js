@@ -38,18 +38,6 @@ $(function () {
     return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  function timeAgo(ts) {
-    const d = toDate(ts);
-    if (!d) return "—";
-    const diff = Math.max(0, Date.now() - d.getTime());
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "เมื่อสักครู่";
-    if (mins < 60) return `${mins} นาทีที่แล้ว`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs} ชม. ที่แล้ว`;
-    const days = Math.floor(hrs / 24);
-    return `${days} วันก่อน`;
-  }
 
   function buildNewsUrl(id) {
     return `/news/${encodeURIComponent(id)}`;
@@ -377,7 +365,7 @@ async function loadFooterAds() {
               <div class="p-3 latest-body">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                   <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.cat_name))}</span>
-                  <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
+                  <span class="small text-muted">${escapeHtml(n.time_ago)}</span>
                 </div>
                 <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
                 <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.excerpt || ""))}</div>
@@ -465,7 +453,7 @@ async function loadFooterAds() {
               <div class="p-3 latest-body">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                   <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.cat_name))}</span>
-                  <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
+                  <span class="small text-muted">${escapeHtml(n.time_ago)}</span>
                 </div>
                 <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
                 <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.excerpt || ""))}</div>
@@ -533,7 +521,7 @@ async function loadFooterAds() {
             <div class="popular-rank">${idx + 1}</div>
             <div class="flex-grow-1 popular-body">
               <div class="small text-muted mb-1">
-                ${escapeHtml(n.cat_name)} • ${escapeHtml(timeAgo(n.published_at))} • ${escapeHtml(n.view_count)} วิว
+                ${escapeHtml(n.cat_name)} • ${escapeHtml(n.time_ago)}• ${escapeHtml(n.view_count)} วิว
               </div>
               <div class="fw-bold small line-clamp-2">
                 ${escapeHtml(n.news_title)}
@@ -711,7 +699,7 @@ async function loadFooterAds() {
                   ${escapeHtml(cat.cat_name)}
                 </span>
                 <span class="small text-muted">
-                  ${escapeHtml(timeAgo(n.published_at))}
+                  ${escapeHtml(n.time_ago)}
                 </span>
               </div>
 
