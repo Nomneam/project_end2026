@@ -141,6 +141,24 @@ def create_sidebar_ad():
 
             conn.commit()
 
+
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO audit_logs_cus
+                        (cus_id, action, pages, detail, ip_address)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (
+                        session["front_user"]["id"],
+                        "Create",
+                        "sidebar_ads",
+                        f"Created SIDEBAR ad: {name} | {months} months | {total_price} บาท",
+                        request.remote_addr
+                    ))
+                conn.commit()
+            except Exception as e:
+                print("Audit Log Error:", e)
+
     except Exception as e:
         print("DB ERROR:", e)
         return jsonify({"error": "บันทึกข้อมูลไม่สำเร็จ"}), 500
