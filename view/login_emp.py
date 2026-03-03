@@ -5,12 +5,14 @@ import pymysql
 import pymysql.cursors
 import bcrypt
 
-# โหลด .env
 load_dotenv()
 
 login_emp_bp = Blueprint("login_emp", __name__)
 
-# ฟังก์ชันเชื่อม DB
+
+# =========================
+# CONNECT DATABASE
+# =========================
 def connect_db():
     return pymysql.connect(
         host=os.environ.get("HOST"),
@@ -21,16 +23,18 @@ def connect_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-# ==========================================================
-# auditlogin_emp
-# ==========================================================
+
+# =========================
+# AUDIT LOG
+# =========================
 def audit_log(emp_id, action, pages="", detail=""):
     conn = None
     try:
         conn = connect_db()
         with conn.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO audit_logs_emp (emp_id, action, pages, detail, ip_address, created_at)
+                INSERT INTO audit_logs_emp 
+                (emp_id, action, pages, detail, ip_address, created_at)
                 VALUES (%s, %s, %s, %s, %s, NOW())
             """, (
                 emp_id,
@@ -47,23 +51,29 @@ def audit_log(emp_id, action, pages="", detail=""):
             conn.close()
 
 
+# =========================
+# LOGIN
+# =========================
 @login_emp_bp.route("/login_emp", methods=["GET", "POST"])
 def login_emp():
-    error = None
 
     if request.method == "POST":
+
         username = (request.form.get("username") or "").strip()
         password = (request.form.get("password") or "").strip()
 
         if not username or not password:
-            error = "กรุณากรอก Username และ Password"
-            return render_template("login_emp.html", error=error)
+            return render_template(
+                "login_emp.html",
+                error="กรุณากรอก Username และ Password"
+            )
 
         conn = None
         cursor = None
         try:
             conn = connect_db()
             cursor = conn.cursor()
+
             cursor.execute("""
                 SELECT 
                     e.emp_id,
@@ -79,37 +89,43 @@ def login_emp():
                   AND e.del_flg = 0
                 LIMIT 1
             """, (username,))
+
             user = cursor.fetchone()
+
         finally:
-            try:
-                if cursor:
-                    cursor.close()
-            finally:
-                if conn:
-                    conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
-        # ไม่เจอ user หรือไม่มี hash
+        # ไม่พบ user
         if not user or not user.get("emp_password_hash"):
-            error = "Username หรือ Password ไม่ถูกต้อง"
-            return render_template("login_emp.html", error=error)
+            return render_template(
+                "login_emp.html",
+                error="Username หรือ Password ไม่ถูกต้อง"
+            )
 
-        # ตรวจสอบรหัสผ่าน
-        stored_hash = (user["emp_password_hash"] or "").strip().encode("utf-8")
+        # ตรวจรหัสผ่าน
+        stored_hash = user["emp_password_hash"].strip().encode("utf-8")
         password_bytes = password.encode("utf-8")
 
         if not bcrypt.checkpw(password_bytes, stored_hash):
-            error = "Username หรือ Password ไม่ถูกต้อง"
-            return render_template("login_emp.html", error=error)
+            return render_template(
+                "login_emp.html",
+                error="Username หรือ Password ไม่ถูกต้อง"
+            )
 
-        # login ผ่าน -> เก็บ session โดยใช้ emp_fname เป็นชื่อแสดงผล
+        # =========================
+        # LOGIN SUCCESS
+        # =========================
         session["user"] = {
             "id": user["emp_id"],
             "username": user["emp_username"],
-            "fname": user.get("emp_fname") or user["emp_username"],  #  ใช้ emp_fname
+            "fname": user.get("emp_fname") or user["emp_username"],
             "lname": user.get("emp_lname") or "",
             "role_id": user.get("role_id"),
-            "role_name": user.get("role_name") or "",               # จาก DB (ถ้ามี)
-            "avatar_url": None,                                     # ปรับได้ถ้ามีใน DB
+            "role_name": user.get("role_name") or "",
+            "avatar_url": None,
         }
 
         audit_log(
@@ -119,33 +135,46 @@ def login_emp():
             detail="Employee login success"
         )
 
-        # Redirect ตาม role (ไม่ใช้ mapping)
+        # กำหนด redirect ตาม role
         if user.get("role_id") == 1:
-            return redirect(url_for("dashboard_admin.admin_dashboard"))
+            redirect_url = url_for("dashboard_admin.admin_dashboard")
         elif user.get("role_id") == 2:
-            return redirect(url_for("dashboard_reporter.reporter_dashboard"))
+            redirect_url = url_for("dashboard_reporter.reporter_dashboard")
         elif user.get("role_id") == 3:
-            return redirect(url_for("dashboard_owner.owner_dashboard"))
+            redirect_url = url_for("dashboard_owner.owner_dashboard")
         else:
             session.clear()
-            error = "Role ไม่ถูกต้อง"
-            return render_template("login_emp.html", error=error)
+            return render_template(
+                "login_emp.html",
+                error="Role ไม่ถูกต้อง"
+            )
 
-    return render_template("login_emp.html", error=error)
+        # 🔥 ส่ง success + redirect ให้ JS ทำงาน
+        return render_template(
+            "login_emp.html",
+            success=True,
+            redirect_url=redirect_url
+        )
+
+    # GET
+    return render_template("login_emp.html")
 
 
+# =========================
+# LOGOUT
+# =========================
 @login_emp_bp.route("/logout_emp")
 def logout_emp():
+
     user = session.get("user")
 
     if user and user.get("id"):
-        #  เรียกใช้ฟังก์ชัน audit log
         audit_log(
-                emp_id=user["id"],
-                action="Logout",
-                pages="/logout_emp",
-                detail="Employee logout"
-            )
+            emp_id=user["id"],
+            action="Logout",
+            pages="/logout_emp",
+            detail="Employee logout"
+        )
+
     session.clear()
     return redirect(url_for("login_emp.login_emp"))
-
