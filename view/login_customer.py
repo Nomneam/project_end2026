@@ -76,6 +76,28 @@ def login_cus():
 
     session.modified = True  # ป้องกันกรณี session ไม่อัปเดต
 
+    # ======================
+    # เขียน Audit Log Login
+    # ======================
+    try:
+        conn = connect_db()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO audit_logs_cus
+                (cus_id, action, pages, detail, ip_address)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user["cus_id"],
+                "Login",
+                "login",
+                "Customer logged in",
+                request.remote_addr
+            ))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Audit Login Error:", e)
+
     return jsonify(
         ok=True,
         user={
@@ -109,5 +131,27 @@ def get_avatar(user_id):
 
 @login_customer_bp.route("/logout_cus")
 def logout_cus():
+    user = session.get("front_user")
+
+    if user:
+        try:
+            conn = connect_db()
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO audit_logs_cus
+                    (cus_id, action, pages, detail, ip_address)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    user["id"],
+                    "Logout",
+                    "logout",
+                    "Customer logged out",
+                    request.remote_addr
+                ))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("Audit Logout Error:", e)
+
     session.pop("front_user", None)
     return redirect(url_for("index.index_news"))
