@@ -319,7 +319,7 @@ async function loadFooterAds() {
             <img src="${escapeHtml(img)}" class="rounded-3 must-read-img" alt="">
             <div class="flex-grow-1 must-read-body">
               <div class="fw-bold small line-clamp-2">${escapeHtml(safeText(x.news_title))}</div>
-              <div class="small text-muted mt-1">${escapeHtml(safeText(x.cat_name))} • ${escapeHtml(timeAgo(x.published_at))}</div>
+              <div class="small text-muted mt-1">${escapeHtml(safeText(x.cat_name))} • ${escapeHtml(x.time_ago)}</div>
             </div>
           </a>
         `;

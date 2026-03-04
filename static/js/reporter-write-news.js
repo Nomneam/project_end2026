@@ -3,6 +3,8 @@ $(function () {
   if ($form.length === 0) return;
 
   const MAX_SUB_IMAGES = 5;
+  const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+  const $videoInput = $('input[name="video_file"]');
 
   // ======================================================
   // SweetAlert helpers
@@ -273,6 +275,28 @@ $(function () {
       swalFire({ icon: "warning", title: "กรุณาเลือกรูปหลัก" });
       return;
     }
+
+    const videoFile = $videoInput[0].files[0];
+
+if (videoFile) {
+  if (videoFile.type !== "video/mp4") {
+    swalFire({
+      icon: "warning",
+      title: "ไฟล์วิดีโอไม่ถูกต้อง",
+      text: "รองรับเฉพาะไฟล์ .mp4 เท่านั้น",
+    });
+    return;
+  }
+
+  if (videoFile.size > MAX_VIDEO_SIZE) {
+    swalFire({
+      icon: "warning",
+      title: "ไฟล์ใหญ่เกินกำหนด",
+      text: "วิดีโอต้องไม่เกิน 100MB",
+    });
+    return;
+  }
+}
 
     const formData = new FormData(this);
 

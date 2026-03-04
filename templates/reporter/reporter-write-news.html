@@ -255,6 +255,19 @@ endblock %} {% block head %}
           </div>
         </div>
 
+        <hr class="my-4" />
+
+        <div class="mb-4">
+          <label class="form-label"><b>วิดีโอ (ถ้ามี)</b></label>
+          <input
+            type="file"
+            class="form-control"
+            name="video_file"
+            accept="video/mp4"
+          />
+          <div class="form-text">รองรับไฟล์ .mp4 ไม่เกิน 100MB</div>
+        </div>
+
         <!-- Sticky Actions -->
         <div class="sticky-actions mt-4">
           <div

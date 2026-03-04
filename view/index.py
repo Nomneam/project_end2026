@@ -115,6 +115,8 @@ def api_news_must_read():
                 LIMIT %s
             """, (limit,))
             items = cur.fetchall()
+            for item in items:
+                item["time_ago"] = time_ago(item.get("published_at"))
     finally:
         db.close()
 
