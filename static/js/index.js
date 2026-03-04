@@ -724,7 +724,7 @@ async function loadFooterAds() {
     container.append(`
       <div class="mb-5">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-          <h2 class="font-kanit fw-bold m-0">${cat.cat_name}</h2>
+          <h2 class="font-kanit fw-bold text-navy-bkk m-0">${cat.cat_name}</h2>
         </div>
         <div class="row g-3">
           ${grid}
