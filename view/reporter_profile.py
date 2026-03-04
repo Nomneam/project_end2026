@@ -58,8 +58,8 @@ def file_to_data_uri(file_storage):
         except Exception:
             pass
 
-@reporter_profile_bp.route('/owner-profile')
-def owner_profile():
+@reporter_profile_bp.route('/reporter-profile')
+def reporter_profile():
 
     user_session = session.get("user")
     if not user_session or not user_session.get("id"):
@@ -86,14 +86,14 @@ def owner_profile():
     finally:
         conn.close()
 
-    return render_template('owner/owner-profile.html', user=user)
+    return render_template('reporter/profile-reporter.html', user=user)
 
 
 
 # ==============================
-#  Update Profile (OWNER)
+#  Update Profile 
 # ==============================
-@reporter_profile_bp.route("/owner-profile/update", methods=["POST"])
+@reporter_profile_bp.route("/reporter-profile/update", methods=["POST"])
 def update_profile():
 
     user_session = session.get("user")
@@ -247,9 +247,9 @@ def update_profile():
 
 
 # ==============================
-#  Change Password (OWNER)
+#  Change Password 
 # ==============================
-@reporter_profile_bp.route("/owner-profile/change-password", methods=["POST"])
+@reporter_profile_bp.route("/reporter-profile/change-password", methods=["POST"])
 def change_password():
 
     user_session = session.get("user")
