@@ -141,6 +141,30 @@ def build_news_filters(user_id: int):
     }
 
 
+# ==============================
+# AUDIT LOG FUNCTION
+# ==============================
+def write_audit_log(emp_id: int, action: str, pages: str, detail: str):
+    try:
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+
+        conn = connect_db()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO audit_logs_emp
+                (emp_id, action, pages, detail, ip_address, created_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+                """,
+                (emp_id, action, pages, detail, ip),
+            )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Audit log error:", e)
+        
+        
+
 # ---------------- Dashboard (HTML render) ----------------
 @dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
 def reporter_dashboard():
@@ -343,6 +367,14 @@ def reporter_soft_delete(news_id):
                 """,
                 (user_id, news_id),
             )
+            
+         # ✅ เพิ่มตรงนี้
+        write_audit_log(
+            emp_id=user_id,
+            action="Delete",
+            pages="Reporter Dashboard",
+            detail=f"ลบข่าว (ID {news_id})",
+        )
 
         return jsonify({"ok": True, "message": "ลบข่าวเรียบร้อย"}), 200
     finally:
@@ -523,6 +555,31 @@ def reporter_news_update(news_id):
                     final_subs = new_subs
                 else:
                     final_subs = old_subs  # ไม่อัปโหลดใหม่ -> คงเดิม
+            
+            # ==============================
+            # COMPARE CHANGES
+            # ==============================
+            changes = []
+
+            def compare(field_name, old_val, new_val):
+                if (old_val or "") != (new_val or ""):
+                    changes.append(f"{field_name}: '{old_val}' → '{new_val}'")
+
+            compare("หัวข้อข่าว", old.get("news_title"), news_title)
+            compare("เนื้อหา", old.get("news_content"), news_content)
+            compare("หมวดหลัก", old.get("cat_id"), cat_id)
+            compare("หมวดย่อย", old.get("subcat_id"), subcat_id)
+            compare("ประเภทข่าว", old.get("is_featured"), is_featured)
+            compare("สถานะ", old.get("status"), status)
+
+            if (old.get("cover_image") or "") != (final_cover or ""):
+                changes.append("รูปปก: เปลี่ยนแปลง")
+
+            old_sub_compare = json.dumps(old_subs, ensure_ascii=False)
+            new_sub_compare = json.dumps(final_subs, ensure_ascii=False)
+
+            if old_sub_compare != new_sub_compare:
+                changes.append("รูปภาพรอง: เปลี่ยนแปลง")
 
             cursor.execute(
                 """
@@ -559,6 +616,19 @@ def reporter_news_update(news_id):
                     status,
                     news_id,
                 ),
+            )
+            
+        if changes:
+            detail_text = (
+                f"แก้ไขข่าว '{news_title}' (ID {news_id})\n"
+                + "\n".join(changes)
+            )
+
+            write_audit_log(
+                emp_id=user_id,
+                action="Update",
+                pages="Reporter Dashboard",
+                detail=detail_text,
             )
 
         return jsonify({"ok": True, "message": "บันทึกการแก้ไขเรียบร้อย"}), 200
