@@ -137,7 +137,7 @@ def get_news_by_id(news_id):
                     n.created_at,
                     n.cover_image,
                     n.sub_images,
-                    n.video_url,
+                    n.video_path,
                     n.cat_id,
                     n.subcat_id,
 
@@ -241,7 +241,6 @@ def update_news(news_id):
     status = request.form.get("status")
     cat_id = request.form.get("cat_id", type=int)
     subcat_id = request.form.get("subcat_id", type=int)
-    video_url = request.form.get("video_url")
 
     main_image = request.files.get("main_image")
     sub_images = request.files.getlist("sub_images")
@@ -323,7 +322,6 @@ def update_news(news_id):
                     subcat_id=%s,
                     cover_image=%s,
                     sub_images=%s,
-                    video_url=%s,
                     updated_at=NOW(),
                     updated_by=%s
                 WHERE news_id=%s
@@ -335,7 +333,6 @@ def update_news(news_id):
                 subcat_id,
                 cover_image,
                 final_sub_images,
-                video_url,
                 user.get("id"),
                 news_id
             ))

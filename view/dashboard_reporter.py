@@ -455,7 +455,6 @@ def reporter_news_update(news_id):
     subcat_id = safe_int(request.form.get("subcat_id"), default=None)
     is_featured = safe_int(request.form.get("is_featured"), default=0)
     status = (request.form.get("status") or "draft").strip()
-    video_url = (request.form.get("video_url") or "").strip()
 
     if not news_title or not news_content or not cat_id:
         return jsonify({"ok": False, "message": "กรุณากรอกข้อมูลที่จำเป็นให้ครบ"}), 400
@@ -537,7 +536,6 @@ def reporter_news_update(news_id):
                   status=%s,
                   cover_image=%s,
                   sub_images=%s,
-                  video_url=%s,
                   updated_by=%s,
                   updated_at=NOW(),
                   published_at = CASE
@@ -556,7 +554,6 @@ def reporter_news_update(news_id):
                     status,
                     final_cover,
                     json.dumps(final_subs, ensure_ascii=False),
-                    video_url,
                     user_id,
                     status,
                     status,
