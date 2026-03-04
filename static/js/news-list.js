@@ -22,14 +22,19 @@ $(function () {
   }
 
   function safeSetImg($img, $empty, src) {
-    if (src && String(src).trim() !== "") {
-      $img.attr("src", src).show();
-      $empty.hide();
-    } else {
-      $img.attr("src", "").hide();
-      $empty.show();
-    }
+  if (src && String(src).trim() !== "") {
+
+    const finalSrc = src.startsWith("http")
+      ? src
+      : "/static/" + src;
+
+    $img.attr("src", finalSrc).show();
+    $empty.hide();
+  } else {
+    $img.attr("src", "").hide();
+    $empty.show();
   }
+}
 
   function renderSubImages(container, emptyEl, subImagesRaw) {
     container.empty();
@@ -55,8 +60,13 @@ $(function () {
     }
 
     arr.forEach((src) => {
-      container.append(`<img src="${src}" alt="sub">`);
-    });
+
+  const finalSrc = src.startsWith("http")
+    ? src
+    : "/static/" + src;
+
+  container.append(`<img src="${finalSrc}" alt="sub" style="max-height:120px;">`);
+});
   }
 
   // ✅ click ดูรายละเอียด

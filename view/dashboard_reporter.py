@@ -377,7 +377,7 @@ def reporter_news_detail(news_id):
 
                     n.cover_image,
                     n.sub_images,
-                    n.video_url,
+                    n.video_path,
 
                     c.cat_name AS category_name,
                     s.subcat_name AS subcategory_name

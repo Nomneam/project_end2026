@@ -48,14 +48,18 @@ $(function () {
   // View helpers
   // ======================================================
   function safeSetImg($img, $empty, src) {
-    if (src && String(src).trim() !== "") {
-      $img.attr("src", src).show();
-      $empty.hide();
-    } else {
-      $img.attr("src", "").hide();
-      $empty.show();
-    }
+  if (src && String(src).trim() !== "") {
+    const finalSrc = src.startsWith("http")
+      ? src
+      : "/static/" + src;
+
+    $img.attr("src", finalSrc).show();
+    $empty.hide();
+  } else {
+    $img.attr("src", "").hide();
+    $empty.show();
   }
+}
 
   function parseSubImages(raw) {
     if (!raw) return [];
@@ -80,13 +84,17 @@ $(function () {
     }
 
     arr.forEach((src) => {
-      const img = $(
-        `<img src="${src}" alt="sub"
-              style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">`
-      );
-      container.append(img);
-    });
-  }
+  const finalSrc = src.startsWith("http")
+    ? src
+    : "/static/" + src;
+
+  const img = $(`
+    <img src="${finalSrc}" alt="sub"
+      style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">
+  `);
+  container.append(img);
+});
+}
 
   // ======================================================
   // AJAX Pagination + Filter (ไม่เปลี่ยน URL)
@@ -390,17 +398,21 @@ $(function () {
   }
 
   function setCoverPreviewFromUrl(url) {
-    const $img = $("#e_cover_preview");
-    const $empty = $("#e_cover_empty");
+  const $img = $("#e_cover_preview");
+  const $empty = $("#e_cover_empty");
 
-    if (url && String(url).trim() !== "") {
-      $img.attr("src", url).show();
-      $empty.hide();
-    } else {
-      $img.attr("src", "").hide();
-      $empty.show();
-    }
+  if (url && String(url).trim() !== "") {
+    const finalUrl = url.startsWith("http")
+      ? url
+      : "/static/" + url;
+
+    $img.attr("src", finalUrl).show();
+    $empty.hide();
+  } else {
+    $img.attr("src", "").hide();
+    $empty.show();
   }
+}
 
   function setSubPreviewFromUrls(urls) {
     const $wrap = $("#e_sub_preview");
@@ -414,11 +426,15 @@ $(function () {
 
     $empty.hide();
     urls.forEach((src) => {
-      $wrap.append(
-        `<img src="${src}" alt="sub"
-              style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">`
-      );
-    });
+    const finalSrc = src.startsWith("http")
+      ? src
+      : "/static/" + src;
+
+    $wrap.append(`
+      <img src="${finalSrc}" alt="sub"
+        style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">
+    `);
+  });
   }
 
   $("#e_cover_file").on("change", function () {
