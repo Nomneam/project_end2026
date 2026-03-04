@@ -85,7 +85,7 @@ def api_news_featured():
                   LEFT(COALESCE(n.news_content,''), 180) AS excerpt
                 FROM news n
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
-                WHERE n.del_flg=0 AND n.status='publish' AND n.is_featured=1
+                WHERE n.del_flg=0 AND n.status='publish' AND n.is_featured=1 AND n.video_path IS NULL
                 ORDER BY n.published_at DESC, n.news_id DESC
                 LIMIT %s
             """, (limit,))
@@ -110,7 +110,7 @@ def api_news_must_read():
                   LEFT(COALESCE(n.news_content,''), 140) AS excerpt
                 FROM news n
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
-                WHERE n.del_flg=0 AND n.status='publish'
+                WHERE n.del_flg=0 AND n.status='publish' AND n.video_path IS NULL
                 ORDER BY n.published_at DESC, n.news_id DESC
                 LIMIT %s
             """, (limit,))
@@ -137,7 +137,7 @@ def api_news_list():
     if page > max_pages:
         page = max_pages
 
-    where = ["n.del_flg=0", "n.status='publish'"]
+    where = ["n.del_flg=0", "n.status='publish'", "n.video_path IS NULL"]
     params = []
 
     if q:
@@ -219,6 +219,7 @@ def api_news_popular():
                 AND v.viewed_at >= NOW() - INTERVAL 24 HOUR
                 WHERE n.del_flg=0
                 AND n.status='publish'
+                AND n.video_path IS NULL
                 AND n.published_at >= NOW() - INTERVAL 24 HOUR
                 GROUP BY n.news_id
                 HAVING view_count > 0
@@ -375,6 +376,7 @@ def api_news_by_category():
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
                 WHERE n.status='publish'
                   AND n.del_flg=0
+                  AND n.video_path IS NULL
                   AND n.cat_id=%s
                 ORDER BY n.published_at DESC
                 LIMIT %s
@@ -383,6 +385,34 @@ def api_news_by_category():
             items = cur.fetchall()
             for item in items:
                 item["time_ago"] = time_ago(item.get("published_at"))
+    finally:
+        db.close()
+
+    return jsonify(ok=True, items=items)
+
+
+
+@index_bp.get("/api/news/videos")
+def api_news_videos():
+    limit = int(request.args.get("limit", 6) or 6)
+
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                  n.news_id,
+                  n.news_title,
+                  n.video_path,
+                  n.published_at
+                FROM news n
+                WHERE n.del_flg=0
+                  AND n.status='publish'
+                  AND n.video_path IS NOT NULL
+                ORDER BY n.published_at DESC
+                LIMIT %s
+            """, (limit,))
+            items = cur.fetchall()
     finally:
         db.close()
 
