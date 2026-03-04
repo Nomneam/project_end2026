@@ -376,6 +376,7 @@ def news_detail(news_id: int):
                   AND (n.del_flg IS NULL OR n.del_flg = 0)
                   AND n.news_id <> %s
                   AND n.cat_id = (SELECT cat_id FROM news WHERE news_id = %s LIMIT 1)
+                  AND n.video_path IS NULL
                 ORDER BY n.published_at DESC, n.news_id DESC
                 LIMIT 4
                 """,
