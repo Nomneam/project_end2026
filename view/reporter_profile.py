@@ -124,11 +124,15 @@ def update_profile():
 
     update_fields = []
     update_values = []
+    change_logs = []  # ✅ เก็บรายละเอียดที่แก้
 
     conn = connect_db()
     try:
         with conn.cursor() as cursor:
 
+            # =========================
+            # CHECK PASSWORD
+            # =========================
             cursor.execute("""
                 SELECT emp_password_hash
                 FROM employee
@@ -145,27 +149,40 @@ def update_profile():
             if not bcrypt.checkpw(auth_password.encode("utf-8"), db_hash):
                 return jsonify({"error": "password incorrect"}), 400
 
+            # =========================
+            # BUILD UPDATE
+            # =========================
+
             if emp_fname:
                 update_fields.append("emp_fname = %s")
                 update_values.append(emp_fname)
+                change_logs.append(f"First name changed to '{emp_fname}'")
 
             if emp_lname:
                 update_fields.append("emp_lname = %s")
                 update_values.append(emp_lname)
+                change_logs.append(f"Last name changed to '{emp_lname}'")
 
             if emp_phone:
                 update_fields.append("emp_phone = %s")
                 update_values.append(emp_phone)
+                change_logs.append(f"Phone changed to '{emp_phone}'")
 
             if emp_email:
                 update_fields.append("emp_email = %s")
                 update_values.append(emp_email)
+                change_logs.append(f"Email changed to '{emp_email}'")
 
             if emp_idcard:
                 update_fields.append("emp_idcard = %s")
                 update_values.append(emp_idcard)
+                change_logs.append("ID Card updated")
 
+            # =========================
+            # IMAGE UPLOAD
+            # =========================
             if emp_profile_file and emp_profile_file.filename:
+
                 if not allowed_file(emp_profile_file.filename) or emp_profile_file.mimetype not in ALLOWED_MIME:
                     return jsonify({"error": "invalid image type"}), 400
 
@@ -176,31 +193,23 @@ def update_profile():
                 filename = f"{uuid.uuid4().hex}_{safe_name}"
                 filepath = os.path.join(upload_dir, filename)
 
-                if emp_profile_file and emp_profile_file.filename:
-                    if not allowed_file(emp_profile_file.filename) or emp_profile_file.mimetype not in ALLOWED_MIME:
-                        return jsonify({"error": "invalid image type"}), 400
+                emp_profile_file.save(filepath)
 
-                    upload_dir = os.path.join("static", "uploads", "profile")
-                    os.makedirs(upload_dir, exist_ok=True)
+                relative_path = filepath.replace("\\", "/")
 
-                    safe_name = secure_filename(emp_profile_file.filename)
-                    filename = f"{uuid.uuid4().hex}_{safe_name}"
-                    filepath = os.path.join(upload_dir, filename)
+                update_fields.append("emp_profile = %s")
+                update_values.append(relative_path)
 
-                    emp_profile_file.save(filepath)
-
-                    # ✅ สร้าง relative_path ตรงนี้
-                    relative_path = filepath.replace("\\", "/")
-
-                    update_fields.append("emp_profile = %s")
-                    update_values.append(relative_path)
+                change_logs.append("Profile image updated")
 
             if not update_fields:
                 return jsonify({"error": "no valid fields"}), 400
 
+            # system fields
             update_fields.append("updated_at = NOW()")
             update_fields.append("updated_by = %s")
             update_values.append(emp_id)
+
             update_values.append(emp_id)
 
             sql = f"""
@@ -210,9 +219,26 @@ def update_profile():
             """
 
             cursor.execute(sql, tuple(update_values))
+
+            # =========================
+            # INSERT AUDIT LOG
+            # =========================
+            detail_text = "; ".join(change_logs)
+
+            cursor.execute("""
+                INSERT INTO audit_logs_emp
+                (emp_id, action, pages, detail, ip_address)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                emp_id,
+                "Update",
+                "Reporter Profile",
+                detail_text,
+                request.remote_addr
+            ))
+
             conn.commit()
-            
-            
+
             # =========================
             # UPDATE SESSION
             # =========================
@@ -223,13 +249,11 @@ def update_profile():
             if emp_lname:
                 session["user"]["lname"] = emp_lname
 
-            # ถ้าเก็บ full_name ใน session
             if "fname" in session["user"] and "lname" in session["user"]:
                 session["user"]["full_name"] = (
                     f"{session['user'].get('fname','')} {session['user'].get('lname','')}"
                 ).strip()
 
-            # ถ้ามีอัปโหลดรูป
             if emp_profile_file and emp_profile_file.filename:
                 session["user"]["avatar_url"] = "/" + relative_path
 
@@ -243,7 +267,6 @@ def update_profile():
         conn.close()
 
     return jsonify({"success": True})
-
 
 
 # ==============================
