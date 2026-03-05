@@ -22,10 +22,8 @@ SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
 VIDEO_DIR = os.path.join(BASE_UPLOAD_DIR, "video")
 
 ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
-ALLOWED_VIDEO_EXT = {"mp4"}
 
 MAX_SUB_IMAGES = 5
-MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
 
 ROLE_REPORTER = 2
 
@@ -79,37 +77,6 @@ def save_image(file_storage, kind: str = "cover"):
     return f"uploads/news/{kind}/{new_name}"
 
 
-# ======================================================
-# Video (Improved & Hardened)
-# ======================================================
-def save_video(file_storage):
-    if not file_storage or not file_storage.filename:
-        return None
-
-    filename = secure_filename(file_storage.filename)
-
-    if "." not in filename:
-        return None
-
-    ext = filename.rsplit(".", 1)[1].lower()
-    if ext not in ALLOWED_VIDEO_EXT:
-        return None
-
-    # ✅ MIME type check
-    if not file_storage.mimetype.startswith("video/"):
-        return None
-
-    # ✅ Size check
-    if file_storage.content_length and file_storage.content_length > MAX_VIDEO_SIZE:
-        return None
-
-    os.makedirs(VIDEO_DIR, exist_ok=True)
-
-    new_name = f"{uuid.uuid4().hex}.{ext}"
-    full_path = os.path.join(VIDEO_DIR, new_name)
-    file_storage.save(full_path)
-
-    return f"uploads/news/video/{new_name}"
 
 
 # ======================================================
@@ -192,19 +159,17 @@ def reporter_news_create_post():
             saved_files.append(os.path.join("static", p))
 
     sub_images_json = json.dumps(sub_list, ensure_ascii=False)
-
+    
     # ======================
-    # VIDEO
+    # VIDEO (URL)
     # ======================
-    video_file = request.files.get("video_file")
-    video_path = None
+    video_path = (request.form.get("video_path") or "").strip()
 
-    if video_file and video_file.filename:
-        video_path = save_video(video_file)
-        if not video_path:
-            return jsonify(ok=False, message="ไฟล์วิดีโอไม่ถูกต้อง (รองรับ mp4 ≤ 50MB)"), 400
-
-        saved_files.append(os.path.join("static", video_path))
+    if not video_path:
+        video_path = None
+        
+    if video_path and not video_path.startswith(("http://", "https://")):
+        return jsonify(ok=False, message="Video URL ไม่ถูกต้อง"), 400
 
     created_by = user.get("user_id") or user.get("id")
 
