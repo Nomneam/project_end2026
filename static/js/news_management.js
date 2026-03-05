@@ -136,7 +136,7 @@ async function renderViewModal(news) {
   }
 
   renderSubImages(news.sub_images);
-  renderVideo(news.video_url);
+  renderVideo(news.video_path);
   renderThaiDate(news.created_at);
   renderStatus(news.status);
 }
@@ -260,7 +260,7 @@ function fillEditForm(n) {
   setValue("editCategory", n.cat_id || "");
   setValue("editStatus", n.status || "draft");
   setValue("editFeatured", n.is_featured ? "1" : "0");
-  setValue("editVideoUrl", n.video_url || "");
+  setValue("editVideoUrl", n.video_path || "");
 }
 
 function renderEditPreview(rawImage) {
