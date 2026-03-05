@@ -210,11 +210,6 @@ def reporter_news_create_post():
     except Exception as e:
         conn.rollback()
 
-        # ✅ ลบไฟล์ทั้งหมดถ้า DB fail
-        for f in saved_files:
-            if os.path.exists(f):
-                os.remove(f)
-
         return jsonify(ok=False, message=f"บันทึกข่าวไม่สำเร็จ: {e}"), 500
 
     finally:

@@ -155,6 +155,17 @@ def admin_writenew_post():
             sub_list.append(p)
 
     sub_images_json = json.dumps(sub_list, ensure_ascii=False)
+    
+    # ======================
+    # VIDEO (URL)
+    # ======================
+    video_path = (request.form.get("video_path") or "").strip()
+
+    if not video_path:
+        video_path = None
+        
+    if video_path and not video_path.startswith(("http://", "https://")):
+        return jsonify(ok=False, message="Video URL ไม่ถูกต้อง"), 400
 
     created_by = user.get("user_id") or user.get("id")
     updated_by = created_by
@@ -166,7 +177,7 @@ def admin_writenew_post():
                 INSERT INTO news
                   (cat_id, subcat_id, news_title, is_featured,
                    news_content, cover_image, sub_images,
-                   video_url, status, published_at,
+                   video_path, status, published_at,
                    created_by, updated_by, del_flg)
                 VALUES
                   (%s, %s, %s, %s,
@@ -176,6 +187,7 @@ def admin_writenew_post():
             """, (
                 cat_id, subcat_id, title, is_featured,
                 content, cover_path, sub_images_json,
+                video_path,
                 status, status,
                 created_by, updated_by
             ))
