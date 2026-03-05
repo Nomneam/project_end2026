@@ -175,21 +175,28 @@ def admin_writenew_post():
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO news
-                  (cat_id, subcat_id, news_title, is_featured,
-                   news_content, cover_image, sub_images,
-                   video_path, status, published_at,
-                   created_by, updated_by, del_flg)
+                (cat_id, subcat_id, news_title, is_featured,
+                news_content, cover_image, sub_images,
+                video_path, status, published_at,
+                created_by, updated_by, del_flg)
                 VALUES
-                  (%s, %s, %s, %s,
-                   %s, %s, %s,
-                   NULL, %s, IF(%s='publish', CURRENT_TIMESTAMP, NULL),
-                   %s, %s, 0)
+                (%s, %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, IF(%s='publish', CURRENT_TIMESTAMP, NULL),
+                %s, %s, 0)
             """, (
-                cat_id, subcat_id, title, is_featured,
-                content, cover_path, sub_images_json,
+                cat_id,
+                subcat_id,
+                title,
+                is_featured,
+                content,
+                cover_path,
+                sub_images_json,
                 video_path,
-                status, status,
-                created_by, updated_by
+                status,
+                status,
+                created_by,
+                updated_by
             ))
 
             news_id = cur.lastrowid
