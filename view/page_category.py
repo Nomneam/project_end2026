@@ -142,7 +142,6 @@ def api_page_category():
         WHERE n.cat_id = %s
           AND n.status = 'publish'
           AND n.del_flg = 0
-          AND n.video_path IS NULL
         """
         params = [cat_id]
 

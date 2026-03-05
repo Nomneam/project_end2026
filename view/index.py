@@ -85,7 +85,7 @@ def api_news_featured():
                   LEFT(COALESCE(n.news_content,''), 180) AS excerpt
                 FROM news n
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
-                WHERE n.del_flg=0 AND n.status='publish' AND n.is_featured=1 AND n.video_path IS NULL
+                WHERE n.del_flg=0 AND n.status='publish' AND n.is_featured=1
                 ORDER BY n.published_at DESC, n.news_id DESC
                 LIMIT %s
             """, (limit,))
@@ -110,7 +110,7 @@ def api_news_must_read():
                   LEFT(COALESCE(n.news_content,''), 140) AS excerpt
                 FROM news n
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
-                WHERE n.del_flg=0 AND n.status='publish' AND n.video_path IS NULL
+                WHERE n.del_flg=0 AND n.status='publish'
                 ORDER BY n.published_at DESC, n.news_id DESC
                 LIMIT %s
             """, (limit,))
@@ -219,7 +219,6 @@ def api_news_popular():
                 AND v.viewed_at >= NOW() - INTERVAL 24 HOUR
                 WHERE n.del_flg=0
                 AND n.status='publish'
-                AND n.video_path IS NULL
                 AND n.published_at >= NOW() - INTERVAL 24 HOUR
                 GROUP BY n.news_id
                 HAVING view_count > 0
@@ -376,7 +375,6 @@ def api_news_by_category():
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
                 WHERE n.status='publish'
                   AND n.del_flg=0
-                  AND n.video_path IS NULL
                   AND n.cat_id=%s
                 ORDER BY n.published_at DESC
                 LIMIT %s
