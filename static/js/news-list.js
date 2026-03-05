@@ -94,7 +94,7 @@ $(function () {
       $("#pv_published_at").val(fmtDateTime(d.published_at));
       $("#pv_author").val((d.author_fname || "") + " " + (d.author_lname || ""));
       $("#pv_content").val(d.news_content || "");
-      $("#pv_video_url").val(d.video_url || "");
+      $("#pv_video_url").val(d.video_path || "");
 
       safeSetImg($("#pv_cover_img"), $("#pv_cover_empty"), d.cover_image);
       renderSubImages($("#pv_sub_images"), $("#pv_sub_images_empty"), d.sub_images);

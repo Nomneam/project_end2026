@@ -359,7 +359,7 @@ $(function () {
       $("#v_published_at").val(fmtDateTime(d.published_at));
       $("#v_updated_at").val(fmtDateTime(d.updated_at));
       $("#v_content").val(d.news_content || "");
-      $("#v_video_url").val(d.video_url || "");
+      $("#v_video_url").val(d.video_path || "");
 
       safeSetImg($("#v_cover_img"), $("#v_cover_empty"), d.cover_image);
       renderSubImages($("#v_sub_images"), $("#v_sub_images_empty"), d.sub_images);
@@ -486,7 +486,7 @@ $(function () {
       $("#e_news_id").val(d.news_id);
       $("#e_title").val(d.news_title || "");
       $("#e_content").val(d.news_content || "");
-      $("#e_video_url").val(d.video_url || "");
+      $("#e_video_url").val(d.video_path || "");
       $("#e_status").val(d.status || "draft");
       $("#e_kind").val(String(Number(d.is_featured || 0)));
 
