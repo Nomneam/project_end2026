@@ -99,7 +99,23 @@
               </div>
 
               <div class="mt-4 d-flex flex-wrap gap-2" id="tags"></div>
+              {% if article.video_path %}
+            <div class="mt-4">
+
+              <div class="fw-bold mb-2">วิดีโอที่เกี่ยวข้อง</div>
+
+              <a 
+                href="{{ article.video_path }}" 
+                target="_blank"
+                class="text-primary text-decoration-underline"
+              >
+                ▶ ดูวิดีโอ
+              </a>
+
             </div>
+            {% endif %}
+            </div>
+            
           </article>
 
           <section class="mt-4">

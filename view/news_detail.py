@@ -275,6 +275,7 @@ def news_detail(news_id: int):
                     n.news_content,
                     n.cover_image,
                     n.sub_images,
+                    n.video_path,
                     n.view_count,
                     n.published_at,
                     n.created_at,
@@ -323,6 +324,8 @@ def news_detail(news_id: int):
 
             # ✅ cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
             article["cover_image"] = safe_str(article.get("cover_image"), "")
+            video = article.get("video_path")
+            article["video_path"] = video
 
             # ✅ เตรียมรูปรอง (จำกัด 5 รูป)
             raw_sub = article.get("sub_images")
