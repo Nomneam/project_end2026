@@ -412,10 +412,14 @@ def reporter_news_detail(news_id):
                     n.video_path,
 
                     c.cat_name AS category_name,
-                    s.subcat_name AS subcategory_name
+                    s.subcat_name AS subcategory_name,
+                    
+                    e.emp_fname AS author_fname,
+                    e.emp_lname AS author_lname
                 FROM news n
                 LEFT JOIN news_category c ON n.cat_id = c.cat_id
                 LEFT JOIN news_subcategory s ON n.subcat_id = s.subcat_id
+                LEFT JOIN employee e ON n.created_by = e.emp_id
                 WHERE n.news_id = %s
                   AND n.created_by = %s
                   AND n.del_flg = 0

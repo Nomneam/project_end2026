@@ -329,41 +329,130 @@ $(function () {
   // View modal
   // ======================================================
   $(document).on("click", ".btn-view-news", async function () {
-    const newsId = $(this).data("id");
 
-    try {
-      const r = await fetch(`/reporter/news/detail/${newsId}`, {
-        method: "GET",
-        headers: { "X-Requested-With": "XMLHttpRequest" },
+  const newsId = $(this).data("id");
+
+  try {
+
+    const r = await fetch(`/reporter/news/detail/${newsId}`, {
+      method: "GET",
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    const json = await r.json().catch(() => ({}));
+
+    if (!r.ok || !json.ok) {
+      await swalFire({
+        icon: "error",
+        title: "ดูข้อมูลไม่ได้",
+        text: json.message || "เกิดข้อผิดพลาด"
       });
-
-      const json = await r.json().catch(() => ({}));
-      if (!r.ok || !json.ok) {
-        await swalFire({ icon: "error", title: "ดูข้อมูลไม่ได้", text: json.message || "เกิดข้อผิดพลาด" });
-        return;
-      }
-
-      const d = json.data || {};
-
-      $("#v_title").val(d.news_title || "-");
-      $("#v_kind").val(Number(d.is_featured || 0) === 1 ? "ข่าวยอดฮิต (Featured)" : "ข่าวทั่วไป");
-      $("#v_category").val(d.category_name || "-");
-      $("#v_subcategory").val(d.subcategory_name || "-");
-      $("#v_status").val(d.status === "publish" ? "เผยแพร่แล้ว" : "ฉบับร่าง");
-      $("#v_published_at").val(fmtDateTime(d.published_at));
-      $("#v_updated_at").val(fmtDateTime(d.updated_at));
-      $("#v_content").val(d.news_content || "");
-      $("#v_video_url").val(d.video_path || "");
-
-      safeSetImg($("#v_cover_img"), $("#v_cover_empty"), d.cover_image);
-      renderSubImages($("#v_sub_images"), $("#v_sub_images_empty"), d.sub_images);
-
-      const m = bsModal("viewNewsModal");
-      if (m) m.show();
-    } catch (e) {
-      await swalFire({ icon: "error", title: "ดูข้อมูลไม่ได้", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
+      return;
     }
-  });
+
+    const d = json.data || {};
+
+    // title
+    $("#v-title").text(d.news_title || "-");
+
+    // author
+    $("#v-author").text(
+    (d.author_fname || "") + " " + (d.author_lname || "")
+  );
+
+    // category
+    $("#v-category").text(d.category_name || "-");
+
+    // content
+    $("#v-content").html(d.news_content || "-");
+
+    // date thai
+    if (d.published_at) {
+
+    const dt = new Date(d.published_at);
+
+    const date = dt.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+
+    const time = dt.toLocaleTimeString("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    $("#v-date-thai").text(date);
+    $("#v-time-thai").text(time);
+
+  } else {
+
+    $("#v-date-thai").text("-");
+    $("#v-time-thai").text("");
+
+  }
+
+    // status
+    if (d.status === "publish") {
+
+      $("#v-status-container").html(
+        `<span class="badge bg-success">เผยแพร่แล้ว</span>`
+      );
+
+    } else {
+
+      $("#v-status-container").html(
+        `<span class="badge bg-secondary">ฉบับร่าง</span>`
+      );
+
+    }
+
+    // cover image
+    if (d.cover_image) {
+
+      $("#v-cover-image")
+        .attr("src", "/static/" + d.cover_image)
+        .show();
+
+    } else {
+
+      $("#v-cover-image").hide();
+
+    }
+
+    // sub images
+    const subWrap = $("#v-sub-images");
+    subWrap.empty();
+
+    const subs = parseSubImages(d.sub_images);
+
+    subs.forEach(img => {
+
+      const src = img.startsWith("http")
+        ? img
+        : "/static/" + img;
+
+      subWrap.append(`
+        <img src="${src}"
+          style="height:90px;border-radius:8px;border:1px solid #ddd">
+      `);
+
+    });
+
+    const m = bsModal("viewNewsModal");
+    if (m) m.show();
+
+  } catch (e) {
+
+    await swalFire({
+      icon: "error",
+      title: "ดูข้อมูลไม่ได้",
+      text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
+    });
+
+  }
+
+});
 
   // ======================================================
   // Edit modal: load subcategories
