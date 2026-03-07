@@ -31,3 +31,87 @@
   background: #fff;
   padding: 2px;
 }
+
+
+/* ===== Pagination Position ===== */
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ===== Red Pagination Theme ===== */
+.pagination .page-link {
+  color: #dc3545;
+  border-color: #dee2e6;
+  background: #fff;
+}
+
+.pagination .page-link:hover {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.pagination .page-item.active .page-link {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #ccc;
+  border-color: #eee;
+  background-color: #f8f9fa;
+}
+
+.pagination .page-link {
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+
+.news-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+}
+
+/* header */
+.news-thead th {
+  background: #fff5f6;           /* ชมพูอ่อนมากๆ */
+  color: #842029;
+  font-weight: 700;
+  border-bottom: 1px solid #f1c6cc;
+  padding: 12px 14px;
+  white-space: nowrap;
+}
+
+/* body cells */
+.news-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f3f5;  /* เส้นบางๆ */
+  vertical-align: middle;
+}
+
+/* ไม่ใช้ striped แบบเดิม แต่ทำ zebra แบบนุ่ม */
+.news-table tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+/* hover นุ่มๆ */
+.news-table tbody tr:hover {
+  background: #fff0f2;  /* ชมพูอ่อน */
+  transition: background 0.15s ease;
+}
+
+/* ทำให้หัวข้อข่าวเด่นแบบอ่านง่าย */
+.news-table td:first-child {
+  color: #212529;
+}
+
+/* ปรับ badge ให้ดูเนียนขึ้น */
+.news-table .badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 600;
+}

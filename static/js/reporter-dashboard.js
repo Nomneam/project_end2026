@@ -160,7 +160,7 @@ $(function () {
 
       $tbody.append(`
         <tr>
-          <td class="fw-semibold text-center">${_escapeHtml(r.news_title || "")}</td>
+          <td class="fw-semibold">${_escapeHtml(r.news_title || "")}</td>
           <td class="text-center">${kindBadge}</td>
           <td class="text-center">${_escapeHtml(r.category_name || "-")}</td>
           <td class="text-center">${_escapeHtml(published)}</td>
@@ -279,12 +279,6 @@ $(function () {
 
     const p = Number($(this).data("page") || 1);
     loadPage(p);
-  });
-
-  // ✅ search: ไม่เปลี่ยน URL
-  $(document).on("submit", "#filterForm", function (e) {
-    e.preventDefault();
-    loadPage(1);
   });
 
   // ✅ reset: ไม่เปลี่ยน URL
@@ -511,6 +505,13 @@ $(function () {
   $(document).on("change", "#e_cat_id", async function () {
     const catId = $(this).val();
     await loadSubcats(catId, "");
+  });
+
+  // ======================================================
+  // auto filter
+  // ======================================================
+  $(document).on("change", "#filter_cat_id, #filter_kind, #filter_status", function () {
+    loadPage(1);
   });
 
   // submit edit

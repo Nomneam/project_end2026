@@ -98,7 +98,7 @@ def require_reporter():
 
 # ---------------- Shared query builder ----------------
 def build_news_filters(user_id: int):
-    per_page = 5
+    per_page = 7
     page = request.args.get("page", default=1, type=int)
     if page < 1:
         page = 1

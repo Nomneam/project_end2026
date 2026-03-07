@@ -31,48 +31,44 @@
           <div class="table-wrap">
 
             <!-- ✅ Filter form -->
-            <form id="filterForm" method="GET" class="row g-2 align-items-end mb-3">
-              <div class="col-md-4">
-                <label class="form-label">ประเภทข่าว</label>
-                <select id="filter_cat_id" name="cat_id" class="form-select">
-                  <option value="">ทั้งหมด</option>
-                  {% for c in categories %}
-                    <option value="{{ c.cat_id }}" {% if (f_cat_id|string) == (c.cat_id|string) %}selected{% endif %}>
-                      {{ c.cat_name }}
-                    </option>
-                  {% endfor %}
-                </select>
-              </div>
+            <form id="filterForm" class="row g-2 align-items-end mb-3">
 
-              <div class="col-md-4">
-                <label class="form-label">ชนิดข่าว</label>
-                <select id="filter_kind" name="kind" class="form-select">
-                  <option value="all" {% if f_kind == "all" %}selected{% endif %}>ทั้งหมด</option>
-                  <option value="featured" {% if f_kind == "featured" %}selected{% endif %}>ข่าวยอดฮิต</option>
-                  <option value="normal" {% if f_kind == "normal" %}selected{% endif %}>ข่าวทั่วไป</option>
-                </select>
-              </div>
+          <div class="col-md-3">
+            <label class="form-label">ประเภทข่าว</label>
+            <select id="filter_cat_id" name="cat_id" class="form-select">
+              <option value="">ทั้งหมด</option>
+              {% for c in categories %}
+                <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-              <div class="col-md-4">
-                <label class="form-label">สถานะ</label>
-                <select id="filter_status" name="status" class="form-select">
-                  <option value="all" {% if f_status == "all" %}selected{% endif %}>ทั้งหมด</option>
-                  <option value="publish" {% if f_status == "publish" %}selected{% endif %}>เผยแพร่แล้ว</option>
-                  <option value="draft" {% if f_status == "draft" %}selected{% endif %}>ฉบับร่าง</option>
-                </select>
-              </div>
+          <div class="col-md-3">
+            <label class="form-label">ชนิดข่าว</label>
+            <select id="filter_kind" name="kind" class="form-select">
+              <option value="all">ทั้งหมด</option>
+              <option value="featured">ข่าวยอดฮิต</option>
+              <option value="normal">ข่าวทั่วไป</option>
+            </select>
+          </div>
 
-              <div class="col-12 d-flex gap-2">
-                <button class="btn btn-danger" type="submit" id="btnSearch">
-                  <i class="bi bi-search"></i> ค้นหา
-                </button>
+          <div class="col-md-3">
+            <label class="form-label">สถานะ</label>
+            <select id="filter_status" name="status" class="form-select">
+              <option value="all">ทั้งหมด</option>
+              <option value="publish">เผยแพร่แล้ว</option>
+              <option value="draft">ฉบับร่าง</option>
+            </select>
+          </div>
 
-                <!-- ✅ ไม่ให้เปลี่ยน URL: ทำเป็นปุ่มให้ JS reset -->
-                <button class="btn btn-outline-secondary" type="button" id="btnReset">
-                  ล้างค่า
-                </button>
-              </div>
-            </form>
+          <!-- ปุ่มล้างค่า -->
+          <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-outline-dark w-100" type="button" id="btnReset">
+               ล้างค้นหา
+            </button>
+          </div>
+
+        </form>
 
             <table class="table news-table align-middle">
               <thead class="news-thead">
@@ -90,7 +86,7 @@
               <tbody id="newsTbody">
                 {% for n in latest_news %}
                 <tr>
-                  <td class="fw-semibold text-center">{{ n.news_title }}</td>
+                  <td class="fw-semibold">{{ n.news_title }}</td>
 
                   <td class="text-center">
                     {% if (n.is_featured or 0) == 1 %}

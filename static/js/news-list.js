@@ -21,6 +21,117 @@ $(function () {
     return d.toLocaleString("th-TH");
   }
 
+  // ======================================
+  // auto search (ajax)
+  // ======================================
+  let searchTimer = null;
+
+  $(document).on("input", "#searchInput", function () {
+
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(function () {
+
+      const q = $("#searchInput").val().trim();
+      searchNews(q);
+
+    }, 300);
+
+  });
+
+  async function searchNews(keyword) {
+
+  try {
+
+    const r = await fetch(`/reporter/news/search?q=${encodeURIComponent(keyword)}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    const j = await r.json();
+
+    if (!j.ok) return;
+
+    const rows = j.rows || [];
+    const tbody = $("#newsTableBody");
+
+    tbody.empty();
+
+    if (!rows.length) {
+
+      tbody.append(`
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">
+            ไม่พบข่าว
+          </td>
+        </tr>
+      `);
+
+      return;
+    }
+
+    rows.forEach(n => {
+
+      const kind = n.is_featured == 1
+        ? `<span class="badge bg-danger">ข่าวยอดฮิต</span>`
+        : `<span class="badge bg-secondary">ข่าวทั่วไป</span>`;
+
+      const date = n.published_at
+        ? new Date(n.published_at).toLocaleDateString("th-TH")
+        : "-";
+
+      tbody.append(`
+        <tr>
+
+          <td class="fw-semibold">${n.news_title}</td>
+
+          <td class="text-center">${kind}</td>
+
+          <td class="text-center">${n.category_name || "-"}</td>
+
+          <td class="text-center">${date}</td>
+
+          <td class="text-center">
+            <span class="status-badge status-published">เผยแพร่แล้ว</span>
+          </td>
+
+          <td class="text-center">
+            ${(n.author_fname || "")} ${(n.author_lname || "")}
+          </td>
+
+          <td class="text-center">
+
+            <button
+              class="btn btn-outline-primary btn-sm rounded-circle btn-view-public"
+              data-id="${n.news_id}">
+              <i class="bi bi-eye"></i>
+            </button>
+
+          </td>
+
+        </tr>
+      `);
+
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+
+}
+
+// ======================================
+// reset search
+// ======================================
+$(document).on("click", "#btnReset", function () {
+
+  // ล้าง input
+  $("#searchInput").val("");
+
+  // โหลดข่าวทั้งหมดใหม่
+  searchNews("");
+
+});
+
   function safeSetImg($img, $empty, src) {
   if (src && String(src).trim() !== "") {
 
