@@ -637,6 +637,11 @@ $(function () {
       }
 
       swalToast("success", j.message || "บันทึกแล้ว");
+
+      // ปิด modal
+      const modal = bsModal("editNewsModal");
+      if (modal) modal.hide();
+
       setTimeout(() => loadPage(currentPage), 350);
     } catch (err) {
       await swalFire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
