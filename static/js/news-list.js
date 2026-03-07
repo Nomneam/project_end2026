@@ -14,12 +14,33 @@ $(function () {
     return bootstrap.Modal.getOrCreateInstance(el);
   }
 
-  function fmtDateTime(v) {
-    if (!v) return "-";
-    const d = new Date(String(v).replace(" ", "T"));
-    if (isNaN(d.getTime())) return String(v);
-    return d.toLocaleString("th-TH");
+  function renderThaiDate(dateStr){
+
+  if(!dateStr){
+    $("#pv_date_thai").text("-");
+    $("#pv_time_thai").text("");
+    return;
   }
+
+  const d = new Date(dateStr);
+
+  const date = d.toLocaleDateString("th-TH",{
+    day:"2-digit",
+    month:"short",
+    year:"numeric",
+    timeZone:"Asia/Bangkok"
+  });
+
+  const time = d.toLocaleTimeString("th-TH",{
+    hour:"2-digit",
+    minute:"2-digit",
+    hour12:false,
+    timeZone:"Asia/Bangkok"
+  });
+
+  $("#pv_date_thai").text(date);
+  $("#pv_time_thai").text(time);
+}
 
   // ======================================
   // auto search (ajax)
@@ -197,14 +218,20 @@ $(document).on("click", "#btnReset", function () {
 
       const d = j.data || {};
 
-      $("#pv_title").val(d.news_title || "-");
-      $("#pv_kind").val(Number(d.is_featured || 0) === 1 ? "ข่าวยอดฮิต (Featured)" : "ข่าวทั่วไป");
-      $("#pv_category").val(d.category_name || "-");
-      $("#pv_subcategory").val(d.subcategory_name || "-");
-      $("#pv_status").val("เผยแพร่แล้ว");
-      $("#pv_published_at").val(fmtDateTime(d.published_at));
-      $("#pv_author").val((d.author_fname || "") + " " + (d.author_lname || ""));
-      $("#pv_content").val(d.news_content || "");
+      $("#pv_title").text(d.news_title || "-");
+
+      $("#pv_category").text(d.category_name || "-");
+
+      $("#pv_status").text("เผยแพร่แล้ว");
+
+      renderThaiDate(d.published_at);
+
+      $("#pv_author").text(
+        (d.author_fname || "") + " " + (d.author_lname || "")
+      );
+
+      $("#pv_content").html(d.news_content || "-");
+
       $("#pv_video_url").val(d.video_path || "");
 
       safeSetImg($("#pv_cover_img"), $("#pv_cover_empty"), d.cover_image);
