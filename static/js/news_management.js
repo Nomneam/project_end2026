@@ -258,6 +258,7 @@ function fillEditForm(n) {
   setValue("editTitle", n.news_title || "");
   setValue("editContent", n.news_content || "");
   setValue("editCategory", n.cat_id || "");
+  loadSubcategories(n.cat_id, n.subcat_id);
   setValue("editStatus", n.status || "draft");
   setValue("editFeatured", n.is_featured ? "1" : "0");
   setValue("editVideoUrl", n.video_path || "");
@@ -455,6 +456,46 @@ document.addEventListener("click", function (e) {
 document.getElementById("editCategory")?.addEventListener("change", function () {
   loadSubcategories(this.value);
 });
+
+async function loadSubcategories(catId, selectedId = null) {
+
+  const subSelect = document.getElementById("editSubCategory");
+  if (!subSelect || !catId) return;
+
+  subSelect.innerHTML = `<option>กำลังโหลด...</option>`;
+
+  try {
+
+    const res = await fetch(`/admin/categories/${catId}/subcategories`);
+    const result = await res.json();
+
+    if (!result.success) {
+      subSelect.innerHTML = `<option value="">-- ไม่มีหมวดย่อย --</option>`;
+      return;
+    }
+
+    subSelect.innerHTML = `<option value="">-- เลือกหมวดย่อย --</option>`;
+
+    result.data.forEach(sub => {
+
+      const opt = document.createElement("option");
+      opt.value = sub.subcat_id;
+      opt.textContent = sub.subcat_name;
+
+      if (selectedId && Number(selectedId) === Number(sub.subcat_id)) {
+        opt.selected = true;
+      }
+
+      subSelect.appendChild(opt);
+
+    });
+
+  } catch (err) {
+    console.error(err);
+    subSelect.innerHTML = `<option value="">-- โหลดไม่สำเร็จ --</option>`;
+  }
+
+}
 
 
 /* =========================================================
