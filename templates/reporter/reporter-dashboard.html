@@ -5,6 +5,7 @@
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/reporter-dashboard.css') }}">
+
 {% endblock %}
 
 {% block content %}
@@ -277,118 +278,145 @@
     </div>
 </div>
 
-<!-- ✅ Edit News Modal -->
+<!-- ===================== Edit Modal (RED THEME) ===================== -->
 <div class="modal fade" id="editNewsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
+  <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 1100px; margin-top: 40px;">
+    <form id="editNewsForm" class="modal-content border-0 shadow-lg"
+          style="border-radius: 16px; overflow: hidden;"
+          enctype="multipart/form-data">
 
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-pencil me-1"></i> แก้ไขข่าว</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <input type="hidden" id="editNewsId" name="news_id">
+
+      <input type="hidden" id="e_remove_cover" name="remove_cover" value="0">
+      <input type="hidden" id="e_remove_subs" name="remove_subs" value="0">
+      
+
+      <!-- 🔥 ใช้เก็บรายการรูปที่ถูกลบ -->
+      <input type="hidden"
+             id="deletedSubImages"
+             name="deleted_sub_images">
+
+      <!-- Header -->
+      <div class="modal-header py-2 px-3 border-0 bg-danger text-white">
+        <h5 class="modal-title fw-bold m-0">
+          <i class="bi bi-pencil-square me-2"></i>แก้ไขข่าวสาร
+        </h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
       </div>
 
-      <form id="editNewsForm" autocomplete="off" enctype="multipart/form-data">
-        <div class="modal-body">
-          <input type="hidden" id="e_news_id" name="news_id">
+      <div class="modal-body p-3">
+        <div class="row g-3">
 
-          <div class="row g-3">
-            <div class="col-md-8">
-              <label class="form-label">หัวข้อข่าว *</label>
-              <input type="text" class="form-control" id="e_title" name="news_title" required maxlength="255">
+          <!-- LEFT -->
+          <div class="col-md-7">
+            <label class="form-label fw-bold">หัวข้อข่าว</label>
+            <input type="text"
+              class="form-control mb-2"
+              id="editTitle"
+              name="news_title">
+
+            <label class="form-label fw-bold">เนื้อหา</label>
+            <textarea class="form-control mb-2"
+                  id="editContent"
+                  name="news_content"
+                  rows="5"></textarea>
+
+            <label class="form-label fw-bold">
+              เปลี่ยนรูปปก (ถ้าไม่เลือก = ใช้รูปเดิม)
+            </label>
+            <input type="file"
+              id="e_cover_file"
+              class="form-control mb-2"
+              name="cover_image"
+              accept="image/*">
+
+            <div class="mt-2">
+
+              <img id="editPreview"
+                  class="img-fluid rounded shadow-sm"
+                  style="max-height:160px; display:none;">
             </div>
 
-            <div class="col-md-4">
-              <label class="form-label">ประเภทข่าว</label>
-              <select class="form-select" id="e_kind" name="is_featured">
-                <option value="0">ข่าวทั่วไป</option>
-                <option value="1">ข่าวยอดฮิต (Featured)</option>
-              </select>
-            </div>
+            <!-- ===================== SUB IMAGES ===================== -->
+            <label class="form-label fw-bold mt-3">รูปภาพเพิ่มเติม</label>
 
-            <div class="col-md-6">
-              <label class="form-label">ประเภทข่าวหลัก *</label>
-              <select class="form-select" id="e_cat_id" name="cat_id" required>
-                <option value="">-- เลือกประเภทข่าวหลัก --</option>
-                {% for c in categories %}
-                  <option value="{{ c.cat_id }}">{{ c.cat_name }}</option>
-                {% endfor %}
-              </select>
-            </div>
+            <input type="file"
+                   id="editSubImages"
+                   name="sub_images"
+                   class="form-control mb-2"
+                   multiple
+                   accept="image/*">
 
-            <div class="col-md-6">
-              <label class="form-label">ประเภทย่อย</label>
-              <select class="form-select" id="e_subcat_id" name="subcat_id" disabled>
-                <option value="">-- เลือกประเภทย่อย --</option>
-              </select>
-              <small class="text-muted">เลือกประเภทข่าวหลักก่อน</small>
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label">สถานะ</label>
-              <select class="form-select" id="e_status" name="status">
-                <option value="draft">ฉบับร่าง</option>
-                <option value="publish">เผยแพร่แล้ว</option>
-              </select>
-            </div>
-
-            <div class="col-12">
-              <label class="form-label">เนื้อหาข่าว *</label>
-              <textarea class="form-control" id="e_content" name="news_content" rows="8" required></textarea>
-            </div>
-
-            <div class="col-12">
-              <label class="form-label">ลิงก์วิดีโอ</label>
-              <input type="text" class="form-control" id="e_video_url" name="video_url">
-            </div>
-
-            <hr class="my-2">
-
-            <div class="col-md-6">
-              <label class="form-label">รูปปก (Cover)</label>
-              <input type="file" class="form-control" id="e_cover_file" name="cover_image" accept="image/*">
-
-              <div class="mt-2 border rounded p-2 bg-light text-center">
-                <img id="e_cover_preview" src="" alt="cover" style="max-height:220px;max-width:100%;display:none;">
-                <div id="e_cover_empty" class="text-muted">ยังไม่มีรูปปก</div>
-              </div>
-
-              <div class="d-flex gap-2 mt-2">
-                <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemoveCover">
-                  <i class="bi bi-trash"></i> ลบรูปปก
-                </button>
-              </div>
-
-              <input type="hidden" id="e_remove_cover" name="remove_cover" value="0">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">รูปภาพรอง (เลือกได้หลายรูป)</label>
-              <input type="file" class="form-control" id="e_sub_files" name="sub_images" accept="image/*" multiple>
-
-              <div class="mt-2 d-flex flex-wrap gap-2" id="e_sub_preview"></div>
-              <div id="e_sub_empty" class="text-muted">ยังไม่มีรูปภาพรอง</div>
-
-              <div class="d-flex gap-2 mt-2">
-                <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemoveSubs">
-                  <i class="bi bi-trash"></i> ลบรูปรองทั้งหมด
-                </button>
-              </div>
-
-              <input type="hidden" id="e_remove_subs" name="remove_subs" value="0">
-            </div>
-
+            <div id="editSubPreview"
+                 class="d-flex flex-wrap gap-2"></div>
           </div>
-        </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-          <button type="submit" class="btn btn-danger">
-            <i class="bi bi-save me-1"></i> บันทึก
-          </button>
-        </div>
-      </form>
+          <!-- RIGHT -->
+          <div class="col-md-5">
+            <label class="form-label fw-bold">หมวดหมู่</label>
+            <select id="editCategory"
+                    name="cat_id"
+                    class="form-select mb-2">
+              {% for cat in categories %}
+                <option value="{{ cat.cat_id }}">
+                  {{ cat.cat_name }}
+                </option>
+              {% endfor %}
+            </select>
 
-    </div>
+            <label class="form-label fw-bold">หมวดย่อย</label>
+            <select id="editSubCategory"
+                    name="subcat_id"
+                    class="form-select mb-2">
+              <option value="">-- เลือกหมวดย่อย --</option>
+            </select>
+
+            <label class="form-label fw-bold">สถานะ</label>
+            <select id="editStatus"
+                    name="status"
+                    class="form-select mb-2">
+              <option value="publish">เผยแพร่</option>
+              <option value="draft">ฉบับร่าง</option>
+            </select>
+
+            <label class="form-label fw-bold">ประเภทข่าว</label>
+            <select id="editFeatured"
+                    name="is_featured"
+                    class="form-select mb-2">
+              <option value="0">ข่าวทั่วไป</option>
+              <option value="1">ข่าวเด่น (Featured)</option>
+            </select>
+
+            <label class="form-label fw-bold">
+              Video URL (ถ้ามี)
+            </label>
+            <input type="text"
+                   id="editVideoUrl"
+                   name="video_url"
+                   class="form-control"
+                   placeholder="https://...">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer py-2 px-3 border-0 bg-light">
+        <button type="button"
+                class="btn btn-outline-secondary rounded-pill px-4"
+                data-bs-dismiss="modal">
+          ยกเลิก
+        </button>
+
+        <button type="submit"
+                class="btn btn-danger rounded-pill px-4 fw-bold">
+          บันทึกการแก้ไข
+        </button>
+      </div>
+
+    </form>
   </div>
 </div>
 {% endblock %}

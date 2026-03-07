@@ -458,7 +458,7 @@ $(function () {
   // Edit modal: load subcategories
   // ======================================================
   async function loadSubcats(catId, selectedSubcatId) {
-    const $sub = $("#e_subcat_id");
+    const $sub = $("#editSubCategory");
     $sub.prop("disabled", true).html(`<option value="">-- เลือกประเภทย่อย --</option>`);
 
     if (!catId) return;
@@ -481,44 +481,47 @@ $(function () {
   }
 
   function setCoverPreviewFromUrl(url) {
-  const $img = $("#e_cover_preview");
-  const $empty = $("#e_cover_empty");
 
-  if (url && String(url).trim() !== "") {
+  const $img = $("#editPreview");
+
+  if (url && url.trim() !== "") {
+
     const finalUrl = url.startsWith("http")
       ? url
       : "/static/" + url;
 
     $img.attr("src", finalUrl).show();
-    $empty.hide();
+
   } else {
-    $img.attr("src", "").hide();
-    $empty.show();
+
+    $img.hide();
+
   }
+
 }
 
   function setSubPreviewFromUrls(urls) {
-    const $wrap = $("#e_sub_preview");
-    const $empty = $("#e_sub_empty");
-    $wrap.empty();
 
-    if (!urls || !urls.length) {
-      $empty.show();
-      return;
-    }
+  const $wrap = $("#editSubPreview");
 
-    $empty.hide();
-    urls.forEach((src) => {
+  $wrap.empty();
+
+  if (!urls || !urls.length) return;
+
+  urls.forEach(src => {
+
     const finalSrc = src.startsWith("http")
       ? src
       : "/static/" + src;
 
     $wrap.append(`
-      <img src="${finalSrc}" alt="sub"
-        style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">
+      <img src="${finalSrc}"
+        style="height:90px;border-radius:8px;border:1px solid #ddd">
     `);
+
   });
-  }
+
+}
 
   $("#e_cover_file").on("change", function () {
     const f = this.files && this.files[0];
@@ -566,14 +569,14 @@ $(function () {
 
       const d = j.data || {};
 
-      $("#e_news_id").val(d.news_id);
-      $("#e_title").val(d.news_title || "");
-      $("#e_content").val(d.news_content || "");
-      $("#e_video_url").val(d.video_path || "");
+      $("#editNewsId").val(d.news_id);
+      $("#editTitle").val(d.news_title || "");
+      $("#editContent").val(d.news_content || "");
+      $("#editVideoUrl").val(d.video_path || "");
       $("#e_status").val(d.status || "draft");
       $("#e_kind").val(String(Number(d.is_featured || 0)));
 
-      $("#e_cat_id").val(d.cat_id || "");
+      $("#editCategory").val(d.cat_id || "");
       await loadSubcats(d.cat_id, d.subcat_id);
 
       $("#e_remove_cover").val("0");
@@ -591,7 +594,7 @@ $(function () {
     }
   });
 
-  $(document).on("change", "#e_cat_id", async function () {
+  $(document).on("change", "#editCategory", async function () {
     const catId = $(this).val();
     await loadSubcats(catId, "");
   });
@@ -607,7 +610,7 @@ $(function () {
   $(document).on("submit", "#editNewsForm", async function (e) {
     e.preventDefault();
 
-    const newsId = $("#e_news_id").val();
+    const newsId = $("#editNewsId").val();
     const form = document.getElementById("editNewsForm");
     const fd = new FormData(form);
 
