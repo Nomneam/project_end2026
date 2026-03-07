@@ -133,6 +133,15 @@
                     {% if status == 'running' %}
                       <span class="badge bg-success">กำลังรัน</span>
 
+                      <div class="mt-2">
+                        <a href="/ads/receipt/{{ ad.adv_id }}"
+                          target="_blank"
+                          class="btn btn-sm btn-outline-primary w-100">
+                          <i class="bi bi-receipt me-1"></i>
+                          ใบเสร็จ
+                        </a>
+                      </div>
+
                     {% elif status == 'approved' %}
                       <span class="badge bg-warning text-dark">รอชำระเงิน</span>
 
