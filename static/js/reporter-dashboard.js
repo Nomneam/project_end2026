@@ -486,9 +486,11 @@ $(function () {
 
   if (url && url.trim() !== "") {
 
-    const finalUrl = url.startsWith("http")
-      ? url
-      : "/static/" + url;
+    let finalUrl = url;
+
+    if (!url.startsWith("http") && !url.startsWith("blob")) {
+      finalUrl = "/static/" + url;
+    }
 
     $img.attr("src", finalUrl).show();
 
@@ -503,20 +505,21 @@ $(function () {
   function setSubPreviewFromUrls(urls) {
 
   const $wrap = $("#editSubPreview");
-
   $wrap.empty();
 
   if (!urls || !urls.length) return;
 
   urls.forEach(src => {
 
-    const finalSrc = src.startsWith("http")
-      ? src
-      : "/static/" + src;
+    let finalSrc = src;
+
+    if (!src.startsWith("http") && !src.startsWith("blob")) {
+      finalSrc = "/static/" + src;
+    }
 
     $wrap.append(`
       <img src="${finalSrc}"
-        style="height:90px;border-radius:8px;border:1px solid #ddd">
+           style="height:90px;border-radius:8px;border:1px solid #ddd">
     `);
 
   });
@@ -530,12 +533,76 @@ $(function () {
     setCoverPreviewFromUrl(URL.createObjectURL(f));
   });
 
-  $("#e_sub_files").on("change", function () {
-    const files = Array.from(this.files || []);
-    $("#e_remove_subs").val("0");
-    if (!files.length) return;
-    setSubPreviewFromUrls(files.map((f) => URL.createObjectURL(f)));
+
+  let subFiles = [];
+
+  $("#editSubImages").on("change", function () {
+
+  const file = this.files[0];
+  $("#e_remove_subs").val("0");
+
+  if (!file) return;
+
+  subFiles.push(file);
+
+  renderSubPreview();
+
+  this.value = ""; // reset input เพื่อให้เลือกไฟล์ซ้ำได้
+
+});
+
+
+function renderSubPreview() {
+
+  const $wrap = $("#editSubPreview");
+  $wrap.empty();
+
+  if (!subFiles.length) return;
+
+  subFiles.forEach((file, index) => {
+
+    let url;
+
+    if (typeof file === "string") {
+
+      url = file.startsWith("http")
+        ? file
+        : "/static/" + file;
+
+    } else {
+
+      url = URL.createObjectURL(file);
+
+    }
+
+    $wrap.append(`
+      <div style="position:relative">
+        <img src="${url}"
+             style="height:90px;border-radius:8px;border:1px solid #ddd">
+
+        <button type="button"
+                class="btn btn-danger btn-sm remove-sub"
+                data-index="${index}"
+                style="position:absolute;top:-6px;right:-6px;border-radius:50%">
+          ×
+        </button>
+      </div>
+    `);
+
   });
+
+}
+
+$(document).on("click", ".remove-sub", function () {
+
+  const i = $(this).data("index");
+
+  subFiles.splice(i, 1);
+
+  renderSubPreview();
+
+});
+
 
   $("#btnRemoveCover").on("click", function () {
     $("#e_cover_file").val("");
@@ -544,10 +611,16 @@ $(function () {
   });
 
   $("#btnRemoveSubs").on("click", function () {
-    $("#e_sub_files").val("");
-    $("#e_remove_subs").val("1");
-    setSubPreviewFromUrls([]);
-  });
+
+  subFiles = [];
+
+  $("#editSubImages").val("");
+
+  $("#e_remove_subs").val("1");
+
+  renderSubPreview();
+
+});
 
   // open edit modal
   $(document).on("click", ".btn-edit-news", async function (e) {
@@ -573,8 +646,8 @@ $(function () {
       $("#editTitle").val(d.news_title || "");
       $("#editContent").val(d.news_content || "");
       $("#editVideoUrl").val(d.video_path || "");
-      $("#e_status").val(d.status || "draft");
-      $("#e_kind").val(String(Number(d.is_featured || 0)));
+      $("#editStatus").val(d.status || "draft");
+      $("#editFeatured").val(String(Number(d.is_featured || 0)));
 
       $("#editCategory").val(d.cat_id || "");
       await loadSubcats(d.cat_id, d.subcat_id);
@@ -582,10 +655,21 @@ $(function () {
       $("#e_remove_cover").val("0");
       $("#e_remove_subs").val("0");
       $("#e_cover_file").val("");
-      $("#e_sub_files").val("");
+      $("#editSubImages").val("");
 
       setCoverPreviewFromUrl(d.cover_image || "");
-      setSubPreviewFromUrls(parseSubImages(d.sub_images));
+
+      // reset
+      subFiles = [];
+
+      const subs = parseSubImages(d.sub_images);
+
+      subs.forEach(url => {
+        subFiles.push(url); // เก็บรูปเดิม
+      });
+
+      renderSubPreview();
+            setSubPreviewFromUrls(d.sub_images || []);
 
       const m = bsModal("editNewsModal");
       if (m) m.show();
@@ -613,6 +697,12 @@ $(function () {
     const newsId = $("#editNewsId").val();
     const form = document.getElementById("editNewsForm");
     const fd = new FormData(form);
+
+    fd.delete("sub_images");
+
+    subFiles.forEach(f => {
+      fd.append("sub_images", f);
+    });
 
     const rs = await swalFire({
       icon: "question",

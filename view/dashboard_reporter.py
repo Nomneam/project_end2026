@@ -554,7 +554,7 @@ def reporter_news_update(news_id):
             else:
                 picked = [f for f in (sub_files or []) if f and f.filename]
                 if picked:
-                    picked = picked[:2]  # ✅ จำกัด 2 รูป
+                    picked = picked[:5]
                     new_subs = []
                     for f in picked:
                         p = save_image(f, "sub")
