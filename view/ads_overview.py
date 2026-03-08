@@ -26,9 +26,31 @@ def connect_db():
         port=int(os.environ.get("PORT")),
         cursorclass=pymysql.cursors.DictCursor
     )
+    
+    
+def update_expired_ads():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE advert
+        SET status='expired'
+        WHERE status='running'
+        AND valid_to IS NOT NULL
+        AND valid_to < NOW()
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
 
 @ads_overview_bp.route("/ads_overview")
 def ads_page():
+    
+    update_expired_ads()
+    
     front_user = session.get("front_user")
     if not front_user:
         # ยังไม่ล็อกอิน -> ส่งกลับไปหน้าแรก หรือหน้า login ที่คุณใช้
