@@ -38,18 +38,6 @@ $(function () {
     return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  function timeAgo(ts) {
-    const d = toDate(ts);
-    if (!d) return "—";
-    const diff = Math.max(0, Date.now() - d.getTime());
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "เมื่อสักครู่";
-    if (mins < 60) return `${mins} นาทีที่แล้ว`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs} ชม. ที่แล้ว`;
-    const days = Math.floor(hrs / 24);
-    return `${days} วันก่อน`;
-  }
 
   function buildNewsUrl(id) {
     return `/news/${encodeURIComponent(id)}`;
@@ -331,7 +319,7 @@ async function loadFooterAds() {
             <img src="${escapeHtml(img)}" class="rounded-3 must-read-img" alt="">
             <div class="flex-grow-1 must-read-body">
               <div class="fw-bold small line-clamp-2">${escapeHtml(safeText(x.news_title))}</div>
-              <div class="small text-muted mt-1">${escapeHtml(safeText(x.cat_name))} • ${escapeHtml(timeAgo(x.published_at))}</div>
+              <div class="small text-muted mt-1">${escapeHtml(safeText(x.cat_name))} • ${escapeHtml(x.time_ago)}</div>
             </div>
           </a>
         `;
@@ -377,7 +365,7 @@ async function loadFooterAds() {
               <div class="p-3 latest-body">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                   <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.cat_name))}</span>
-                  <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
+                  <span class="small text-muted">${escapeHtml(n.time_ago)}</span>
                 </div>
                 <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
                 <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.excerpt || ""))}</div>
@@ -465,7 +453,7 @@ async function loadFooterAds() {
               <div class="p-3 latest-body">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                   <span class="text-red-bkk fw-bold text-uppercase latest-cat">${escapeHtml(safeText(n.cat_name))}</span>
-                  <span class="small text-muted">${escapeHtml(timeAgo(n.published_at))}</span>
+                  <span class="small text-muted">${escapeHtml(n.time_ago)}</span>
                 </div>
                 <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(safeText(n.news_title))}</div>
                 <div class="text-secondary small mt-2 line-clamp-2">${escapeHtml(safeText(n.excerpt || ""))}</div>
@@ -533,7 +521,7 @@ async function loadFooterAds() {
             <div class="popular-rank">${idx + 1}</div>
             <div class="flex-grow-1 popular-body">
               <div class="small text-muted mb-1">
-                ${escapeHtml(n.cat_name)} • ${escapeHtml(timeAgo(n.published_at))} • ${escapeHtml(n.view_count)} วิว
+                ${escapeHtml(n.cat_name)} • ${escapeHtml(n.time_ago)}• ${escapeHtml(n.view_count)} วิว
               </div>
               <div class="fw-bold small line-clamp-2">
                 ${escapeHtml(n.news_title)}
@@ -557,104 +545,6 @@ async function loadFooterAds() {
       .catch((err) => {
         $("#popular-list").html(`<div class="text-danger small">โหลดยอดนิยมไม่สำเร็จ: ${escapeHtml(err.message || err)}</div>`);
       });
-  }
-
-  // ======================================================
-  // MOCK sections
-  // ======================================================
-  const EDITOR_PICKS = [
-    { cat: "ไลฟ์สไตล์", title: "7 วิธีรับมือฝุ่นและภูมิแพ้ในเมือง แบบไม่พังสุขภาพ", img: 166 },
-    { cat: "เทคโนโลยี", title: "เทรนด์งานปี 2026: AI + Hybrid ทักษะไหนบริษัทแย่งตัว", img: 170 },
-    { cat: "สังคม", title: "หลอกลวงออนไลน์พุ่ง: วิธีเช็คก่อนโอนเงิน ลดความเสี่ยง", img: 172 },
-  ];
-
-  function renderEditorsPicks() {
-    const $el = $("#editors-picks");
-    if (!$el.length) return;
-
-    const html = EDITOR_PICKS.map(
-      (p) => `
-        <div class="col-md-4">
-          <div class="rounded-4 overflow-hidden border bg-white h-100">
-            <img src="https://picsum.photos/id/${p.img}/800/600" class="w-100 editors-img" alt="">
-            <div class="p-3">
-              <div class="text-red-bkk fw-bold editors-cat">${escapeHtml(p.cat)}</div>
-              <div class="fw-bold mt-1 line-clamp-2">${escapeHtml(p.title)}</div>
-              <div class="small text-muted mt-2">แนะนำโดยกองบรรณาธิการ</div>
-            </div>
-          </div>
-        </div>
-      `
-    ).join("");
-    $el.html(html);
-  }
-
-  function renderInPictures() {
-    if (!$("#pictureHeroImg").length) return;
-
-    $("#pictureHeroImg").attr("src", `https://picsum.photos/id/301/1600/900`);
-    $("#pictureHeroCat").text("PHOTO");
-    $("#pictureHeroTime").text("วันนี้");
-    $("#pictureHeroTitle").text("ภาพข่าวเด่นประจำวัน (mock)");
-    $("#pictureHeroDesc").text("โซนนี้ยังเป็น mock อยู่ ถ้าจะดึงจาก DB จริง เดี๋ยวผมทำให้เป็นชุดเดียวกันได้เลย");
-
-    const html = [302, 303, 304]
-      .map(
-        (id) => `
-          <div class="col-md-4">
-            <div class="bg-white rounded-4 border overflow-hidden h-100">
-              <img src="https://picsum.photos/id/${id}/900/520" class="w-100 picture-mini-img" alt="">
-              <div class="p-3">
-                <div class="fw-bold mt-1 line-clamp-2">ภาพประกอบ (mock)</div>
-                <div class="text-secondary small mt-2 line-clamp-2">คำอธิบายสั้นๆ</div>
-              </div>
-            </div>
-          </div>
-        `
-      )
-      .join("");
-    $("#pictureMiniGrid").html(html);
-  }
-
-  let watchSwiper = null;
-  function renderWatchRail() {
-    if (!$("#watchWrapper").length) return;
-
-    const list = [210, 211, 212, 213, 214, 215];
-    const html = list
-      .map(
-        (imgId) => `
-          <div class="swiper-slide">
-            <div class="rail-card">
-              <div class="rail-thumb">
-                <img src="https://picsum.photos/id/${imgId}/900/520" alt="">
-                <div class="play-badge">▶ watch</div>
-              </div>
-              <div class="p-3">
-                <div class="small text-white-50 mb-2">Mock • วันนี้</div>
-                <div class="fw-bold text-white line-clamp-2">วิดีโอแนะนำ (mock)</div>
-                <div class="small text-white-50 mt-2">Mock video • 2:34</div>
-              </div>
-            </div>
-          </div>
-        `
-      )
-      .join("");
-    $("#watchWrapper").html(html);
-
-    if (watchSwiper) {
-      watchSwiper.destroy(true, true);
-      watchSwiper = null;
-    }
-
-    watchSwiper = new Swiper(".watchSwiper", {
-      slidesPerView: "auto",
-      spaceBetween: 14,
-      loop: true,
-      speed: 4500,
-      autoplay: { delay: 0, disableOnInteraction: false, pauseOnMouseEnter: true },
-      navigation: { prevEl: "#watchPrev", nextEl: "#watchNext" },
-    });
   }
 
 
@@ -711,7 +601,7 @@ async function loadFooterAds() {
                   ${escapeHtml(cat.cat_name)}
                 </span>
                 <span class="small text-muted">
-                  ${escapeHtml(timeAgo(n.published_at))}
+                  ${escapeHtml(n.time_ago)}
                 </span>
               </div>
 
@@ -736,7 +626,7 @@ async function loadFooterAds() {
     container.append(`
       <div class="mb-5">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-          <h2 class="font-kanit fw-bold m-0">${cat.cat_name}</h2>
+          <h2 class="font-kanit fw-bold text-navy-bkk m-0">${cat.cat_name}</h2>
         </div>
         <div class="row g-3">
           ${grid}

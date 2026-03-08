@@ -18,11 +18,33 @@ def connect_db():
         port=int(os.environ.get('PORT')),
         cursorclass=pymysql.cursors.DictCursor
     )
+    
+def update_expired_ads():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE advert
+        SET status='expired'
+        WHERE status='running'
+        AND valid_to IS NOT NULL
+        AND valid_to < NOW()
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    
 # ==============================
 #  Advert Review Page
 # ==============================
 @advert_review_bp.route('/ad-review')
 def advert_review():
+    
+    update_expired_ads()
+    
     user = session.get("user")
     if not user or not user.get("id"):
         return redirect(url_for("login_emp.login_emp"))
@@ -92,7 +114,7 @@ def advert_review():
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
                 LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
-                WHERE a.status IN ('approved','rejected')
+                WHERE a.status IN ('approved','rejected','running','paused','expired')
                   AND a.del_flg=0
                 ORDER BY a.reviewed_at DESC
                 LIMIT %s OFFSET %s
@@ -163,5 +185,35 @@ def reject_advert():
             """, (reason, emp_id, datetime.now(), adv_id))
         conn.commit()
         return jsonify({'status': 'success'})
+    finally:
+        conn.close()
+
+
+@advert_review_bp.route('/ad-review/pause', methods=['POST'])
+def pause_advert():
+
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
+
+    data = request.get_json()
+    adv_id = data.get("adv_id")
+    reason = data.get("reason")
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cur:
+
+            cur.execute("""
+                UPDATE advert
+                SET status='paused',
+                    rejected_reason=%s
+                WHERE adv_id=%s
+            """,(reason,adv_id))
+
+        conn.commit()
+
+        return jsonify({"status":"success"})
+
     finally:
         conn.close()

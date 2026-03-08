@@ -4,6 +4,7 @@ $(function () {
 
   const MAX_SUB_IMAGES = 5;
 
+
   // ======================================================
   // SweetAlert helpers
   // ======================================================
@@ -273,6 +274,19 @@ $(function () {
       swalFire({ icon: "warning", title: "กรุณาเลือกรูปหลัก" });
       return;
     }
+
+    const videoInput = $('input[name="video_path"]').val()?.trim();
+
+    if (videoInput && !videoInput.startsWith("http://") && !videoInput.startsWith("https://")) {
+      swalFire({
+        icon: "warning",
+        title: "Video URL ไม่ถูกต้อง",
+        text: "ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://",
+      });
+      return;
+    }
+
+    
 
     const formData = new FormData(this);
 

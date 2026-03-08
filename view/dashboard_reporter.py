@@ -98,7 +98,7 @@ def require_reporter():
 
 # ---------------- Shared query builder ----------------
 def build_news_filters(user_id: int):
-    per_page = 5
+    per_page = 7
     page = request.args.get("page", default=1, type=int)
     if page < 1:
         page = 1
@@ -140,6 +140,30 @@ def build_news_filters(user_id: int):
         "params": params,
     }
 
+
+# ==============================
+# AUDIT LOG FUNCTION
+# ==============================
+def write_audit_log(emp_id: int, action: str, pages: str, detail: str):
+    try:
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+
+        conn = connect_db()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO audit_logs_emp
+                (emp_id, action, pages, detail, ip_address, created_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+                """,
+                (emp_id, action, pages, detail, ip),
+            )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Audit log error:", e)
+        
+        
 
 # ---------------- Dashboard (HTML render) ----------------
 @dashboard_reporter_bp.route("/reporter/dashboard", methods=["GET"])
@@ -343,6 +367,14 @@ def reporter_soft_delete(news_id):
                 """,
                 (user_id, news_id),
             )
+            
+         # ✅ เพิ่มตรงนี้
+        write_audit_log(
+            emp_id=user_id,
+            action="Delete",
+            pages="Reporter Dashboard",
+            detail=f"ลบข่าว (ID {news_id})",
+        )
 
         return jsonify({"ok": True, "message": "ลบข่าวเรียบร้อย"}), 200
     finally:
@@ -377,13 +409,17 @@ def reporter_news_detail(news_id):
 
                     n.cover_image,
                     n.sub_images,
-                    n.video_url,
+                    n.video_path,
 
                     c.cat_name AS category_name,
-                    s.subcat_name AS subcategory_name
+                    s.subcat_name AS subcategory_name,
+                    
+                    e.emp_fname AS author_fname,
+                    e.emp_lname AS author_lname
                 FROM news n
                 LEFT JOIN news_category c ON n.cat_id = c.cat_id
                 LEFT JOIN news_subcategory s ON n.subcat_id = s.subcat_id
+                LEFT JOIN employee e ON n.created_by = e.emp_id
                 WHERE n.news_id = %s
                   AND n.created_by = %s
                   AND n.del_flg = 0
@@ -439,7 +475,7 @@ def reporter_subcategories():
         conn.close()
 
 
-# ---------------- Update (รองรับรูป + จำกัดรูปรอง 2 รูป + บันทึกเหมือนตอนเพิ่ม) ----------------
+# ---------------- Update (รองรับรูป + จำกัดรูปรอง 5 รูป + บันทึกเหมือนตอนเพิ่ม) ----------------
 @dashboard_reporter_bp.route("/reporter/news/update/<int:news_id>", methods=["POST"])
 def reporter_news_update(news_id):
     user = require_reporter()
@@ -455,115 +491,180 @@ def reporter_news_update(news_id):
     subcat_id = safe_int(request.form.get("subcat_id"), default=None)
     is_featured = safe_int(request.form.get("is_featured"), default=0)
     status = (request.form.get("status") or "draft").strip()
-    video_url = (request.form.get("video_url") or "").strip()
+    video_path = (request.form.get("video_url") or "").strip()
 
     if not news_title or not news_content or not cat_id:
         return jsonify({"ok": False, "message": "กรุณากรอกข้อมูลที่จำเป็นให้ครบ"}), 400
 
+    if video_path and not video_path.startswith(("http://", "https://")):
+        return jsonify(ok=False, message="Video URL ไม่ถูกต้อง"), 400
+
     if status not in ("draft", "publish"):
         status = "draft"
+
     if is_featured not in (0, 1):
         is_featured = 0
 
-    # ชื่อไฟล์จากฟอร์มหน้า dashboard (ของคุณใช้ cover_image/sub_images)
     cover_file = request.files.get("cover_image")
     sub_files = request.files.getlist("sub_images")
 
-    remove_cover = (request.form.get("remove_cover") or "0").strip() == "1"
-    remove_subs = (request.form.get("remove_subs") or "0").strip() == "1"
+    remove_cover = (request.form.get("remove_cover") or "0") == "1"
+    remove_subs = (request.form.get("remove_subs") or "0") == "1"
+    deleted_sub_images = request.form.get("deleted_sub_images")
 
     conn = connect_db()
+
     try:
         with conn.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT cover_image, sub_images, published_at
-                FROM news
-                WHERE news_id=%s AND created_by=%s AND del_flg=0
-                """,
-                (news_id, user_id),
-            )
-            old = cursor.fetchone()
-            if not old:
-                return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์แก้ไข"}), 404
 
-            # ---------- cover ----------
-            old_cover = (old.get("cover_image") or "").strip()
-            if remove_cover:
-                final_cover = None
-            else:
-                if cover_file and cover_file.filename:
-                    new_cover = save_image(cover_file, "cover")
-                    if not new_cover:
-                        return jsonify({"ok": False, "message": "ไฟล์รูปปกไม่รองรับ"}), 400
-                    final_cover = new_cover
-                else:
-                    final_cover = old_cover  # ไม่อัปโหลดใหม่ -> คงเดิม
-
-            # ---------- sub images ----------
-            old_sub_raw = old.get("sub_images")
-            try:
-                old_subs = json.loads(old_sub_raw) if old_sub_raw else []
-                if not isinstance(old_subs, list):
-                    old_subs = []
-            except Exception:
-                old_subs = []
-
-            if remove_subs:
-                final_subs = []
-            else:
-                picked = [f for f in (sub_files or []) if f and f.filename]
-                if picked:
-                    picked = picked[:2]  # ✅ จำกัด 2 รูป
-                    new_subs = []
-                    for f in picked:
-                        p = save_image(f, "sub")
-                        if not p:
-                            return jsonify({"ok": False, "message": "มีไฟล์รูปรองที่ไม่รองรับ"}), 400
-                        new_subs.append(p)
-                    final_subs = new_subs
-                else:
-                    final_subs = old_subs  # ไม่อัปโหลดใหม่ -> คงเดิม
-
-            cursor.execute(
-                """
-                UPDATE news
-                SET
-                  news_title=%s,
-                  news_content=%s,
-                  cat_id=%s,
-                  subcat_id=%s,
-                  is_featured=%s,
-                  status=%s,
-                  cover_image=%s,
-                  sub_images=%s,
-                  video_url=%s,
-                  updated_by=%s,
-                  updated_at=NOW(),
-                  published_at = CASE
-                    WHEN %s = 'publish' AND published_at IS NULL THEN NOW()
-                    WHEN %s <> 'publish' THEN NULL
-                    ELSE published_at
-                  END
-                WHERE news_id=%s
-                """,
-                (
+            cursor.execute("""
+                SELECT
                     news_title,
                     news_content,
                     cat_id,
                     subcat_id,
                     is_featured,
                     status,
-                    final_cover,
-                    json.dumps(final_subs, ensure_ascii=False),
-                    video_url,
-                    user_id,
-                    status,
-                    status,
-                    news_id,
-                ),
+                    video_path,
+                    cover_image,
+                    sub_images,
+                    published_at
+                FROM news
+                WHERE news_id=%s AND created_by=%s AND del_flg=0
+            """, (news_id, user_id))
+
+            old = cursor.fetchone()
+
+            if not old:
+                return jsonify({"ok": False, "message": "ไม่พบข่าว หรือไม่มีสิทธิ์"}), 404
+
+            # ---------------- COVER ----------------
+            old_cover = (old.get("cover_image") or "").strip()
+
+            if remove_cover:
+                final_cover = None
+
+            elif cover_file and cover_file.filename:
+                new_cover = save_image(cover_file, "cover")
+
+                if not new_cover:
+                    return jsonify({"ok": False, "message": "ไฟล์รูปปกไม่รองรับ"}), 400
+
+                final_cover = new_cover
+
+            else:
+                final_cover = old_cover
+
+            # ---------------- SUB IMAGES ----------------
+            old_sub_raw = old.get("sub_images")
+
+            try:
+                old_subs = json.loads(old_sub_raw) if old_sub_raw else []
+                if not isinstance(old_subs, list):
+                    old_subs = []
+            except:
+                old_subs = []
+
+            if remove_subs:
+                final_subs = []
+
+            else:
+
+                deleted = []
+
+                if deleted_sub_images:
+                    try:
+                        deleted = json.loads(deleted_sub_images)
+                    except:
+                        deleted = []
+
+                # ✅ ลบออกจาก list เท่านั้น (ไม่ลบไฟล์จริง)
+                old_subs = [img for img in old_subs if img not in deleted]
+
+                picked = [f for f in (sub_files or []) if f and f.filename]
+
+                for f in picked:
+
+                    p = save_image(f, "sub")
+
+                    if not p:
+                        return jsonify({
+                            "ok": False,
+                            "message": "มีไฟล์รูปรองที่ไม่รองรับ"
+                        }), 400
+
+                    old_subs.append(p)
+
+                # จำกัด 5 รูป
+                final_subs = old_subs[:5]
+
+            # ---------------- COMPARE CHANGE ----------------
+            changes = []
+
+            def compare(name, old_val, new_val):
+                if (old_val or "") != (new_val or ""):
+                    changes.append(f"{name}: '{old_val}' → '{new_val}'")
+
+            compare("หัวข้อข่าว", old.get("news_title"), news_title)
+            compare("เนื้อหา", old.get("news_content"), news_content)
+            compare("หมวดหลัก", old.get("cat_id"), cat_id)
+            compare("หมวดย่อย", old.get("subcat_id"), subcat_id)
+            compare("ประเภทข่าว", old.get("is_featured"), is_featured)
+            compare("สถานะ", old.get("status"), status)
+            compare("วิดีโอ", old.get("video_path"), video_path)
+
+            if (old.get("cover_image") or "") != (final_cover or ""):
+                changes.append("รูปปก: เปลี่ยนแปลง")
+
+            if json.dumps(old_subs) != json.dumps(final_subs):
+                changes.append("รูปภาพรอง: เปลี่ยนแปลง")
+
+            # ---------------- UPDATE ----------------
+            cursor.execute("""
+                UPDATE news
+                SET
+                    news_title=%s,
+                    news_content=%s,
+                    cat_id=%s,
+                    subcat_id=%s,
+                    is_featured=%s,
+                    status=%s,
+                    video_path=%s,
+                    cover_image=%s,
+                    sub_images=%s,
+                    updated_by=%s,
+                    updated_at=NOW(),
+                    published_at = CASE
+                        WHEN %s='publish' AND published_at IS NULL THEN NOW()
+                        WHEN %s<>'publish' THEN NULL
+                        ELSE published_at
+                    END
+                WHERE news_id=%s
+            """, (
+                news_title,
+                news_content,
+                cat_id,
+                subcat_id,
+                is_featured,
+                status,
+                video_path if video_path else None,
+                final_cover,
+                json.dumps(final_subs, ensure_ascii=False),
+                user_id,
+                status,
+                status,
+                news_id
+            ))
+
+        if changes:
+            write_audit_log(
+                emp_id=user_id,
+                action="Update",
+                pages="Reporter Dashboard",
+                detail=f"แก้ไขข่าว '{news_title}' (ID {news_id})\n" + "\n".join(changes)
             )
 
         return jsonify({"ok": True, "message": "บันทึกการแก้ไขเรียบร้อย"}), 200
+
     finally:
         conn.close()

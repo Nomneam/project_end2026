@@ -195,24 +195,6 @@ loadSidebarAds();
 
 
 
-  // ======================================================
-  // Date helpers (ไทย)
-  // ======================================================
-  function setHeaderDate(d) {
-    const $dayName = $("#dayName");
-    const $dayDate = $("#dayDate");
-    if (!$dayName.length || !$dayDate.length) return;
-
-    const daysTH = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-    const monthsEN = [
-      "January","February","March","April","May","June",
-      "July","August","September","October","November","December"
-    ];
-
-    $dayName.text(daysTH[d.getDay()]);
-    $dayDate.text(`${d.getDate()} ${monthsEN[d.getMonth()]} ${d.getFullYear()}`);
-  }
-
   function toast(msg) {
     // ถ้ามี Swal ก็เปลี่ยนเป็น Swal.fire ได้
     try {

@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask,jsonify
 from dotenv import load_dotenv
 import os
+from werkzeug.exceptions import RequestEntityTooLarge
 
 load_dotenv()
 
@@ -46,6 +47,7 @@ from view.reporter_profile import reporter_profile_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 # register blueprints
 app.register_blueprint(login_emp_bp)
 app.register_blueprint(dashboard_admin_bp)
@@ -88,6 +90,10 @@ def inject_navbar():
         "categories": load_nav_categories(),
         **load_footer_data()
     }
+    
+@app.errorhandler(RequestEntityTooLarge)
+def handle_file_too_large(e):
+    return jsonify(ok=False, message="ไฟล์ใหญ่เกิน 100MB"), 413
 
 if __name__ == '__main__':
     app.run(debug=True)

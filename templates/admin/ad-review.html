@@ -118,7 +118,7 @@
   <!-- ========================= -->
   <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-success text-white">
-      รายการโฆษณาที่อนุมัติ / ปฏิเสธแล้ว
+      รายการโฆษณาที่อนุมัติ / ปฏิเสธแล้ว / กำลังแสดง / หมดอายุ
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -161,17 +161,44 @@
                   {{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}
                 </td>
                 <td>
-                  {% if ad.status == 'approved' %}
-                    <span class="badge bg-success">อนุมัติ</span>
-                  {% else %}
-                    <span class="badge bg-danger">ปฏิเสธ</span>
-                  {% endif %}
-                </td>
+                    {% if ad.status == 'approved' %}
+                      <span class="badge bg-success">อนุมัติ</span>
+
+                    {% elif ad.status == 'running' %}
+                      <span class="badge bg-info text-dark">กำลังแสดง</span>
+
+                    {% elif ad.status == 'paused' %}
+                      <span class="badge bg-dark">หยุดชั่วคราว</span>
+
+                    {% elif ad.status == 'rejected' %}
+                      <span class="badge bg-danger">ปฏิเสธ</span>
+
+                    {% elif ad.status == 'expired' %}
+                      <span class="badge bg-secondary">หมดอายุ</span>
+
+                    {% else %}
+                      <span class="badge bg-secondary">ไม่ทราบสถานะ</span>
+                    {% endif %}
+                  </td>
                 <td class="text-center">
-                  <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>
-                    ดูรายละเอียด
-                  </button>
-                </td>
+  <div class="d-flex justify-content-center gap-2">
+
+    <button class="btn btn-outline-primary btn-sm btn-view"
+            data-ad='{{ ad | tojson }}'
+            title="รายละเอียด">
+      ดูรายละเอียด
+    </button>
+
+    {% if ad.status == 'running' %}
+<button class="btn btn-outline-warning btn-sm btn-pause"
+        data-id="{{ ad.adv_id }}"
+        title="หยุดโฆษณา">
+  หยุดโฆษณา
+</button>
+{% endif %}
+
+  </div>
+</td>
               </tr>
               {% endfor %}
             {% else %}

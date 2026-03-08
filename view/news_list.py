@@ -123,7 +123,7 @@ def public_news_detail(news_id):
                   n.published_at,
                   n.cover_image,
                   n.sub_images,
-                  n.video_url,
+                  n.video_path,
                   c.cat_name AS category_name,
                   s.subcat_name AS subcategory_name,
                   e.emp_fname AS author_fname,
@@ -144,5 +144,45 @@ def public_news_detail(news_id):
                 return jsonify({"ok": False, "message": "ไม่พบข่าว"}), 404
 
             return jsonify({"ok": True, "data": row}), 200
+    finally:
+        conn.close()
+
+
+@news_list_bp.route("/reporter/news/search")
+def search_news():
+
+    q = (request.args.get("q") or "").strip()
+
+    conn = connect_db()
+
+    try:
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT
+                  n.news_id,
+                  n.news_title,
+                  n.is_featured,
+                  n.published_at,
+                  c.cat_name AS category_name,
+                  e.emp_fname AS author_fname,
+                  e.emp_lname AS author_lname
+                FROM news n
+                LEFT JOIN news_category c ON n.cat_id = c.cat_id
+                LEFT JOIN employee e ON n.created_by = e.emp_id
+                WHERE n.del_flg = 0
+                AND n.status = 'publish'
+                AND n.news_title LIKE %s
+                ORDER BY n.published_at DESC
+                LIMIT 50
+                """,
+                ("%" + q + "%",)
+            )
+
+            rows = cursor.fetchall()
+
+        return jsonify(ok=True, rows=rows)
+
     finally:
         conn.close()

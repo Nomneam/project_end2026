@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 import pymysql
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 
 load_dotenv()
@@ -19,6 +20,49 @@ def connect_db():
         autocommit=True,
         charset="utf8mb4",
     )
+    
+    
+def time_ago(dt):
+    if not dt:
+        return "—"
+
+    now = datetime.now()
+    diff = now - dt
+    seconds = diff.total_seconds()
+
+    if seconds < 0:
+        return "—"
+
+    minutes = int(seconds // 60)
+    hours = int(minutes // 60)
+    days = int(hours // 24)
+
+    if minutes < 1:
+        return "เมื่อสักครู่"
+
+    if minutes < 60:
+        return f"{minutes} นาทีที่แล้ว"
+
+    if hours < 24:
+        return f"{hours} ชม. ที่แล้ว"
+
+    if days < 30:
+        return f"{days} วันก่อน"
+
+    thai_months = [
+        "", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.",
+        "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.",
+        "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    ]
+
+    month = thai_months[dt.month]
+
+    if dt.year == now.year:
+        return f"{dt.day} {month}"
+
+    return f"{dt.day} {month} {dt.year + 543}"
+
+
 
 @index_bp.route("/index")
 def index_news():
@@ -71,6 +115,8 @@ def api_news_must_read():
                 LIMIT %s
             """, (limit,))
             items = cur.fetchall()
+            for item in items:
+                item["time_ago"] = time_ago(item.get("published_at"))
     finally:
         db.close()
 
@@ -91,7 +137,7 @@ def api_news_list():
     if page > max_pages:
         page = max_pages
 
-    where = ["n.del_flg=0", "n.status='publish'"]
+    where = ["n.del_flg=0", "n.status='publish'", "n.video_path IS NULL"]
     params = []
 
     if q:
@@ -135,6 +181,8 @@ def api_news_list():
                 LIMIT %s OFFSET %s
             """, params + [page_size, offset])
             items = cur.fetchall()
+            for item in items:
+                item["time_ago"] = time_ago(item.get("published_at"))
     finally:
         db.close()
 
@@ -332,6 +380,36 @@ def api_news_by_category():
                 LIMIT %s
             """, (cat_id, limit))
 
+            items = cur.fetchall()
+            for item in items:
+                item["time_ago"] = time_ago(item.get("published_at"))
+    finally:
+        db.close()
+
+    return jsonify(ok=True, items=items)
+
+
+
+@index_bp.get("/api/news/videos")
+def api_news_videos():
+    limit = int(request.args.get("limit", 6) or 6)
+
+    db = connect_db()
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT
+                  n.news_id,
+                  n.news_title,
+                  n.video_path,
+                  n.published_at
+                FROM news n
+                WHERE n.del_flg=0
+                  AND n.status='publish'
+                  AND n.video_path IS NOT NULL
+                ORDER BY n.published_at DESC
+                LIMIT %s
+            """, (limit,))
             items = cur.fetchall()
     finally:
         db.close()

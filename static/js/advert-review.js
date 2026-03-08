@@ -181,3 +181,55 @@ $(function () {
     }
 
 });
+
+
+$(document).on("click",".btn-pause",function(){
+
+    const advId = $(this).data("id");
+
+    Swal.fire({
+        title: "หยุดโฆษณา",
+        input: "textarea",
+        inputLabel: "เหตุผลในการหยุด",
+        inputPlaceholder: "กรุณาระบุเหตุผล...",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "หยุดโฆษณา",
+        cancelButtonText: "ยกเลิก",
+        inputValidator: (value) => {
+            if (!value || value.trim().length < 3) {
+                return "กรุณาระบุเหตุผล";
+            }
+        }
+    }).then(result=>{
+
+        if(!result.isConfirmed) return;
+
+        fetch("/ad-review/pause",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                adv_id:advId,
+                reason: result.value.trim()
+            })
+        })
+        .then(res=>res.json())
+        .then(res=>{
+
+            if(res.status==="success"){
+                Swal.fire(
+                    "สำเร็จ",
+                    "หยุดโฆษณาเรียบร้อย",
+                    "success"
+                ).then(()=>{
+                    location.reload()
+                })
+            }
+
+        })
+
+    })
+
+})

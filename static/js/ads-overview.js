@@ -224,6 +224,7 @@ $(document).on("click", ".edit-ad-btn", function () {
   $("#editAdName").val($(this).data("name"));
   $("#editAdDesc").val($(this).data("desc"));
   $("#editAdUrl").val($(this).data("url"));
+  $("#editAdStatus").val($(this).data("status"));
 
   $("#imagePreview").addClass("d-none").attr("src", "");
 
@@ -255,6 +256,7 @@ $("#saveAdChanges").click(function () {
   formData.append("name", $("#editAdName").val());
   formData.append("desc", $("#editAdDesc").val());
   formData.append("url", $("#editAdUrl").val());
+  formData.append("status", $("#editAdStatus").val());
 
   const file = $("#editAdImage")[0].files[0];
   if (file) {

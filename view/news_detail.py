@@ -45,15 +45,42 @@ def format_th_date(dt):
 def time_ago(dt):
     if not dt:
         return "—"
+
     now = datetime.now()
-    sec = int((now - dt).total_seconds())
-    if sec < 60:
+    diff = now - dt
+    seconds = diff.total_seconds()
+
+    if seconds < 0:
+        return "—"
+
+    minutes = int(seconds // 60)
+    hours = int(minutes // 60)
+    days = int(hours // 24)
+
+    if minutes < 1:
         return "เมื่อสักครู่"
-    if sec < 3600:
-        return f"{sec // 60} นาทีที่แล้ว"
-    if sec < 86400:
-        return f"{sec // 3600} ชม. ที่แล้ว"
-    return f"{sec // 86400} วันที่แล้ว"
+
+    if minutes < 60:
+        return f"{minutes} นาทีที่แล้ว"
+
+    if hours < 24:
+        return f"{hours} ชม. ที่แล้ว"
+
+    if days < 30:
+        return f"{days} วันก่อน"
+
+    thai_months = [
+        "", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.",
+        "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.",
+        "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    ]
+
+    month = thai_months[dt.month]
+
+    if dt.year == now.year:
+        return f"{dt.day} {month}"
+
+    return f"{dt.day} {month} {dt.year + 543}"
 
 
 def safe_str(x, default="—"):
@@ -248,6 +275,7 @@ def news_detail(news_id: int):
                     n.news_content,
                     n.cover_image,
                     n.sub_images,
+                    n.video_path,
                     n.view_count,
                     n.published_at,
                     n.created_at,
@@ -296,6 +324,8 @@ def news_detail(news_id: int):
 
             # ✅ cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
             article["cover_image"] = safe_str(article.get("cover_image"), "")
+            video = article.get("video_path")
+            article["video_path"] = video
 
             # ✅ เตรียมรูปรอง (จำกัด 5 รูป)
             raw_sub = article.get("sub_images")

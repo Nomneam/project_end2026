@@ -6,13 +6,31 @@ import uuid
 import pymysql
 import pymysql.cursors
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 
 load_dotenv()
 
 write_news_reporter_bp = Blueprint("write_news_reporter", __name__)
 
+# ======================================================
+# Upload config
+# ======================================================
+BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
+
+COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
+SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
+VIDEO_DIR = os.path.join(BASE_UPLOAD_DIR, "video")
+
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
+
 MAX_SUB_IMAGES = 5
 
+ROLE_REPORTER = 2
+
+
+# ======================================================
+# DB
+# ======================================================
 def connect_db():
     return pymysql.connect(
         host=os.environ.get("HOST"),
@@ -25,31 +43,18 @@ def connect_db():
         charset="utf8mb4",
     )
 
-# ======================================================
-# Upload config (แยก cover / sub)
-# ======================================================
-BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
-COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
-SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
 
-ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
-
+# ======================================================
+# Image
+# ======================================================
 def allowed_file(filename: str) -> bool:
     if not filename or "." not in filename:
         return False
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXT
 
-def save_image(file_storage, kind: str = "cover"):
-    """
-    เซฟรูปลง:
-      - static/uploads/news/cover/   (kind=cover)
-      - static/uploads/news/sub/     (kind=sub)
 
-    คืนค่า path ที่เก็บลง DB:
-      - uploads/news/cover/uuid.ext
-      - uploads/news/sub/uuid.ext
-    """
+def save_image(file_storage, kind: str = "cover"):
     if not file_storage or not file_storage.filename:
         return None
 
@@ -57,7 +62,7 @@ def save_image(file_storage, kind: str = "cover"):
     if not allowed_file(filename):
         return None
 
-    kind = (kind or "cover").lower().strip()
+    kind = kind.lower().strip()
     if kind not in ("cover", "sub"):
         kind = "cover"
 
@@ -71,8 +76,11 @@ def save_image(file_storage, kind: str = "cover"):
 
     return f"uploads/news/{kind}/{new_name}"
 
+
+
+
 # ======================================================
-# 1) GET เปิดหน้าเขียนข่าว
+# GET Page
 # ======================================================
 @write_news_reporter_bp.route("/reporter/write_news", methods=["GET"])
 def reporter_news_create():
@@ -80,7 +88,7 @@ def reporter_news_create():
     if not user:
         return redirect(url_for("login_emp.login_emp"))
 
-    if user.get("role_id") != 2:
+    if user.get("role_id") != ROLE_REPORTER:
         return "Forbidden", 403
 
     conn = connect_db()
@@ -98,34 +106,24 @@ def reporter_news_create():
 
     return render_template("reporter/reporter-write-news.html", categories=categories)
 
+
 # ======================================================
-# 2) POST บันทึกข่าว
-#    - cover_image: VARCHAR (uploads/news/cover/xxx.webp)
-#    - sub_images : LONGTEXT (json list of uploads/news/sub/xxx.webp)
+# POST Save News
 # ======================================================
 @write_news_reporter_bp.route("/reporter/write_news", methods=["POST"])
 def reporter_news_create_post():
     user = session.get("user")
     if not user:
         return jsonify(ok=False, message="not logged in"), 401
-    if user.get("role_id") != 2:
+    if user.get("role_id") != ROLE_REPORTER:
         return jsonify(ok=False, message="forbidden"), 403
 
     news_title = (request.form.get("title") or "").strip()
     news_content = (request.form.get("content") or "").strip()
-
     cat_id = int(request.form.get("cat_id") or 0)
 
-    # ✅ subcat_id ไม่บังคับ: ถ้าไม่มี/0 ให้เป็น None (ลง DB เป็น NULL)
     raw_subcat = (request.form.get("subcat_id") or "").strip()
-    subcat_id = None
-    try:
-        if raw_subcat:
-            v = int(raw_subcat)
-            if v > 0:
-                subcat_id = v
-    except Exception:
-        subcat_id = None
+    subcat_id = int(raw_subcat) if raw_subcat.isdigit() else None
 
     news_type = (request.form.get("newsType") or "regular").strip()
     is_featured = 1 if news_type == "featured" else 0
@@ -133,35 +131,51 @@ def reporter_news_create_post():
     submit_action = (request.form.get("submit_action") or "publish").strip().lower()
     status = "draft" if submit_action == "draft" else "publish"
 
-    # ✅ validate (ไม่บังคับ subcat)
     if not news_title or not news_content or cat_id <= 0:
         return jsonify(ok=False, message="กรุณากรอกข้อมูลให้ครบ"), 400
 
-    # --- images ---
-    main_image = request.files.get("main_image")
-    sub_images = request.files.getlist("sub_images")
+    saved_files = []
 
+    # ======================
+    # IMAGE
+    # ======================
+    main_image = request.files.get("main_image")
     if not main_image or not main_image.filename:
         return jsonify(ok=False, message="กรุณาเลือกรูปหลัก"), 400
 
     cover_path = save_image(main_image, "cover")
     if not cover_path:
-        return jsonify(ok=False, message="ไฟล์รูปหลักไม่ถูกต้อง (รองรับ png/jpg/jpeg/webp)"), 400
+        return jsonify(ok=False, message="ไฟล์รูปหลักไม่ถูกต้อง"), 400
 
-    # ✅ subs -> list of sub path (จำกัดสูงสุด 5 รูป)
+    saved_files.append(os.path.join("static", cover_path))
+
+    sub_images = request.files.getlist("sub_images")
     sub_list = []
+
     for f in (sub_images or [])[:MAX_SUB_IMAGES]:
-        if not f or not f.filename:
-            continue
         p = save_image(f, "sub")
         if p:
             sub_list.append(p)
+            saved_files.append(os.path.join("static", p))
 
     sub_images_json = json.dumps(sub_list, ensure_ascii=False)
+    
+    # ======================
+    # VIDEO (URL)
+    # ======================
+    video_path = (request.form.get("video_path") or "").strip()
 
-    created_by = user.get("user_id") or user.get("id") or None
-    updated_by = created_by
+    if not video_path:
+        video_path = None
+        
+    if video_path and not video_path.startswith(("http://", "https://")):
+        return jsonify(ok=False, message="Video URL ไม่ถูกต้อง"), 400
 
+    created_by = user.get("user_id") or user.get("id")
+
+    # ======================
+    # INSERT DB
+    # ======================
     conn = connect_db()
     try:
         with conn.cursor() as cur:
@@ -169,41 +183,48 @@ def reporter_news_create_post():
                 INSERT INTO news
                   (cat_id, subcat_id, news_title, is_featured,
                    news_content, cover_image, sub_images,
-                   video_url, status, published_at,
+                   video_path, status, published_at,
                    created_by, updated_by, del_flg)
                 VALUES
                   (%s, %s, %s, %s,
                    %s, %s, %s,
-                   NULL, %s, IF(%s='publish', CURRENT_TIMESTAMP, NULL),
+                   %s, %s, IF(%s='publish', CURRENT_TIMESTAMP, NULL),
                    %s, %s, 0)
             """, (
                 cat_id, subcat_id, news_title, is_featured,
                 news_content, cover_path, sub_images_json,
+                video_path,
                 status, status,
-                created_by, updated_by
+                created_by, created_by
             ))
 
             news_id = cur.lastrowid
 
         conn.commit()
-        return jsonify(ok=True, message="บันทึกข่าวสำเร็จ", data={"news_id": news_id, "status": status})
+
+        return jsonify(ok=True, message="บันทึกข่าวสำเร็จ", data={
+            "news_id": news_id,
+            "status": status
+        })
 
     except Exception as e:
         conn.rollback()
+
         return jsonify(ok=False, message=f"บันทึกข่าวไม่สำเร็จ: {e}"), 500
 
     finally:
         conn.close()
 
+
 # ======================================================
-# 3) API ดึงประเภทย่อย
+# API Subcategory
 # ======================================================
 @write_news_reporter_bp.route("/api/news/subcategories", methods=["GET"])
 def api_news_subcategories():
     user = session.get("user")
     if not user:
         return jsonify(ok=False, message="not logged in"), 401
-    if user.get("role_id") != 2:
+    if user.get("role_id") != ROLE_REPORTER:
         return jsonify(ok=False, message="forbidden"), 403
 
     cat_id = request.args.get("cat_id", type=int)

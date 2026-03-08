@@ -48,14 +48,18 @@ $(function () {
   // View helpers
   // ======================================================
   function safeSetImg($img, $empty, src) {
-    if (src && String(src).trim() !== "") {
-      $img.attr("src", src).show();
-      $empty.hide();
-    } else {
-      $img.attr("src", "").hide();
-      $empty.show();
-    }
+  if (src && String(src).trim() !== "") {
+    const finalSrc = src.startsWith("http")
+      ? src
+      : "/static/" + src;
+
+    $img.attr("src", finalSrc).show();
+    $empty.hide();
+  } else {
+    $img.attr("src", "").hide();
+    $empty.show();
   }
+}
 
   function parseSubImages(raw) {
     if (!raw) return [];
@@ -80,13 +84,17 @@ $(function () {
     }
 
     arr.forEach((src) => {
-      const img = $(
-        `<img src="${src}" alt="sub"
-              style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">`
-      );
-      container.append(img);
-    });
-  }
+  const finalSrc = src.startsWith("http")
+    ? src
+    : "/static/" + src;
+
+  const img = $(`
+    <img src="${finalSrc}" alt="sub"
+      style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">
+  `);
+  container.append(img);
+});
+}
 
   // ======================================================
   // AJAX Pagination + Filter (ไม่เปลี่ยน URL)
@@ -152,7 +160,7 @@ $(function () {
 
       $tbody.append(`
         <tr>
-          <td class="fw-semibold text-center">${_escapeHtml(r.news_title || "")}</td>
+          <td class="fw-semibold">${_escapeHtml(r.news_title || "")}</td>
           <td class="text-center">${kindBadge}</td>
           <td class="text-center">${_escapeHtml(r.category_name || "-")}</td>
           <td class="text-center">${_escapeHtml(published)}</td>
@@ -273,12 +281,6 @@ $(function () {
     loadPage(p);
   });
 
-  // ✅ search: ไม่เปลี่ยน URL
-  $(document).on("submit", "#filterForm", function (e) {
-    e.preventDefault();
-    loadPage(1);
-  });
-
   // ✅ reset: ไม่เปลี่ยน URL
   $(document).on("click", "#btnReset", function () {
     $("#filter_cat_id").val("");
@@ -327,47 +329,136 @@ $(function () {
   // View modal
   // ======================================================
   $(document).on("click", ".btn-view-news", async function () {
-    const newsId = $(this).data("id");
 
-    try {
-      const r = await fetch(`/reporter/news/detail/${newsId}`, {
-        method: "GET",
-        headers: { "X-Requested-With": "XMLHttpRequest" },
+  const newsId = $(this).data("id");
+
+  try {
+
+    const r = await fetch(`/reporter/news/detail/${newsId}`, {
+      method: "GET",
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    const json = await r.json().catch(() => ({}));
+
+    if (!r.ok || !json.ok) {
+      await swalFire({
+        icon: "error",
+        title: "ดูข้อมูลไม่ได้",
+        text: json.message || "เกิดข้อผิดพลาด"
       });
-
-      const json = await r.json().catch(() => ({}));
-      if (!r.ok || !json.ok) {
-        await swalFire({ icon: "error", title: "ดูข้อมูลไม่ได้", text: json.message || "เกิดข้อผิดพลาด" });
-        return;
-      }
-
-      const d = json.data || {};
-
-      $("#v_title").val(d.news_title || "-");
-      $("#v_kind").val(Number(d.is_featured || 0) === 1 ? "ข่าวยอดฮิต (Featured)" : "ข่าวทั่วไป");
-      $("#v_category").val(d.category_name || "-");
-      $("#v_subcategory").val(d.subcategory_name || "-");
-      $("#v_status").val(d.status === "publish" ? "เผยแพร่แล้ว" : "ฉบับร่าง");
-      $("#v_published_at").val(fmtDateTime(d.published_at));
-      $("#v_updated_at").val(fmtDateTime(d.updated_at));
-      $("#v_content").val(d.news_content || "");
-      $("#v_video_url").val(d.video_url || "");
-
-      safeSetImg($("#v_cover_img"), $("#v_cover_empty"), d.cover_image);
-      renderSubImages($("#v_sub_images"), $("#v_sub_images_empty"), d.sub_images);
-
-      const m = bsModal("viewNewsModal");
-      if (m) m.show();
-    } catch (e) {
-      await swalFire({ icon: "error", title: "ดูข้อมูลไม่ได้", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
+      return;
     }
-  });
+
+    const d = json.data || {};
+
+    // title
+    $("#v-title").text(d.news_title || "-");
+
+    // author
+    $("#v-author").text(
+    (d.author_fname || "") + " " + (d.author_lname || "")
+  );
+
+    // category
+    $("#v-category").text(d.category_name || "-");
+
+    // content
+    $("#v-content").html(d.news_content || "-");
+
+    // date thai
+    if (d.published_at) {
+
+    const dt = new Date(d.published_at);
+
+    const date = dt.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+
+    const time = dt.toLocaleTimeString("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    $("#v-date-thai").text(date);
+    $("#v-time-thai").text(time);
+
+  } else {
+
+    $("#v-date-thai").text("-");
+    $("#v-time-thai").text("");
+
+  }
+
+    // status
+    if (d.status === "publish") {
+
+      $("#v-status-container").html(
+        `<span class="badge bg-success">เผยแพร่แล้ว</span>`
+      );
+
+    } else {
+
+      $("#v-status-container").html(
+        `<span class="badge bg-secondary">ฉบับร่าง</span>`
+      );
+
+    }
+
+    // cover image
+    if (d.cover_image) {
+
+      $("#v-cover-image")
+        .attr("src", "/static/" + d.cover_image)
+        .show();
+
+    } else {
+
+      $("#v-cover-image").hide();
+
+    }
+
+    // sub images
+    const subWrap = $("#v-sub-images");
+    subWrap.empty();
+
+    const subs = parseSubImages(d.sub_images);
+
+    subs.forEach(img => {
+
+      const src = img.startsWith("http")
+        ? img
+        : "/static/" + img;
+
+      subWrap.append(`
+        <img src="${src}"
+          style="height:90px;border-radius:8px;border:1px solid #ddd">
+      `);
+
+    });
+
+    const m = bsModal("viewNewsModal");
+    if (m) m.show();
+
+  } catch (e) {
+
+    await swalFire({
+      icon: "error",
+      title: "ดูข้อมูลไม่ได้",
+      text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
+    });
+
+  }
+
+});
 
   // ======================================================
   // Edit modal: load subcategories
   // ======================================================
   async function loadSubcats(catId, selectedSubcatId) {
-    const $sub = $("#e_subcat_id");
+    const $sub = $("#editSubCategory");
     $sub.prop("disabled", true).html(`<option value="">-- เลือกประเภทย่อย --</option>`);
 
     if (!catId) return;
@@ -390,36 +481,50 @@ $(function () {
   }
 
   function setCoverPreviewFromUrl(url) {
-    const $img = $("#e_cover_preview");
-    const $empty = $("#e_cover_empty");
 
-    if (url && String(url).trim() !== "") {
-      $img.attr("src", url).show();
-      $empty.hide();
-    } else {
-      $img.attr("src", "").hide();
-      $empty.show();
+  const $img = $("#editPreview");
+
+  if (url && url.trim() !== "") {
+
+    let finalUrl = url;
+
+    if (!url.startsWith("http") && !url.startsWith("blob")) {
+      finalUrl = "/static/" + url;
     }
+
+    $img.attr("src", finalUrl).show();
+
+  } else {
+
+    $img.hide();
+
   }
+
+}
 
   function setSubPreviewFromUrls(urls) {
-    const $wrap = $("#e_sub_preview");
-    const $empty = $("#e_sub_empty");
-    $wrap.empty();
 
-    if (!urls || !urls.length) {
-      $empty.show();
-      return;
+  const $wrap = $("#editSubPreview");
+  $wrap.empty();
+
+  if (!urls || !urls.length) return;
+
+  urls.forEach(src => {
+
+    let finalSrc = src;
+
+    if (!src.startsWith("http") && !src.startsWith("blob")) {
+      finalSrc = "/static/" + src;
     }
 
-    $empty.hide();
-    urls.forEach((src) => {
-      $wrap.append(
-        `<img src="${src}" alt="sub"
-              style="height:90px;width:auto;border-radius:8px;border:1px solid #ddd;background:#fff;padding:2px;">`
-      );
-    });
-  }
+    $wrap.append(`
+      <img src="${finalSrc}"
+           style="height:90px;border-radius:8px;border:1px solid #ddd">
+    `);
+
+  });
+
+}
 
   $("#e_cover_file").on("change", function () {
     const f = this.files && this.files[0];
@@ -428,12 +533,97 @@ $(function () {
     setCoverPreviewFromUrl(URL.createObjectURL(f));
   });
 
-  $("#e_sub_files").on("change", function () {
-    const files = Array.from(this.files || []);
-    $("#e_remove_subs").val("0");
-    if (!files.length) return;
-    setSubPreviewFromUrls(files.map((f) => URL.createObjectURL(f)));
+
+  let subFiles = [];
+
+  $("#editSubImages").on("change", function () {
+
+  const file = this.files[0];
+  $("#e_remove_subs").val("0");
+
+  if (!file) return;
+
+  if (subFiles.length >= 5) {
+
+    swalFire({
+      icon: "warning",
+      title: "เพิ่มรูปไม่ได้",
+      text: "สามารถเพิ่มรูปได้สูงสุด 5 รูป"
+    });
+
+    
+    return;
+  }
+
+  subFiles.push(file);
+
+  renderSubPreview();
+
+  
+});
+
+
+function renderSubPreview() {
+
+  const $wrap = $("#editSubPreview");
+  $wrap.empty();
+
+  if (!subFiles.length) return;
+
+  subFiles.forEach((file, index) => {
+
+    let url;
+
+    if (typeof file === "string") {
+
+      url = file.startsWith("http")
+        ? file
+        : "/static/" + file;
+
+    } else {
+
+      url = URL.createObjectURL(file);
+
+    }
+
+    $wrap.append(`
+      <div style="position:relative">
+        <img src="${url}"
+             style="height:90px;border-radius:8px;border:1px solid #ddd">
+
+        <button type="button"
+                class="btn btn-danger btn-sm remove-sub"
+                data-index="${index}"
+                style="position:absolute;top:-6px;right:-6px;border-radius:50%">
+          ×
+        </button>
+      </div>
+    `);
+
   });
+
+}
+
+let deletedSubImages = [];
+
+$(document).on("click", ".remove-sub", function () {
+
+  const i = $(this).data("index");
+
+  const item = subFiles[i];
+
+  if (typeof item === "string") {
+    deletedSubImages.push(item);
+  }
+
+  subFiles.splice(i, 1);
+
+  $("#deletedSubImages").val(JSON.stringify(deletedSubImages));
+
+  renderSubPreview();
+
+});
+
 
   $("#btnRemoveCover").on("click", function () {
     $("#e_cover_file").val("");
@@ -442,10 +632,16 @@ $(function () {
   });
 
   $("#btnRemoveSubs").on("click", function () {
-    $("#e_sub_files").val("");
-    $("#e_remove_subs").val("1");
-    setSubPreviewFromUrls([]);
-  });
+
+  subFiles = [];
+
+  $("#editSubImages").val("");
+
+  $("#e_remove_subs").val("1");
+
+  renderSubPreview();
+
+});
 
   // open edit modal
   $(document).on("click", ".btn-edit-news", async function (e) {
@@ -467,23 +663,35 @@ $(function () {
 
       const d = j.data || {};
 
-      $("#e_news_id").val(d.news_id);
-      $("#e_title").val(d.news_title || "");
-      $("#e_content").val(d.news_content || "");
-      $("#e_video_url").val(d.video_url || "");
-      $("#e_status").val(d.status || "draft");
-      $("#e_kind").val(String(Number(d.is_featured || 0)));
+      $("#editNewsId").val(d.news_id);
+      $("#editTitle").val(d.news_title || "");
+      $("#editContent").val(d.news_content || "");
+      $("#editVideoUrl").val(d.video_path || "");
+      $("#editStatus").val(d.status || "draft");
+      $("#editFeatured").val(String(Number(d.is_featured || 0)));
 
-      $("#e_cat_id").val(d.cat_id || "");
+      $("#editCategory").val(d.cat_id || "");
       await loadSubcats(d.cat_id, d.subcat_id);
 
       $("#e_remove_cover").val("0");
       $("#e_remove_subs").val("0");
       $("#e_cover_file").val("");
-      $("#e_sub_files").val("");
+      $("#editSubImages").val("");
 
       setCoverPreviewFromUrl(d.cover_image || "");
-      setSubPreviewFromUrls(parseSubImages(d.sub_images));
+
+      // reset
+      subFiles = [];
+      deletedSubImages = [];
+      $("#deletedSubImages").val("");
+
+      const subs = parseSubImages(d.sub_images);
+
+      subs.forEach(url => {
+        subFiles.push(url); // เก็บรูปเดิม
+      });
+
+      renderSubPreview();
 
       const m = bsModal("editNewsModal");
       if (m) m.show();
@@ -492,18 +700,31 @@ $(function () {
     }
   });
 
-  $(document).on("change", "#e_cat_id", async function () {
+  $(document).on("change", "#editCategory", async function () {
     const catId = $(this).val();
     await loadSubcats(catId, "");
+  });
+
+  // ======================================================
+  // auto filter
+  // ======================================================
+  $(document).on("change", "#filter_cat_id, #filter_kind, #filter_status", function () {
+    loadPage(1);
   });
 
   // submit edit
   $(document).on("submit", "#editNewsForm", async function (e) {
     e.preventDefault();
 
-    const newsId = $("#e_news_id").val();
+    const newsId = $("#editNewsId").val();
     const form = document.getElementById("editNewsForm");
     const fd = new FormData(form);
+
+    fd.delete("sub_images");
+
+    subFiles.forEach(f => {
+      fd.append("sub_images", f);
+    });
 
     const rs = await swalFire({
       icon: "question",
@@ -528,6 +749,11 @@ $(function () {
       }
 
       swalToast("success", j.message || "บันทึกแล้ว");
+
+      // ปิด modal
+      const modal = bsModal("editNewsModal");
+      if (modal) modal.hide();
+
       setTimeout(() => loadPage(currentPage), 350);
     } catch (err) {
       await swalFire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });

@@ -4,8 +4,9 @@ import os
 import pymysql
 import pymysql.cursors
 from datetime import datetime
-import base64
 import json
+import uuid
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -23,34 +24,52 @@ def connect_db():
         port=int(os.environ.get('PORT')),
         cursorclass=pymysql.cursors.DictCursor
     )
-
+    
 # =========================
-# IMAGE VALIDATION (BASE64)
+# UPLOAD CONFIG
 # =========================
-ALLOWED_EXT = {"png", "jpg", "jpeg", "webp"}
-ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
+BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
+COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
+SUB_DIR = os.path.join(BASE_UPLOAD_DIR, "sub")
 
-def allowed_file(filename: str) -> bool:
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
+
+def allowed_file(filename: str):
     if not filename or "." not in filename:
         return False
     return filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
-def file_to_data_uri(file_storage):
+
+def save_image(file_storage, kind="cover"):
+
     if not file_storage or not file_storage.filename:
         return None
 
-    if not allowed_file(file_storage.filename):
+    filename = secure_filename(file_storage.filename)
+
+    if not allowed_file(filename):
         return None
 
-    mime = (file_storage.mimetype or "").lower()
-    if mime not in ALLOWED_MIME:
-        return None
+    kind = kind.lower()
 
-    raw = file_storage.read()
-    if not raw:
-        return None
+    if kind == "sub":
+        folder = SUB_DIR
+    else:
+        folder = COVER_DIR
 
-    return f"data:{mime};base64,{base64.b64encode(raw).decode('utf-8')}"
+    os.makedirs(folder, exist_ok=True)
+
+    ext = filename.rsplit(".", 1)[1].lower()
+
+    new_name = f"{uuid.uuid4().hex}.{ext}"
+
+    full_path = os.path.join(folder, new_name)
+
+    file_storage.save(full_path)
+
+    return f"uploads/news/{kind}/{new_name}"
+
+
 
 # =====================================================
 # 1) หน้า Admin จัดการข่าว
@@ -137,7 +156,7 @@ def get_news_by_id(news_id):
                     n.created_at,
                     n.cover_image,
                     n.sub_images,
-                    n.video_url,
+                    n.video_path,
                     n.cat_id,
                     n.subcat_id,
 
@@ -236,94 +255,115 @@ def update_news(news_id):
     if not user or not user.get("id"):
         return jsonify(success=False, message="Unauthorized"), 401
 
-    title = request.form.get("title")
-    content = request.form.get("content")
-    status = request.form.get("status")
+    user_id = user.get("id")
+
+    title = (request.form.get("title") or "").strip()
+    content = (request.form.get("content") or "").strip()
+    status = (request.form.get("status") or "draft").strip()
+
     cat_id = request.form.get("cat_id", type=int)
     subcat_id = request.form.get("subcat_id", type=int)
-    video_url = request.form.get("video_url")
 
-    main_image = request.files.get("main_image")
+    video_path = (request.form.get("video_url") or "").strip()
+
+    main_image = request.files.get("cover_image")
     sub_images = request.files.getlist("sub_images")
+
+    remove_cover = (request.form.get("remove_cover") or "0") == "1"
+    remove_subs = (request.form.get("remove_subs") or "0") == "1"
+
+    deleted_sub_images = request.form.get("deleted_sub_images")
 
     if not title or not content:
         return jsonify(success=False, message="กรอกข้อมูลไม่ครบ"), 400
 
     conn = connect_db()
+
     try:
         with conn.cursor() as cursor:
 
             cursor.execute("""
-                SELECT cover_image, sub_images 
-                FROM news 
-                WHERE news_id=%s
+                SELECT cover_image, sub_images
+                FROM news
+                WHERE news_id=%s AND del_flg=0
             """, (news_id,))
+
             old = cursor.fetchone()
 
             if not old:
                 return jsonify(success=False, message="ไม่พบข่าว"), 404
 
-            cover_image = old["cover_image"]
-            old_sub_images = old["sub_images"]
+            # ---------------- COVER ----------------
 
-            # ==========================
-            # รูปปก
-            # ==========================
-            if main_image and main_image.filename:
-                new_cover = file_to_data_uri(main_image)
+            old_cover = (old.get("cover_image") or "").strip()
+
+            if remove_cover:
+                final_cover = None
+
+            elif main_image and main_image.filename:
+
+                new_cover = save_image(main_image, "cover")
+
                 if not new_cover:
                     return jsonify(success=False, message="ไฟล์รูปไม่ถูกต้อง"), 400
-                cover_image = new_cover
 
-            # ==========================
-            # รูปย่อย (หลายรูป)
-            # ==========================
+                final_cover = new_cover
 
-            deleted_sub_images = request.form.get("deleted_sub_images")
-
-            # โหลดรูปเก่า
-            if old_sub_images:
-                try:
-                    current_images = json.loads(old_sub_images)
-                except:
-                    current_images = []
             else:
-                current_images = []
+                final_cover = old_cover
 
-            # ลบรูปที่ถูกเลือก
-            if deleted_sub_images:
-                try:
-                    deleted_list = json.loads(deleted_sub_images)
-                    current_images = [
-                        img for img in current_images
-                        if img not in deleted_list
-                    ]
-                except:
-                    pass
+            # ---------------- SUB IMAGES ----------------
 
-            # เพิ่มรูปใหม่
-            for img in sub_images:
-                if img and img.filename:
-                    img_data = file_to_data_uri(img)
-                    if img_data:
-                        current_images.append(img_data)
+            old_sub_raw = old.get("sub_images")
 
-            # แปลงกลับเป็น JSON
-            final_sub_images = json.dumps(current_images) if current_images else None
+            try:
+                old_subs = json.loads(old_sub_raw) if old_sub_raw else []
+                if not isinstance(old_subs, list):
+                    old_subs = []
+            except:
+                old_subs = []
 
-            # ==========================
-            # UPDATE
-            # ==========================
+            if remove_subs:
+
+                final_subs = []
+
+            else:
+
+                deleted = []
+
+                if deleted_sub_images:
+                    try:
+                        deleted = json.loads(deleted_sub_images)
+                    except:
+                        deleted = []
+
+                old_subs = [img for img in old_subs if img not in deleted]
+
+                picked = [f for f in (sub_images or []) if f and f.filename]
+
+                for f in picked:
+
+                    p = save_image(f, "sub")
+
+                    if not p:
+                        return jsonify(success=False, message="ไฟล์รูปรองไม่ถูกต้อง"), 400
+
+                    old_subs.append(p)
+
+                # จำกัด 5 รูป
+                final_subs = old_subs[:5]
+
             cursor.execute("""
                 UPDATE news
-                SET news_title=%s,
+                SET
+                    news_title=%s,
                     news_content=%s,
                     status=%s,
                     cat_id=%s,
                     subcat_id=%s,
+                    video_path=%s,
                     cover_image=%s,
                     sub_images=%s,
-                    video_url=%s,
                     updated_at=NOW(),
                     updated_by=%s
                 WHERE news_id=%s
@@ -333,10 +373,10 @@ def update_news(news_id):
                 status,
                 cat_id,
                 subcat_id,
-                cover_image,
-                final_sub_images,
-                video_url,
-                user.get("id"),
+                video_path if video_path else None,
+                final_cover,
+                json.dumps(final_subs, ensure_ascii=False),
+                user_id,
                 news_id
             ))
 
@@ -345,6 +385,7 @@ def update_news(news_id):
     except Exception as e:
         conn.rollback()
         return jsonify(success=False, message=str(e)), 500
+
     finally:
         conn.close()
 

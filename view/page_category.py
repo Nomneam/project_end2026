@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, abort
 from dotenv import load_dotenv
 import pymysql
 import os
+from datetime import datetime
 
 load_dotenv()
 
@@ -21,6 +22,48 @@ def connect_db():
         autocommit=True,
         charset="utf8mb4",
     )
+    
+    
+def time_ago(dt):
+    if not dt:
+        return "—"
+
+    now = datetime.now()
+    diff = now - dt
+    seconds = diff.total_seconds()
+
+    if seconds < 0:
+        return "—"
+
+    minutes = int(seconds // 60)
+    hours = int(minutes // 60)
+    days = int(hours // 24)
+
+    if minutes < 1:
+        return "เมื่อสักครู่"
+
+    if minutes < 60:
+        return f"{minutes} นาทีที่แล้ว"
+
+    if hours < 24:
+        return f"{hours} ชม. ที่แล้ว"
+
+    if days < 30:
+        return f"{days} วันก่อน"
+
+    thai_months = [
+        "", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.",
+        "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.",
+        "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    ]
+
+    month = thai_months[dt.month]
+
+    if dt.year == now.year:
+        return f"{dt.day} {month}"
+
+    return f"{dt.day} {month} {dt.year + 543}"
+
 
 # =============================
 # PAGE
@@ -111,6 +154,9 @@ def api_page_category():
 
         cur.execute(sql, params)
         items = cur.fetchall()
+        
+        for item in items:
+            item["time_ago"] = time_ago(item.get("published_at"))
 
         # -------------------------
         # count
