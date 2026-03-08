@@ -118,7 +118,7 @@
   <!-- ========================= -->
   <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-success text-white">
-      รายการโฆษณาที่อนุมัติ / ปฏิเสธแล้ว
+      รายการโฆษณาที่อนุมัติ / ปฏิเสธแล้ว / กำลังแสดง / หมดอายุ
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -172,6 +172,9 @@
 
                     {% elif ad.status == 'rejected' %}
                       <span class="badge bg-danger">ปฏิเสธ</span>
+
+                    {% elif ad.status == 'expired' %}
+                      <span class="badge bg-secondary">หมดอายุ</span>
 
                     {% else %}
                       <span class="badge bg-secondary">ไม่ทราบสถานะ</span>
