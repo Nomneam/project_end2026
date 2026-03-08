@@ -12,6 +12,7 @@ const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
 ========================================================= */
 let currentAbortController = null;
 let deletedSubImages = [];
+let subFiles = [];
 
 /* =========================================================
    Utils
@@ -242,7 +243,17 @@ async function editNews(newsId) {
     }
 
     fillEditForm(result.data);
-    renderEditPreview(result.data.cover_image);
+    
+    // Reset states
+    subFiles = [];
+    deletedSubImages = [];
+    document.getElementById("e_remove_cover").value = "0";
+    document.getElementById("e_remove_subs").value = "0";
+    document.getElementById("e_cover_file").value = "";
+    document.getElementById("editSubImages").value = "";
+    document.getElementById("deletedSubImages").value = "";
+
+    setCoverPreviewFromUrl(result.data.cover_image);
     renderEditSubImages(result.data.sub_images);
 
     editModal.show();
@@ -264,18 +275,144 @@ function fillEditForm(n) {
   setValue("editVideoUrl", n.video_path || "");
 }
 
-function renderEditPreview(rawImage) {
-  const preview = document.getElementById("editPreview");
-  if (!preview) return;
+/* =========================================================
+   Cover Image Handling
+========================================================= */
+function setCoverPreviewFromUrl(url) {
+  const $img = document.getElementById("editPreview");
+  if (!$img) return;
 
-  if (!rawImage) {
-    preview.style.display = "none";
+  if (url && String(url).trim() !== "") {
+    let finalUrl = url;
+    if (!url.startsWith("http") && !url.startsWith("blob") && !url.startsWith("data:")) {
+      finalUrl = "/static/" + url;
+    }
+    $img.src = finalUrl;
+    $img.style.display = "block";
+  } else {
+    $img.style.display = "none";
+  }
+}
+
+document.getElementById("e_cover_file")?.addEventListener("change", function () {
+  const f = this.files && this.files[0];
+  document.getElementById("e_remove_cover").value = "0";
+  if (!f) return;
+  setCoverPreviewFromUrl(URL.createObjectURL(f));
+});
+
+document.getElementById("btnRemoveCover")?.addEventListener("click", function (e) {
+  e.preventDefault();
+  const fileInput = document.getElementById("e_cover_file");
+  if (fileInput) fileInput.value = "";
+  document.getElementById("e_remove_cover").value = "1";
+  setCoverPreviewFromUrl("");
+});
+
+/* =========================================================
+   Sub Images Handling
+========================================================= */
+function renderSubPreview() {
+  const $wrap = document.getElementById("editSubPreview");
+  if (!$wrap) return;
+  
+  $wrap.innerHTML = "";
+
+  subFiles.forEach((file, index) => {
+    let url;
+
+    if (typeof file === "string") {
+      url = file.startsWith("http") || file.startsWith("/static/") || file.startsWith("data:")
+        ? file
+        : "/static/" + file;
+    } else {
+      url = URL.createObjectURL(file);
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+    wrapper.style.display = "inline-flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.justifyContent = "center";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "rounded shadow-sm";
+    img.style.width = "90px";
+    img.style.height = "90px";
+    img.style.objectFit = "cover";
+
+    const btn = document.createElement("button");
+    btn.innerHTML = "×";
+    btn.type = "button";
+    btn.className = "btn btn-danger btn-sm remove-sub";
+    btn.dataset.index = index;
+    btn.style.position = "absolute";
+    btn.style.top = "-8px";
+    btn.style.right = "-8px";
+    btn.style.borderRadius = "50%";
+    btn.style.width = "28px";
+    btn.style.height = "28px";
+    btn.style.padding = "0";
+    btn.style.fontSize = "18px";
+    btn.style.lineHeight = "1";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const i = Number(this.dataset.index);
+      const item = subFiles[i];
+
+      if (typeof item === "string") {
+        deletedSubImages.push(item);
+      }
+
+      subFiles.splice(i, 1);
+      const hiddenInput = document.getElementById("deletedSubImages");
+      if (hiddenInput) {
+        hiddenInput.value = JSON.stringify(deletedSubImages);
+      }
+
+      renderSubPreview();
+    });
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(btn);
+    $wrap.appendChild(wrapper);
+  });
+}
+
+document.getElementById("editSubImages")?.addEventListener("change", function () {
+  const f = this.files && this.files[0];
+  document.getElementById("e_remove_subs").value = "0";
+
+  if (!f) return;
+
+  if (subFiles.length >= 5) {
+    Swal?.fire({
+      icon: "warning",
+      title: "เพิ่มรูปไม่ได้",
+      text: "สามารถเพิ่มรูปได้สูงสุด 5 รูป"
+    });
+    this.value = "";
     return;
   }
 
-  preview.src = buildImageSrc(rawImage);
-  preview.style.display = "block";
-}
+  subFiles.push(f);
+  renderSubPreview();
+  this.value = "";
+});
+
+document.getElementById("btnRemoveSubs")?.addEventListener("click", function (e) {
+  e.preventDefault();
+  subFiles = [];
+  const fileInput = document.getElementById("editSubImages");
+  if (fileInput) fileInput.value = "";
+  document.getElementById("e_remove_subs").value = "1";
+  renderSubPreview();
+});
 
 function renderEditSubImages(subImagesRaw) {
   const container = document.getElementById("editSubPreview");
@@ -284,6 +421,9 @@ function renderEditSubImages(subImagesRaw) {
   if (!container) return;
 
   container.innerHTML = "";
+  
+  // ล้าง subFiles และ deletedSubImages ก่อน เพื่อให้ button remove sub ทำงานถูกต้อง
+  subFiles = [];
   deletedSubImages = [];
   if (hiddenInput) hiddenInput.value = "";
 
@@ -296,13 +436,15 @@ function renderEditSubImages(subImagesRaw) {
 
       const wrapper = document.createElement("div");
       wrapper.style.position = "relative";
-      wrapper.style.display = "inline-block";
+      wrapper.style.display = "inline-flex";
+      wrapper.style.alignItems = "center";
+      wrapper.style.justifyContent = "center";
 
       const img = document.createElement("img");
       img.src = buildImageSrc(raw);
       img.className = "rounded shadow-sm";
-      img.style.width = "70px";
-      img.style.height = "70px";
+      img.style.width = "90px";
+      img.style.height = "90px";
       img.style.objectFit = "cover";
 
       // 🔥 ปุ่มลบ
@@ -310,21 +452,32 @@ function renderEditSubImages(subImagesRaw) {
       btn.innerHTML = "×";
       btn.type = "button";
       btn.style.position = "absolute";
-      btn.style.top = "-5px";
-      btn.style.right = "-5px";
+      btn.style.top = "-8px";
+      btn.style.right = "-8px";
       btn.style.background = "red";
       btn.style.color = "white";
       btn.style.border = "none";
       btn.style.borderRadius = "50%";
-      btn.style.width = "20px";
-      btn.style.height = "20px";
-      btn.style.fontSize = "14px";
+      btn.style.width = "28px";
+      btn.style.height = "28px";
+      btn.style.fontSize = "18px";
       btn.style.cursor = "pointer";
+      btn.style.lineHeight = "1";
+      btn.style.display = "flex";
+      btn.style.alignItems = "center";
+      btn.style.justifyContent = "center";
+      btn.className = "btn btn-danger btn-sm";
 
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        e.preventDefault();
         deletedSubImages.push(raw);
         if (hiddenInput) {
           hiddenInput.value = JSON.stringify(deletedSubImages);
+        }
+        // ลบออกจาก subFiles เมื่อกดปุ่มลบ (ทีละรูป)
+        const idx = subFiles.indexOf(raw);
+        if (idx > -1) {
+          subFiles.splice(idx, 1);
         }
         wrapper.remove();
       };
@@ -332,6 +485,9 @@ function renderEditSubImages(subImagesRaw) {
       wrapper.appendChild(img);
       wrapper.appendChild(btn);
       container.appendChild(wrapper);
+      
+      // เพิ่มในอาร์เรย์เพื่อติดตามสถานะ
+      subFiles.push(raw);
     });
 
   } catch {}
@@ -352,6 +508,14 @@ document.getElementById("editNewsForm")?.addEventListener("submit", async functi
   if (!id) return;
 
   const formData = new FormData(this);
+  
+  // ลบ sub_images[] ที่เก่า
+  formData.delete("sub_images[]");
+
+  // เพิ่ม sub_images ใหม่จาก subFiles array
+  subFiles.forEach(f => {
+    formData.append("sub_images", f);
+  });
 
   try {
     const res = await fetch(`/admin/news/${id}/update`, {
@@ -497,6 +661,8 @@ async function loadSubcategories(catId, selectedId = null) {
 
 }
 
+
+// preview sub images ใหม่ - DEPRECATED (ถูกแทนที่ด้วย renderSubPreview ด้านบน)
 
 /* =========================================================
    Chart: News by Category (เลือกวัน/สัปดาห์/เดือน/ปี)
