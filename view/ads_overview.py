@@ -122,8 +122,6 @@ def update_ad():
                     adv_image_url=%s,
                     status=%s,
                     rejected_reason=NULL,
-                    reviewed_by_emp_id=NULL,
-                    reviewed_at=NULL,
                     updated_at=NOW()
                 WHERE adv_id=%s AND cus_id=%s
             """, (
@@ -146,8 +144,6 @@ def update_ad():
                     target_url=%s,
                     status=%s,
                     rejected_reason=NULL,
-                    reviewed_by_emp_id=NULL,
-                    reviewed_at=NULL,
                     updated_at=NOW()
                 WHERE adv_id=%s AND cus_id=%s
             """, (
