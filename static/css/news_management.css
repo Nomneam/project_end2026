@@ -307,3 +307,33 @@
         grid-template-columns: 1fr 1fr; /* แสดง 2 คอลัมน์ในมือถือ */
     }
 }
+
+
+/* ===== Red Pagination Theme ===== */
+.pagination .page-link {
+  color: #dc3545;
+  border-color: #dee2e6;
+  background: #fff;
+}
+
+.pagination .page-link:hover {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.pagination .page-item.active .page-link {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #ccc;
+  border-color: #eee;
+  background-color: #f8f9fa;
+}
+
+.pagination .page-link {
+  border-radius: 6px;
+  margin-left: 4px;
+}
