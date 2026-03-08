@@ -10,6 +10,7 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import uuid
 
 
 load_dotenv()
@@ -75,35 +76,42 @@ def ads_page():
 
 @ads_overview_bp.route("/ads/update", methods=["POST"])
 def update_ad():
+
     front_user = session.get("front_user")
     if not front_user:
-        return jsonify({"error": "unauthorized"}), 401
+        return jsonify(success=False, message="กรุณาเข้าสู่ระบบ")
 
     adv_id = request.form.get("id")
     name = request.form.get("name")
     desc = request.form.get("desc")
     url = request.form.get("url")
+    old_status = request.form.get("status")
 
     image = request.files.get("image")
-    image_url = None
+
+    # กำหนดสถานะใหม่
+    if old_status == "paused":
+        new_status = "running"
+    else:
+        new_status = "draft"
+
+    conn = connect_db()
+    cursor = conn.cursor()
 
     try:
-        conn = connect_db()
-        cursor = conn.cursor()
 
-        # ===============================
-        # ✅ ถ้ามีอัปโหลดรูปใหม่
-        # ===============================
-        if image and image.filename:
+        # ถ้ามีการอัปโหลดรูปใหม่
+        if image and image.filename != "":
 
-            upload_folder = "static/uploads/ads"
+            ext = os.path.splitext(image.filename)[1]
+            filename = f"ad_{uuid.uuid4().hex}{ext}"
+
+            upload_folder = os.path.join("static", "uploads")
             os.makedirs(upload_folder, exist_ok=True)
 
-            filename = f"{int(datetime.now().timestamp())}_{secure_filename(image.filename)}"
             filepath = os.path.join(upload_folder, filename)
-            image.save(filepath)
 
-            image_url = f"/static/uploads/ads/{filename}"
+            image.save(filepath)
 
             cursor.execute("""
                 UPDATE advert
@@ -112,46 +120,56 @@ def update_ad():
                     adv_description=%s,
                     target_url=%s,
                     adv_image_url=%s,
-                    status='draft',
+                    status=%s,
                     rejected_reason=NULL,
                     reviewed_by_emp_id=NULL,
                     reviewed_at=NULL,
                     updated_at=NOW()
                 WHERE adv_id=%s AND cus_id=%s
             """, (
-                name, desc, url, image_url,
-                adv_id, front_user["id"]
+                name,
+                desc,
+                url,
+                f"/static/uploads/{filename}",
+                new_status,
+                adv_id,
+                front_user["id"]
             ))
 
         else:
-            # ไม่มีรูปใหม่ → ไม่แก้รูป
+
             cursor.execute("""
                 UPDATE advert
                 SET
                     adv_name=%s,
                     adv_description=%s,
                     target_url=%s,
-                    status='draft',
+                    status=%s,
                     rejected_reason=NULL,
                     reviewed_by_emp_id=NULL,
                     reviewed_at=NULL,
                     updated_at=NOW()
                 WHERE adv_id=%s AND cus_id=%s
             """, (
-                name, desc, url,
-                adv_id, front_user["id"]
+                name,
+                desc,
+                url,
+                new_status,
+                adv_id,
+                front_user["id"]
             ))
 
         conn.commit()
 
+        return jsonify(success=True)
+
     except Exception as e:
-        print("UPDATE ERROR:", e)
-        return jsonify({"error": "update failed"}), 500
+        conn.rollback()
+        return jsonify(success=False, message=str(e))
 
     finally:
+        cursor.close()
         conn.close()
-
-    return jsonify(success=True)
 
 
 
@@ -255,3 +273,30 @@ def generate_receipt(adv_id):
         download_name=f"receipt_{adv_id}.pdf",
         mimetype="application/pdf"
     )
+    
+    
+@ads_overview_bp.route("/ads/resume", methods=["POST"])
+def resume_ad():
+
+    front_user = session.get("front_user")
+    if not front_user:
+        return jsonify({"error": "unauthorized"}), 401
+
+    adv_id = request.form.get("id")
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE advert
+        SET status='running',
+            updated_at=NOW()
+        WHERE adv_id=%s AND cus_id=%s
+    """, (adv_id, front_user["id"]))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(success=True)

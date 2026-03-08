@@ -164,7 +164,9 @@
                           data-name="{{ ad.adv_name }}"
                           data-desc="{{ ad.adv_description }}"
                           data-url="{{ ad.target_url }}"
-                          data-position="{{ ad.adv_position }}">
+                          data-position="{{ ad.adv_position }}"
+                          data-status="{{ ad.status }}">
+                          
                           <i class="bi bi-pencil-square me-1"></i>
                           แก้ไขโฆษณา
                         </a>
@@ -172,6 +174,18 @@
 
                     {% elif status == 'paused' %}
                       <span class="badge bg-info text-dark">หยุดชั่วคราว</span>
+
+                      <div class="mt-2">
+                        <button class="btn btn-sm btn-success w-100 edit-ad-btn"
+                           data-id="{{ ad.adv_id }}"
+                            data-name="{{ ad.adv_name }}"
+                            data-desc="{{ ad.adv_description }}"
+                            data-url="{{ ad.target_url }}"
+                            data-status="{{ ad.status }}">
+                          <i class="bi bi-play-fill"></i>
+                          แก้ไขโฆษณา
+                        </button>
+                      </div>
 
                     {% elif status == 'expired' %}
                       <span class="badge bg-dark">หมดอายุ</span>
@@ -268,6 +282,7 @@
 
       <div class="modal-body">
         <input type="hidden" id="editAdId">
+        <input type="hidden" id="editAdStatus">
 
         <label class="form-label">ชื่อโฆษณา</label>
         <input type="text" id="editAdName" class="form-control mb-2">
