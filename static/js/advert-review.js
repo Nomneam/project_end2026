@@ -188,12 +188,19 @@ $(document).on("click",".btn-pause",function(){
     const advId = $(this).data("id");
 
     Swal.fire({
-        title: "หยุดโฆษณา?",
-        text: "โฆษณาจะหยุดแสดงชั่วคราว",
+        title: "หยุดโฆษณา",
+        input: "textarea",
+        inputLabel: "เหตุผลในการหยุด",
+        inputPlaceholder: "กรุณาระบุเหตุผล...",
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "หยุดโฆษณา",
-        cancelButtonText: "ยกเลิก"
+        cancelButtonText: "ยกเลิก",
+        inputValidator: (value) => {
+            if (!value || value.trim().length < 3) {
+                return "กรุณาระบุเหตุผล";
+            }
+        }
     }).then(result=>{
 
         if(!result.isConfirmed) return;
@@ -204,7 +211,8 @@ $(document).on("click",".btn-pause",function(){
                 "Content-Type":"application/json"
             },
             body:JSON.stringify({
-                adv_id:advId
+                adv_id:advId,
+                reason: result.value.trim()
             })
         })
         .then(res=>res.json())

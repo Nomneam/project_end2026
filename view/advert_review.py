@@ -176,6 +176,7 @@ def pause_advert():
 
     data = request.get_json()
     adv_id = data.get("adv_id")
+    reason = data.get("reason")
 
     conn = connect_db()
     try:
@@ -183,9 +184,10 @@ def pause_advert():
 
             cur.execute("""
                 UPDATE advert
-                SET status='paused'
+                SET status='paused',
+                    rejected_reason=%s
                 WHERE adv_id=%s
-            """,(adv_id,))
+            """,(reason,adv_id))
 
         conn.commit()
 
