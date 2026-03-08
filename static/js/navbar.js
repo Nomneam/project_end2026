@@ -420,15 +420,34 @@ $("#tabRegister").off("click.tab").on("click.tab", function () {
   // Date header
   // ----------------------
   function renderHeaderDate() {
-    const $dayName = $("#dayName");
-    const $dayDate = $("#dayDate");
-    if (!$dayName.length || !$dayDate.length) return;
+  const $dayName = $("#dayName");
+  const $dayDate = $("#dayDate");
+  if (!$dayName.length || !$dayDate.length) return;
 
-    const d = new Date();
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    $dayName.text(days[d.getDay()]);
-    $dayDate.text(d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
-  }
+  const d = new Date();
+
+  // วันภาษาไทย
+  const daysTH = [
+    "อาทิตย์",
+    "จันทร์",
+    "อังคาร",
+    "พุธ",
+    "พฤหัสบดี",
+    "ศุกร์",
+    "เสาร์",
+  ];
+
+  $dayName.text(daysTH[d.getDay()]);
+
+  // วันที่ภาษาไทย + พ.ศ.
+  const dateTH = d.toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  $dayDate.text(dateTH);
+}
 
   // =======================
 // Require login handler
