@@ -543,12 +543,23 @@ $(function () {
 
   if (!file) return;
 
+  if (subFiles.length >= 5) {
+
+    swalFire({
+      icon: "warning",
+      title: "เพิ่มรูปไม่ได้",
+      text: "สามารถเพิ่มรูปได้สูงสุด 5 รูป"
+    });
+
+    
+    return;
+  }
+
   subFiles.push(file);
 
   renderSubPreview();
 
-  this.value = ""; // reset input เพื่อให้เลือกไฟล์ซ้ำได้
-
+  
 });
 
 
@@ -593,11 +604,21 @@ function renderSubPreview() {
 
 }
 
+let deletedSubImages = [];
+
 $(document).on("click", ".remove-sub", function () {
 
   const i = $(this).data("index");
 
+  const item = subFiles[i];
+
+  if (typeof item === "string") {
+    deletedSubImages.push(item);
+  }
+
   subFiles.splice(i, 1);
+
+  $("#deletedSubImages").val(JSON.stringify(deletedSubImages));
 
   renderSubPreview();
 
@@ -661,6 +682,8 @@ $(document).on("click", ".remove-sub", function () {
 
       // reset
       subFiles = [];
+      deletedSubImages = [];
+      $("#deletedSubImages").val("");
 
       const subs = parseSubImages(d.sub_images);
 
@@ -669,7 +692,6 @@ $(document).on("click", ".remove-sub", function () {
       });
 
       renderSubPreview();
-            setSubPreviewFromUrls(d.sub_images || []);
 
       const m = bsModal("editNewsModal");
       if (m) m.show();
