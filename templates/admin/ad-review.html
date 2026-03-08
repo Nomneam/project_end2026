@@ -161,12 +161,22 @@
                   {{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}
                 </td>
                 <td>
-                  {% if ad.status == 'approved' %}
-                    <span class="badge bg-success">อนุมัติ</span>
-                  {% else %}
-                    <span class="badge bg-danger">ปฏิเสธ</span>
-                  {% endif %}
-                </td>
+                    {% if ad.status == 'approved' %}
+                      <span class="badge bg-success">อนุมัติ</span>
+
+                    {% elif ad.status == 'running' %}
+                      <span class="badge bg-info text-dark">กำลังแสดง</span>
+
+                    {% elif ad.status == 'paused' %}
+                      <span class="badge bg-dark">หยุดชั่วคราว</span>
+
+                    {% elif ad.status == 'rejected' %}
+                      <span class="badge bg-danger">ปฏิเสธ</span>
+
+                    {% else %}
+                      <span class="badge bg-secondary">ไม่ทราบสถานะ</span>
+                    {% endif %}
+                  </td>
                 <td class="text-center">
   <div class="d-flex justify-content-center gap-2">
 
@@ -176,13 +186,13 @@
       ดูรายละเอียด
     </button>
 
-    {% if ad.status == 'approved' or ad.status == 'running' %}
-    <button class="btn btn-outline-warning btn-sm btn-pause"
-            data-id="{{ ad.adv_id }}"
-            title="หยุดโฆษณา">
-      หยุดโฆษณา
-    </button>
-    {% endif %}
+    {% if ad.status == 'running' %}
+<button class="btn btn-outline-warning btn-sm btn-pause"
+        data-id="{{ ad.adv_id }}"
+        title="หยุดโฆษณา">
+  หยุดโฆษณา
+</button>
+{% endif %}
 
   </div>
 </td>

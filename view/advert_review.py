@@ -92,7 +92,7 @@ def advert_review():
                 FROM advert a
                 JOIN customer c ON a.cus_id = c.cus_id
                 LEFT JOIN advert_category ac ON a.adc_cat_id = ac.adc_cat_id
-                WHERE a.status IN ('approved','rejected')
+                WHERE a.status IN ('approved','rejected','running','paused')
                   AND a.del_flg=0
                 ORDER BY a.reviewed_at DESC
                 LIMIT %s OFFSET %s
