@@ -181,3 +181,47 @@ $(function () {
     }
 
 });
+
+
+$(document).on("click",".btn-pause",function(){
+
+    const advId = $(this).data("id");
+
+    Swal.fire({
+        title: "หยุดโฆษณา?",
+        text: "โฆษณาจะหยุดแสดงชั่วคราว",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "หยุดโฆษณา",
+        cancelButtonText: "ยกเลิก"
+    }).then(result=>{
+
+        if(!result.isConfirmed) return;
+
+        fetch("/ad-review/pause",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                adv_id:advId
+            })
+        })
+        .then(res=>res.json())
+        .then(res=>{
+
+            if(res.status==="success"){
+                Swal.fire(
+                    "สำเร็จ",
+                    "หยุดโฆษณาเรียบร้อย",
+                    "success"
+                ).then(()=>{
+                    location.reload()
+                })
+            }
+
+        })
+
+    })
+
+})

@@ -168,10 +168,24 @@
                   {% endif %}
                 </td>
                 <td class="text-center">
-                  <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>
-                    ดูรายละเอียด
-                  </button>
-                </td>
+  <div class="d-flex justify-content-center gap-2">
+
+    <button class="btn btn-outline-primary btn-sm btn-view"
+            data-ad='{{ ad | tojson }}'
+            title="รายละเอียด">
+      ดูรายละเอียด
+    </button>
+
+    {% if ad.status == 'approved' or ad.status == 'running' %}
+    <button class="btn btn-outline-warning btn-sm btn-pause"
+            data-id="{{ ad.adv_id }}"
+            title="หยุดโฆษณา">
+      หยุดโฆษณา
+    </button>
+    {% endif %}
+
+  </div>
+</td>
               </tr>
               {% endfor %}
             {% else %}

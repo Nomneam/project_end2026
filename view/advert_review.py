@@ -165,3 +165,31 @@ def reject_advert():
         return jsonify({'status': 'success'})
     finally:
         conn.close()
+
+
+@advert_review_bp.route('/ad-review/pause', methods=['POST'])
+def pause_advert():
+
+    user = session.get("user")
+    if not user or not user.get("id"):
+        return redirect(url_for("login_emp.login_emp"))
+
+    data = request.get_json()
+    adv_id = data.get("adv_id")
+
+    conn = connect_db()
+    try:
+        with conn.cursor() as cur:
+
+            cur.execute("""
+                UPDATE advert
+                SET status='paused'
+                WHERE adv_id=%s
+            """,(adv_id,))
+
+        conn.commit()
+
+        return jsonify({"status":"success"})
+
+    finally:
+        conn.close()
