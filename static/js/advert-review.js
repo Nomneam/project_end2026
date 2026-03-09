@@ -1,57 +1,203 @@
 $(function () {
-
     let currentAd = null;
-    let currentRow = null;
+    let currentDraftPage = Number($('#draftCard').data('current-page')) || 1;
+    let currentApprovedPage = Number($('#approvedCard').data('current-page')) || 1;
 
+    function debounce(fn, delay) {
+        let timer = null;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    function getDraftFilters() {
+        return {
+            draft_name: ($('#draftSearchName').val() || '').trim(),
+            draft_category: $('#draftSearchCategory').val() || '',
+            page_draft: currentDraftPage,
+            approved_name: ($('#approvedSearchName').val() || '').trim(),
+            approved_category: $('#approvedSearchCategory').val() || '',
+            approved_status: $('#approvedSearchStatus').val() || '',
+            page_approved: currentApprovedPage
+        };
+    }
+
+    function getApprovedFilters() {
+        return {
+            draft_name: ($('#draftSearchName').val() || '').trim(),
+            draft_category: $('#draftSearchCategory').val() || '',
+            page_draft: currentDraftPage,
+            approved_name: ($('#approvedSearchName').val() || '').trim(),
+            approved_category: $('#approvedSearchCategory').val() || '',
+            approved_status: $('#approvedSearchStatus').val() || '',
+            page_approved: currentApprovedPage
+        };
+    }
+
+    let currentRequest = null;
+
+    function captureInputState() {
+        const activeEl = document.activeElement;
+        if (!activeEl || !activeEl.id) return null;
+
+        const isSearchInput = activeEl.id === 'draftSearchName' || activeEl.id === 'approvedSearchName';
+        if (!isSearchInput) return null;
+
+        return {
+            id: activeEl.id,
+            value: activeEl.value,
+            selectionStart: activeEl.selectionStart,
+            selectionEnd: activeEl.selectionEnd
+        };
+    }
+
+    function restoreInputState(state) {
+        if (!state) return;
+
+        const input = document.getElementById(state.id);
+        if (!input) return;
+
+        input.focus();
+        if (typeof state.selectionStart === 'number' && typeof state.selectionEnd === 'number') {
+            input.setSelectionRange(state.selectionStart, state.selectionEnd);
+        }
+    }
+
+    function fetchPage(params, section) {
+        const inputState = captureInputState();
+
+        if (currentRequest && currentRequest.readyState !== 4) {
+            currentRequest.abort();
+        }
+
+        currentRequest = $.ajax({
+            url: '/ad-review',
+            method: 'GET',
+            data: params,
+            dataType: 'html',
+            success: function (html) {
+                const $html = $('<div>').html(html);
+
+                if (section === 'draft' || section === 'all') {
+                    const $newDraft = $html.find('#draftCard');
+                    if ($newDraft.length) {
+                        $('#draftCard').replaceWith($newDraft);
+                        currentDraftPage = Number($newDraft.data('current-page')) || 1;
+                    }
+                }
+
+                if (section === 'approved' || section === 'all') {
+                    const $newApproved = $html.find('#approvedCard');
+                    if ($newApproved.length) {
+                        $('#approvedCard').replaceWith($newApproved);
+                        currentApprovedPage = Number($newApproved.data('current-page')) || 1;
+                    }
+                }
+
+                restoreInputState(inputState);
+            },
+            error: function (_xhr, status) {
+                if (status === 'abort') return;
+                Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'error');
+            }
+        });
+    }
+
+    const debouncedDraftSearch = debounce(function () {
+        currentDraftPage = 1;
+        fetchPage(getDraftFilters(), 'draft');
+    }, 350);
+
+    const debouncedApprovedSearch = debounce(function () {
+        currentApprovedPage = 1;
+        fetchPage(getApprovedFilters(), 'approved');
+    }, 350);
+
+    function preventEnterSubmit(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
+
+    // ===============================
+    // Draft filters + pagination
+    // ===============================
+    $(document).on('keydown', '#draftSearchName', preventEnterSubmit);
+    $(document).on('input', '#draftSearchName', debouncedDraftSearch);
+
+    $(document).on('change', '#draftSearchCategory', function () {
+        currentDraftPage = 1;
+        fetchPage(getDraftFilters(), 'draft');
+    });
+
+    $(document).on('click', '#draftClearFilters', function () {
+        $('#draftSearchName').val('');
+        $('#draftSearchCategory').val('');
+        currentDraftPage = 1;
+        fetchPage(getDraftFilters(), 'draft');
+    });
+
+    $(document).on('click', '.draft-page-link', function (e) {
+        e.preventDefault();
+        currentDraftPage = Number($(this).data('page')) || 1;
+        fetchPage(getDraftFilters(), 'draft');
+    });
+
+    // ===============================
+    // Approved filters + pagination
+    // ===============================
+    $(document).on('keydown', '#approvedSearchName', preventEnterSubmit);
+    $(document).on('input', '#approvedSearchName', debouncedApprovedSearch);
+
+    $(document).on('change', '#approvedSearchCategory, #approvedSearchStatus', function () {
+        currentApprovedPage = 1;
+        fetchPage(getApprovedFilters(), 'approved');
+    });
+
+    $(document).on('click', '#approvedClearFilters', function () {
+        $('#approvedSearchName').val('');
+        $('#approvedSearchCategory').val('');
+        $('#approvedSearchStatus').val([]);
+        currentApprovedPage = 1;
+        fetchPage(getApprovedFilters(), 'approved');
+    });
+
+    $(document).on('click', '.approved-page-link', function (e) {
+        e.preventDefault();
+        currentApprovedPage = Number($(this).data('page')) || 1;
+        fetchPage(getApprovedFilters(), 'approved');
+    });
+
+    // ===============================
     // เปิด modal
+    // ===============================
     $(document).on('click', '.btn-view', function () {
-
         currentAd = $(this).data('ad');
-        currentRow = $(this).closest('tr');
 
         const imageUrl = currentAd.adv_image_url
             ? currentAd.adv_image_url
             : '/static/images/no-image.png';
 
-        const price = (currentAd.adv_price || 0).toLocaleString();
-
-        // ===============================
-        // โฆษณารอตรวจสอบ (draft)
-        // ===============================
         if (currentAd.status === 'draft') {
-
             $('#modalImage').attr('src', imageUrl);
             $('#modalName').text(currentAd.adv_name);
             $('#modalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
             $('#modalArea').text(currentAd.adc_cat_name || '-');
-            $('#modalPrice').text(
-                Number(currentAd.adv_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })
-            );
-            $('#modalDate').text(
-                formatDate(currentAd.valid_from) + ' - ' +
-                formatDate(currentAd.valid_to)
-            );
+            $('#modalPrice').text(Number(currentAd.adv_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 }));
+            $('#modalDate').text(formatDate(currentAd.valid_from) + ' - ' + formatDate(currentAd.valid_to));
 
             new bootstrap.Modal('#adDetailModal').show();
-
         } else {
-
-            // ===============================
-            // โฆษณาที่อนุมัติ / ปฏิเสธแล้ว
-            // ===============================
-
             $('#approvedModalImage').attr('src', imageUrl);
             $('#approvedModalName').text(currentAd.adv_name);
             $('#approvedModalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
             $('#approvedModalArea').text(currentAd.adc_cat_name || '-');
-            $('#approvedModalPrice').text(
-                    Number(currentAd.adv_price || 0)
-                        .toLocaleString('th-TH', { minimumFractionDigits: 2 })
-                );
+            $('#approvedModalPrice').text(Number(currentAd.adv_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 }));
 
             let statusBadge = '';
-
-            switch(currentAd.status) {
+            switch (currentAd.status) {
                 case 'approved':
                     statusBadge = '<span class="badge bg-success">อนุมัติ</span>';
                     break;
@@ -68,12 +214,10 @@ $(function () {
                     statusBadge = '<span class="badge bg-secondary">หมดอายุ</span>';
                     break;
                 default:
-                    statusBadge = '<span class="badge bg-secondary">ร่าง</span>';
-                    break;
+                    statusBadge = '<span class="badge bg-secondary">ไม่ทราบสถานะ</span>';
             }
 
             $('#approvedModalStatus').html(statusBadge);
-
             new bootstrap.Modal('#adApprovedModal').show();
         }
     });
@@ -81,8 +225,7 @@ $(function () {
     // ===============================
     // Approve
     // ===============================
-    $('#btnApprove').on('click', function () {
-
+    $(document).on('click', '#btnApprove', function () {
         if (!currentAd) return;
 
         Swal.fire({
@@ -94,7 +237,6 @@ $(function () {
             cancelButtonText: 'ยกเลิก',
             confirmButtonColor: '#198754'
         }).then(result => {
-
             if (!result.isConfirmed) return;
 
             $.ajax({
@@ -103,33 +245,30 @@ $(function () {
                 data: JSON.stringify({ adv_id: currentAd.adv_id }),
                 contentType: 'application/json',
                 dataType: 'json',
-                success: function(res){
-                    if(res.status === 'success'){
-                        Swal.fire('สำเร็จ','อนุมัติโฆษณาเรียบร้อย','success')
-                        .then(() => location.reload());
+                success: function (res) {
+                    if (res.status === 'success') {
+                        Swal.fire('สำเร็จ', 'อนุมัติโฆษณาเรียบร้อย', 'success').then(() => {
+                            fetchPage(getDraftFilters(), 'all');
+                        });
                     } else {
-                        Swal.fire('ผิดพลาด',res.message || 'เกิดข้อผิดพลาด','error');
+                        Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
                     }
                 }
             });
-
         });
     });
 
     // ===============================
     // Reject
     // ===============================
-    $('#btnReject').on('click', function () {
-
+    $(document).on('click', '#btnReject', function () {
         if (!currentAd) return;
 
-        // ✅ ปิด modal ด้านหลังก่อน
         const modalEl = document.getElementById('adDetailModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();
 
         setTimeout(() => {
-
             Swal.fire({
                 title: 'ปฏิเสธโฆษณา',
                 input: 'textarea',
@@ -146,7 +285,6 @@ $(function () {
                     }
                 }
             }).then((result) => {
-
                 if (!result.isConfirmed) return;
 
                 fetch('/ad-review/reject', {
@@ -157,79 +295,64 @@ $(function () {
                         reason: result.value.trim()
                     })
                 })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.status === 'success') {
-                        Swal.fire('สำเร็จ','ปฏิเสธโฆษณาเรียบร้อย','success')
-                        .then(() => location.reload());
-                    } else {
-                        Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด','error');
-                    }
-                });
-
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.status === 'success') {
+                            Swal.fire('สำเร็จ', 'ปฏิเสธโฆษณาเรียบร้อย', 'success').then(() => {
+                                fetchPage(getDraftFilters(), 'all');
+                            });
+                        } else {
+                            Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
+                        }
+                    });
             });
-
-        }, 300); // รอ modal ปิด animation
+        }, 300);
     });
-    // ===============================
-    // Helper format date
-    // ===============================
-    function formatDate(dateStr){
-        if(!dateStr) return '-';
-        const d = new Date(dateStr.replace(' ','T'));
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const d = new Date(String(dateStr).replace(' ', 'T'));
         return d.toLocaleDateString('th-TH');
     }
-
 });
 
-
-$(document).on("click",".btn-pause",function(){
-
-    const advId = $(this).data("id");
+$(document).on('click', '.btn-pause', function () {
+    const advId = $(this).data('id');
 
     Swal.fire({
-        title: "หยุดโฆษณา",
-        input: "textarea",
-        inputLabel: "เหตุผลในการหยุด",
-        inputPlaceholder: "กรุณาระบุเหตุผล...",
-        icon: "warning",
+        title: 'หยุดโฆษณา',
+        input: 'textarea',
+        inputLabel: 'เหตุผลในการหยุด',
+        inputPlaceholder: 'กรุณาระบุเหตุผล...',
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: "หยุดโฆษณา",
-        cancelButtonText: "ยกเลิก",
+        confirmButtonText: 'หยุดโฆษณา',
+        cancelButtonText: 'ยกเลิก',
         inputValidator: (value) => {
             if (!value || value.trim().length < 3) {
-                return "กรุณาระบุเหตุผล";
+                return 'กรุณาระบุเหตุผล';
             }
         }
-    }).then(result=>{
+    }).then(result => {
+        if (!result.isConfirmed) return;
 
-        if(!result.isConfirmed) return;
-
-        fetch("/ad-review/pause",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
+        fetch('/ad-review/pause', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             },
-            body:JSON.stringify({
-                adv_id:advId,
+            body: JSON.stringify({
+                adv_id: advId,
                 reason: result.value.trim()
             })
         })
-        .then(res=>res.json())
-        .then(res=>{
-
-            if(res.status==="success"){
-                Swal.fire(
-                    "สำเร็จ",
-                    "หยุดโฆษณาเรียบร้อย",
-                    "success"
-                ).then(()=>{
-                    location.reload()
-                })
-            }
-
-        })
-
-    })
-
-})
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    Swal.fire('สำเร็จ', 'หยุดโฆษณาเรียบร้อย', 'success').then(() => {
+                        window.location.href = '/ad-review';
+                    });
+                }
+            });
+    });
+});
