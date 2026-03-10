@@ -185,6 +185,7 @@ def api_page_category():
             SELECT subcat_id, subcat_name
             FROM news_subcategory
             WHERE cat_id=%s
+            AND del_flg = 0
             ORDER BY subcat_name
             """,
             [cat_id]
