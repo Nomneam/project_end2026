@@ -201,49 +201,76 @@ $(function () {
   }
 
   function renderPagination(paging) {
-    const $wrap = $("#paginationWrap");
-    const total = Number(paging.total_pages || 1);
-    const page = Number(paging.page || 1);
+  const $wrap = $("#paginationWrap");
+  const total = Number(paging.total_pages || 1);
+  const page = Number(paging.page || 1);
 
-    if (total <= 1) {
-      $wrap.html("");
-      return;
-    }
+  if (total <= 1) {
+    $wrap.html("");
+    return;
+  }
 
-    const prevDisabled = page <= 1 ? "disabled" : "";
-    const nextDisabled = page >= total ? "disabled" : "";
+  const prevDisabled = page <= 1 ? "disabled" : "";
+  const nextDisabled = page >= total ? "disabled" : "";
 
-    let html = `
-      <div class="pagination-wrap mt-3">
-        <nav aria-label="Pagination">
-          <ul class="pagination mb-0">
+  let html = `
+  <div class="pagination-wrap mt-3">
+    <nav>
+      <ul class="pagination">
 
-            <li class="page-item ${prevDisabled}">
-              <a class="page-link js-page" data-page="${page - 1}" href="#" aria-label="Previous">&laquo;</a>
-            </li>
+        <li class="page-item ${prevDisabled}">
+          <a class="page-link js-page" data-page="${page - 1}" href="#">&laquo;</a>
+        </li>
+  `;
+
+  let start = Math.max(1, page - 1);
+  let end = Math.min(total, page + 1);
+
+  if (start > 1) {
+    html += `
+      <li class="page-item">
+        <a class="page-link js-page" data-page="1" href="#">1</a>
+      </li>
     `;
 
-    for (let p = 1; p <= total; p++) {
-      const active = p === page ? "active" : "";
-      html += `
-        <li class="page-item ${active}">
-          <a class="page-link js-page" data-page="${p}" href="#">${p}</a>
-        </li>
-      `;
+    if (start > 2) {
+      html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+    }
+  }
+
+  for (let p = start; p <= end; p++) {
+    const active = p === page ? "active" : "";
+    html += `
+      <li class="page-item ${active}">
+        <a class="page-link js-page" data-page="${p}" href="#">${p}</a>
+      </li>
+    `;
+  }
+
+  if (end < total) {
+    if (end < total - 1) {
+      html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
     }
 
     html += `
-            <li class="page-item ${nextDisabled}">
-              <a class="page-link js-page" data-page="${page + 1}" href="#" aria-label="Next">&raquo;</a>
-            </li>
-
-          </ul>
-        </nav>
-      </div>
+      <li class="page-item">
+        <a class="page-link js-page" data-page="${total}" href="#">${total}</a>
+      </li>
     `;
-
-    $wrap.html(html);
   }
+
+  html += `
+        <li class="page-item ${nextDisabled}">
+          <a class="page-link js-page" data-page="${page + 1}" href="#">&raquo;</a>
+        </li>
+
+      </ul>
+    </nav>
+  </div>
+  `;
+
+  $wrap.html(html);
+}
 
   async function loadPage(page) {
     if (isLoadingPage) return;
