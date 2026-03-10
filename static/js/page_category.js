@@ -230,24 +230,35 @@
   // PAGINATION (style เดียวกับ index)
   // =============================
   function renderPagination() {
-    el.pagination.innerHTML = "";
-    el.pageInfo.textContent = "";
+  el.pagination.innerHTML = "";
+  el.pageInfo.textContent = "";
 
-    const totalPages = Math.ceil(state.total / state.pageSize);
-    if (totalPages < 1) return;
+  const totalPages = Math.ceil(state.total / state.pageSize);
+  if (totalPages < 1) return;
 
-    const cur = state.page;
-    const pages = [];
+  const cur = state.page;
+  const pages = [];
 
-    pages.push("prev");
+  pages.push("prev");
 
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1, 2, 3, "...", totalPages);
-    }
+  const start = Math.max(1, cur - 1);
+  const end = Math.min(totalPages, cur + 1);
 
-    pages.push("next");
+  if (start > 1) {
+    pages.push(1);
+    if (start > 2) pages.push("...");
+  }
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (end < totalPages) {
+    if (end < totalPages - 1) pages.push("...");
+    pages.push(totalPages);
+  }
+
+  pages.push("next");
 
     el.pagination.innerHTML = pages
       .map((p) => {
