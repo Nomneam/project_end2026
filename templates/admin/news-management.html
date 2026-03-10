@@ -61,8 +61,8 @@
 <!-- ================= News Table ================= -->
 
     <div class="card card-custom">
-        <div class="card-header-custom d-flex justify-content-between align-items-center">
-            <div>
+        <div class="card-header-custom d-flex align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center">
                 <i class="bi bi-grid-fill me-2"></i>
                 <span>รายชื่อข่าวในระบบ</span>
             </div>
@@ -72,6 +72,14 @@
 
         <!-- ===== Table ===== -->
         <div class="table-responsive">
+            <div class="d-flex align-items-center justify-content-end gap-2 p-3 border-bottom bg-white">
+                <i class="bi bi-search text-muted"></i>
+                <input type="text"
+                       id="newsSearchInput"
+                       class="form-control form-control-sm"
+                       placeholder="ค้นหาด้วยชื่อข่าว..."
+                       style="max-width: 240px;">
+            </div>
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
@@ -83,7 +91,7 @@
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="newsTableBody">
                     {% for news in news_list %}
                     <tr>
                         <td>
