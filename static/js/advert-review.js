@@ -226,37 +226,42 @@ $(function () {
     // Approve
     // ===============================
     $(document).on('click', '#btnApprove', function () {
-        if (!currentAd) return;
+    if (!currentAd) return;
 
-        Swal.fire({
-            title: 'ยืนยันการอนุมัติ',
-            html: `อนุมัติโฆษณา <b>${currentAd.adv_name}</b> ใช่หรือไม่`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'อนุมัติ',
-            cancelButtonText: 'ยกเลิก',
-            confirmButtonColor: '#198754'
-        }).then(result => {
-            if (!result.isConfirmed) return;
+    // ปิด modal ก่อน
+    const modalEl = document.getElementById('adDetailModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
 
-            $.ajax({
-                url: '/ad-review/approve',
-                method: 'POST',
-                data: JSON.stringify({ adv_id: currentAd.adv_id }),
-                contentType: 'application/json',
-                dataType: 'json',
-                success: function (res) {
-                    if (res.status === 'success') {
-                        Swal.fire('สำเร็จ', 'อนุมัติโฆษณาเรียบร้อย', 'success').then(() => {
-                            fetchPage(getDraftFilters(), 'all');
-                        });
-                    } else {
-                        Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
-                    }
+    Swal.fire({
+        title: 'ยืนยันการอนุมัติ',
+        html: `อนุมัติโฆษณา <b>${currentAd.adv_name}</b> ใช่หรือไม่`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'อนุมัติ',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#198754'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+            url: '/ad-review/approve',
+            method: 'POST',
+            data: JSON.stringify({ adv_id: currentAd.adv_id }),
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function (res) {
+                if (res.status === 'success') {
+                    Swal.fire('สำเร็จ', 'อนุมัติโฆษณาเรียบร้อย', 'success').then(() => {
+                        fetchPage(getDraftFilters(), 'all');
+                    });
+                } else {
+                    Swal.fire('ผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
                 }
-            });
+            }
         });
     });
+});
 
     // ===============================
     // Reject
@@ -314,9 +319,8 @@ $(function () {
         const d = new Date(String(dateStr).replace(' ', 'T'));
         return d.toLocaleDateString('th-TH');
     }
-});
 
-$(document).on('click', '.btn-pause', function () {
+    $(document).on('click', '.btn-pause', function () {
     const advId = $(this).data('id');
 
     Swal.fire({
@@ -346,13 +350,15 @@ $(document).on('click', '.btn-pause', function () {
                 reason: result.value.trim()
             })
         })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    Swal.fire('สำเร็จ', 'หยุดโฆษณาเรียบร้อย', 'success').then(() => {
-                        window.location.href = '/ad-review';
-                    });
-                }
-            });
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === 'success') {
+                Swal.fire('สำเร็จ', 'หยุดโฆษณาเรียบร้อย', 'success').then(() => {
+                    fetchPage(getApprovedFilters(), 'approved');
+                });
+            }
+        });
     });
 });
+});
+
