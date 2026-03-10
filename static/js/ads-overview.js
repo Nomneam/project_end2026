@@ -56,33 +56,57 @@ $(document).ready(function () {
   }
 
   function renderPaginationControls(total, totalPages) {
-    const $pagination = $("#pagination");
-    const $pageInfo = $("#pageInfo");
-    const startItem = (currentPage - 1) * pageSize + 1;
-    const endItem = Math.min(currentPage * pageSize, total);
+  const $pagination = $("#pagination");
+  const $pageInfo = $("#pageInfo");
 
-    $pageInfo.text(`แสดง ${startItem}-${endItem} จากทั้งหมด ${total} แคมเปญ`);
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, total);
 
-    let html = "";
-    // ปุ่มก่อนหน้า
-    html += `<li class="page-item ${currentPage === 1 ? "disabled" : ""}">
-              <a class="page-link" href="#" data-page="prev">ก่อนหน้า</a>
-            </li>`;
+  $pageInfo.text(`แสดง ${startItem}-${endItem} จากทั้งหมด ${total} แคมเปญ`);
 
-    // เลขหน้า
-    for (let i = 1; i <= totalPages; i++) {
-      html += `<li class="page-item ${i === currentPage ? "active" : ""}">
-                <a class="page-link" href="#" data-page="${i}">${i}</a>
-              </li>`;
+  let html = "";
+
+  // ก่อนหน้า
+  html += `
+    <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+      <a class="page-link" href="#" data-page="prev">ก่อนหน้า</a>
+    </li>
+  `;
+
+  let start = Math.max(1, currentPage - 2);
+  let end = Math.min(totalPages, currentPage + 2);
+
+  if (start > 1) {
+    html += `<li class="page-item"><a class="page-link" data-page="1">1</a></li>`;
+    if (start > 2) {
+      html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
     }
-
-    // ปุ่มถัดไป
-    html += `<li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
-              <a class="page-link" href="#" data-page="next">ถัดไป</a>
-            </li>`;
-
-    $pagination.html(html);
   }
+
+  for (let i = start; i <= end; i++) {
+    html += `
+      <li class="page-item ${i === currentPage ? "active" : ""}">
+        <a class="page-link" href="#" data-page="${i}">${i}</a>
+      </li>
+    `;
+  }
+
+  if (end < totalPages) {
+    if (end < totalPages - 1) {
+      html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+    }
+    html += `<li class="page-item"><a class="page-link" data-page="${totalPages}">${totalPages}</a></li>`;
+  }
+
+  // ถัดไป
+  html += `
+    <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+      <a class="page-link" href="#" data-page="next">ถัดไป</a>
+    </li>
+  `;
+
+  $pagination.html(html);
+}
 
 
 // ====== PAYMENT FLOW (TMWEASY) ======

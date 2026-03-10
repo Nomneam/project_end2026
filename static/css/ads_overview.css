@@ -274,11 +274,11 @@
     }
 
     .pagination .page-link {
-      border-radius: 999px;
-      margin-inline: 0.15rem;
-      font-size: 0.85rem;
-      color: #4b5563;
-    }
+  border-radius: 6px;
+  margin-inline: 3px;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
 
     .pagination .page-link.active-page {
       background: #1d4ed8;
@@ -345,4 +345,11 @@
 #qrImage {
   display: block;
   margin: 0 auto;
+}
+
+
+.pagination .page-item.active .page-link {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
 }
