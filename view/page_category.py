@@ -95,7 +95,7 @@ def api_page_category():
     if not cat_id:
         abort(400, "cat_id is required")
 
-    PAGE_SIZE = 15
+    PAGE_SIZE = 9
     offset = (page - 1) * PAGE_SIZE
 
     conn = connect_db()
