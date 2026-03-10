@@ -789,4 +789,22 @@ document.addEventListener("DOMContentLoaded", function () {
       loadNewsChart(this.dataset.range);
     });
   });
+
+  // ค้นหาข่าวด้วยชื่อ
+  const searchInput = document.getElementById("newsSearchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      const keyword = this.value.trim().toLowerCase();
+      const rows = document.querySelectorAll("table tbody tr");
+
+      rows.forEach(row => {
+        const titleEl = row.querySelector(".news-title");
+        if (!titleEl) return;
+
+        const title = titleEl.textContent.trim().toLowerCase();
+        const match = title.includes(keyword);
+        row.style.display = match ? "" : "none";
+      });
+    });
+  }
 });
