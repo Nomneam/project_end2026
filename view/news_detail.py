@@ -414,6 +414,7 @@ def api_ads_sidebar():
                 FROM advert
                 WHERE status = 'running'
                   AND adv_position = 'SIDEBAR'
+                  AND del_flg = 0
                   AND (valid_from IS NULL OR valid_from <= NOW())
                   AND (valid_to IS NULL OR valid_to >= NOW())
                 ORDER BY adv_id DESC
