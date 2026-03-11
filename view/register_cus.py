@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session,url_for
+from flask import Blueprint, request, jsonify, session, url_for
 from dotenv import load_dotenv
 import pymysql
 import os
@@ -21,7 +21,7 @@ def connect_db():
         port=int(os.environ.get("PORT", 3306)),
         cursorclass=pymysql.cursors.DictCursor,
         charset="utf8mb4",
-        autocommit=False  # ใช้ transaction
+        autocommit=False
     )
 
 # =============================
@@ -71,34 +71,73 @@ def register_customer():
         return jsonify(ok=False, message="เบอร์โทรต้องขึ้นต้น 06, 08 หรือ 09 และมี 10 หลัก"), 400
 
     conn = connect_db()
-    cur = conn.cursor()
 
     try:
-        # ===== Hash Password =====
-        hashed_pw = bcrypt.hashpw(
-            password.encode("utf-8"),
-            bcrypt.gensalt()
-        ).decode("utf-8")
+        with conn.cursor() as cur:
 
-        # ===== Insert =====
-        cur.execute("""
-            INSERT INTO customer
-            (cus_username, cus_fname, cus_lname, cus_phone, cus_idcard, cus_email, cus_password_hash)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
-        """, (username, fname, lname, phone, idcard, email, hashed_pw))
+            # =============================
+            # CHECK DUPLICATE
+            # =============================
 
-        conn.commit()
-        new_user_id = cur.lastrowid
+            # username
+            cur.execute(
+                "SELECT cus_id FROM customer WHERE cus_username=%s",
+                (username,)
+            )
+            if cur.fetchone():
+                return jsonify(ok=False, message="Username นี้มีผู้ใช้งานแล้ว"), 400
 
-    except pymysql.err.IntegrityError:
+            # email
+            cur.execute(
+                "SELECT cus_id FROM customer WHERE cus_email=%s",
+                (email,)
+            )
+            if cur.fetchone():
+                return jsonify(ok=False, message="Email นี้ถูกใช้ไปแล้ว"), 400
+
+            # idcard
+            cur.execute(
+                "SELECT cus_id FROM customer WHERE cus_idcard=%s",
+                (idcard,)
+            )
+            if cur.fetchone():
+                return jsonify(ok=False, message="เลขบัตรประชาชนนี้ถูกใช้ไปแล้ว"), 400
+
+
+            # =============================
+            # HASH PASSWORD
+            # =============================
+            hashed_pw = bcrypt.hashpw(
+                password.encode("utf-8"),
+                bcrypt.gensalt()
+            ).decode("utf-8")
+
+
+            # =============================
+            # INSERT USER
+            # =============================
+            cur.execute("""
+                INSERT INTO customer
+                (cus_username, cus_fname, cus_lname, cus_phone, cus_idcard, cus_email, cus_password_hash)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+            """, (username, fname, lname, phone, idcard, email, hashed_pw))
+
+            conn.commit()
+
+            new_user_id = cur.lastrowid
+
+
+    except Exception as e:
         conn.rollback()
-        return jsonify(ok=False, message="Username หรือ Email ถูกใช้แล้ว"), 400
+        return jsonify(ok=False, message="เกิดข้อผิดพลาด กรุณาลองใหม่"), 500
 
     finally:
-        cur.close()
         conn.close()
 
-    # ===== Auto Login (เหมือน login route) =====
+
+    # =============================
+    # AUTO LOGIN
+    # =============================
     session["front_user"] = {
         "id": new_user_id,
         "username": username,
@@ -107,7 +146,8 @@ def register_customer():
 
     session.modified = True
 
+
     return jsonify(
-    ok=True,
-    redirect=url_for("index.index_news")
-)
+        ok=True,
+        redirect=url_for("index.index_news")
+    )
