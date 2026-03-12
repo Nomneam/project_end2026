@@ -170,13 +170,12 @@ $("#changePasswordBtn").click(function () {
         const lname = formData.get("lname")?.trim();
         const phone = formData.get("phone")?.trim();
         const email = formData.get("email")?.trim();
-        const address = formData.get("address")?.trim();
         const citizen = formData.get("citizen_id")?.trim();
         const avatar = formData.get("avatar");
 
         /* ===== VALIDATION ===== */
 
-        if (!fname || !lname || !phone || !email || !address || !citizen) {
+        if (!fname || !lname || !phone || !email  || !citizen) {
             return Swal.fire("ข้อมูลไม่ครบ", "กรอกข้อมูลให้ครบทุกช่อง", "warning");
         }
 

@@ -70,7 +70,6 @@ def update_profile():
     lname = (data.get("lname") or "").strip()
     phone = (data.get("phone") or "").strip()
     email = (data.get("email") or "").strip()
-    address = (data.get("address") or "").strip()
     citizen_id = (data.get("citizen_id") or "").strip()
 
     conn = connect_db()
@@ -97,7 +96,6 @@ def update_profile():
         "cus_lname": lname,
         "cus_phone": phone,
         "cus_email": email,
-        "cus_address": address,
         "cus_idcard": citizen_id,
     }
 
@@ -119,7 +117,6 @@ def update_profile():
                 cus_lname=%s,
                 cus_phone=%s,
                 cus_email=%s,
-                cus_address=%s,
                 cus_idcard=%s,
                 cus_profile=COALESCE(%s, cus_profile)
             WHERE cus_id=%s
@@ -128,7 +125,6 @@ def update_profile():
             lname,
             phone,
             email,
-            address,
             citizen_id,
             avatar_base64,
             user_id
