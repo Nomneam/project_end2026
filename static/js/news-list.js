@@ -59,25 +59,17 @@ $(function () {
 
 });
 
-  async function searchNews(keyword) {
-
-  if(!keyword){
-    loadPage(1);
-    return;
-  }
-
-}
-
 // ======================================
 // reset search
 // ======================================
 $(document).on("click", "#btnReset", function () {
 
-  window.location.href = "/reporter/news-list";
+  $("#searchInput").val("");   // ล้างช่องค้นหา
+  loadPage(1);                 // โหลดข่าวทั้งหมดใหม่
 
 });
 
-  function safeSetImg($img, $empty, src) {
+function safeSetImg($img, $empty, src) {
   if (src && String(src).trim() !== "") {
 
     const finalSrc = src.startsWith("http")
