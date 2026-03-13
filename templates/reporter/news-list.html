@@ -107,67 +107,11 @@
       </div>
 
       {# Pagination #}
-      {% if total_pages > 1 %}
-      <div class="pagination-wrap mt-3">
-        <nav aria-label="Pagination">
-          <ul class="pagination mb-0">
-
-            <!-- Previous Button -->
-            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-              <a class="page-link"
-                 href="{{ url_for('news_list.news_list_page', page=page-1, q=q) }}"
-                 aria-label="Previous">&laquo;</a>
-            </li>
-
-            <!-- Page 1 -->
-            <li class="page-item {% if page == 1 %}active{% endif %}">
-              <a class="page-link"
-                 href="{{ url_for('news_list.news_list_page', page=1, q=q) }}">1</a>
-            </li>
-
-            <!-- Ellipsis before current -->
-            {% if page > 4 %}
-            <li class="page-item disabled">
-              <span class="page-link">...</span>
-            </li>
-            {% endif %}
-
-            <!-- Pages around current -->
-            {% for p in range(2, total_pages) %}
-              {% if p >= page - 2 and p <= page + 2 %}
-              <li class="page-item {% if p == page %}active{% endif %}">
-                <a class="page-link"
-                   href="{{ url_for('news_list.news_list_page', page=p, q=q) }}">{{ p }}</a>
-              </li>
-              {% endif %}
-            {% endfor %}
-
-            <!-- Ellipsis after current -->
-            {% if page < total_pages - 3 %}
-            <li class="page-item disabled">
-              <span class="page-link">...</span>
-            </li>
-            {% endif %}
-
-            <!-- Last Page -->
-            {% if total_pages > 1 %}
-            <li class="page-item {% if page == total_pages %}active{% endif %}">
-              <a class="page-link"
-                 href="{{ url_for('news_list.news_list_page', page=total_pages, q=q) }}">{{ total_pages }}</a>
-            </li>
-            {% endif %}
-
-            <!-- Next Button -->
-            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-              <a class="page-link"
-                 href="{{ url_for('news_list.news_list_page', page=page+1, q=q) }}"
-                 aria-label="Next">&raquo;</a>
-            </li>
-
-          </ul>
-        </nav>
-      </div>
-      {% endif %}
+     <div class="pagination-wrap mt-3">
+      <nav>
+        <ul class="pagination mb-0"></ul>
+      </nav>
+    </div>
     </div>
   </div>
 </div>

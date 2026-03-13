@@ -186,3 +186,79 @@ def search_news():
 
     finally:
         conn.close()
+        
+        
+        
+@news_list_bp.route("/reporter/news/pagination")
+def news_pagination():
+
+    page = request.args.get("page", 1, type=int)
+    q = (request.args.get("q") or "").strip()
+
+    per_page = 10
+
+    if page < 1:
+        page = 1
+
+    offset = (page - 1) * per_page
+
+    conn = connect_db()
+
+    try:
+        with conn.cursor() as cursor:
+
+            # เงื่อนไข
+            where = ["n.del_flg = 0", "n.status = 'publish'"]
+            params = []
+
+            if q:
+                where.append("n.news_title LIKE %s")
+                params.append(f"%{q}%")
+
+            where_sql = " AND ".join(where)
+
+            # นับจำนวนทั้งหมด
+            cursor.execute(f"""
+            SELECT COUNT(*) AS total
+            FROM news n
+            WHERE {where_sql}
+            """, tuple(params))
+
+            total_rows = cursor.fetchone()["total"] or 0
+            total_pages = max(1, math.ceil(total_rows / per_page))
+
+            # ป้องกัน page เกิน
+            if page > total_pages:
+                page = total_pages
+                offset = (page - 1) * per_page
+
+            # ดึงข้อมูล
+            cursor.execute(f"""
+            SELECT
+                n.news_id,
+                n.news_title,
+                n.is_featured,
+                n.published_at,
+                c.cat_name AS category_name,
+                e.emp_fname AS author_fname,
+                e.emp_lname AS author_lname
+            FROM news n
+            LEFT JOIN news_category c ON n.cat_id = c.cat_id
+            LEFT JOIN employee e ON n.created_by = e.emp_id
+            WHERE {where_sql}
+            ORDER BY n.published_at DESC, n.news_id DESC
+            LIMIT %s OFFSET %s
+            """, tuple(params + [per_page, offset]))
+
+            rows = cursor.fetchall()
+
+        return jsonify(
+            ok=True,
+            rows=rows,
+            page=page,
+            total_pages=total_pages,
+            total_rows=total_rows
+        )
+
+    finally:
+        conn.close()
