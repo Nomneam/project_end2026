@@ -1,0 +1,77 @@
+/* ===== Reporter Layout Avatar Styles (match profile.css) ===== */
+
+/* Navbar Avatar */
+.nav-avatar {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 8px 18px rgba(17,24,39,.18);
+  background: #e5e7eb;
+  flex-shrink: 0;
+}
+
+.nav-avatar.avatar-text {
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  user-select: none;
+  color: #fff;
+  text-shadow:
+    0 4px 10px rgba(0,0,0,.25),
+    0 1px 0 rgba(255,255,255,.25);
+  background:
+    radial-gradient(12px 12px at 30% 25%, rgba(255,255,255,.9), transparent 55%),
+    linear-gradient(135deg, rgba(214,31,38,.95), rgba(255,107,107,.95));
+  border: 2px solid #fff;
+  box-shadow: 0 8px 18px rgba(17,24,39,.18);
+  transition: .2s ease;
+}
+
+.nav-avatar.avatar-text:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(17,24,39,.24);
+}
+
+/* Sidebar Avatar */
+.side-avatar {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 10px 20px rgba(17,24,39,.18);
+  background: #e5e7eb;
+  flex-shrink: 0;
+}
+
+.side-avatar.avatar-text {
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  user-select: none;
+  color: #fff;
+  text-shadow:
+    0 4px 10px rgba(0,0,0,.25),
+    0 1px 0 rgba(255,255,255,.25);
+  background:
+    radial-gradient(18px 18px at 30% 25%, rgba(255,255,255,.9), transparent 55%),
+    linear-gradient(135deg, rgba(214,31,38,.95), rgba(255,107,107,.95));
+  border: 2px solid #fff;
+  box-shadow: 0 10px 20px rgba(17,24,39,.18);
+  transition: .2s ease;
+}
+
+.side-avatar.avatar-text:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(17,24,39,.24);
+}

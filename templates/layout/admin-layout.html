@@ -17,6 +17,7 @@
     />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/avatar-layout.css') }}" />
     {% block head %}{% endblock %}
   </head>
 
@@ -55,13 +56,21 @@
               aria-expanded="false"
               aria-label="User menu"
             >
-              <!-- ✅ avatar จาก session -->
-              <img
-                class="avatar"
-                id="navAvatar"
-                alt="avatar"
-                src="{{ session.get('user', {}).get('avatar_url') or url_for('static', filename='img/default-avatar.png') }}"
-              />
+              <!-- ✅ avatar จาก session เหมือน profile-reporter -->
+              <div class="position-relative d-inline-block">
+                {% if session.get('user', {}).get('avatar_url') %}
+                  <img
+                    src="{{ session.get('user', {}).get('avatar_url') }}"
+                    class="profile-avatar nav-avatar"
+                    id="navAvatar"
+                  />
+                {% else %}
+                  <div class="profile-avatar nav-avatar avatar-text">
+                    {% set fname = session.get('user', {}).get('fname', '') %}
+                    {{ fname[0] | upper if fname else '-' }}
+                  </div>
+                {% endif %}
+              </div>
               <!-- ✅ fname จาก session -->
               <strong class="small" id="navUserName">
                 {{ session.get('user', {}).get('fname', '-') }}
@@ -96,13 +105,21 @@
       <aside class="sidebar" id="sidebar">
         <div class="profile-card">
           <div class="d-flex align-items-center gap-3">
-            <!-- ✅ avatar -->
-            <img
-              class="avatar"
-              id="sideAvatar"
-              alt="avatar"
-              src="{{ session.get('user', {}).get('avatar_url') or url_for('static', filename='img/default-avatar.png') }}"
-            />
+            <!-- ✅ avatar เหมือน profile-reporter -->
+            <div class="position-relative d-inline-block">
+              {% if session.get('user', {}).get('avatar_url') %}
+                <img
+                  src="{{ session.get('user', {}).get('avatar_url') }}"
+                  class="profile-avatar side-avatar"
+                  id="sideAvatar"
+                />
+              {% else %}
+                <div class="profile-avatar side-avatar avatar-text">
+                  {% set fname = session.get('user', {}).get('fname', '') %}
+                  {{ fname[0] | upper if fname else '-' }}
+                </div>
+              {% endif %}
+            </div>
             <div>
               <!-- ✅ fname -->
               <div class="profile-name" id="sideUserName">
