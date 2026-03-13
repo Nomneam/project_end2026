@@ -1,4 +1,4 @@
-from flask import Flask,jsonify
+from flask import Flask,jsonify,render_template
 from dotenv import load_dotenv
 import os
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -82,7 +82,7 @@ app.register_blueprint(reporter_profile_bp)
 
 @app.route('/')
 def home():
-    return "Hello, World!"
+    return render_template("index.html")
 
 @app.context_processor
 def inject_navbar():

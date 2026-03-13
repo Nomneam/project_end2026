@@ -49,111 +49,27 @@ $(function () {
 
   $(document).on("input", "#searchInput", function () {
 
-    clearTimeout(searchTimer);
+  clearTimeout(searchTimer);
 
-    searchTimer = setTimeout(function () {
+  searchTimer = setTimeout(function () {
 
-      const q = $("#searchInput").val().trim();
-      searchNews(q);
+    loadPage(1);
 
-    }, 300);
+  }, 300);
 
-  });
-
-  async function searchNews(keyword) {
-
-  try {
-
-    const r = await fetch(`/reporter/news/search?q=${encodeURIComponent(keyword)}`, {
-      headers: { "X-Requested-With": "XMLHttpRequest" }
-    });
-
-    const j = await r.json();
-
-    if (!j.ok) return;
-
-    const rows = j.rows || [];
-    const tbody = $("#newsTableBody");
-
-    tbody.empty();
-
-    if (!rows.length) {
-
-      tbody.append(`
-        <tr>
-          <td colspan="7" class="text-center text-muted py-4">
-            ไม่พบข่าว
-          </td>
-        </tr>
-      `);
-
-      return;
-    }
-
-    rows.forEach(n => {
-
-      const kind = n.is_featured == 1
-        ? `<span class="badge bg-danger">ข่าวยอดฮิต</span>`
-        : `<span class="badge bg-secondary">ข่าวทั่วไป</span>`;
-
-      const date = n.published_at
-        ? new Date(n.published_at).toLocaleDateString("th-TH")
-        : "-";
-
-      tbody.append(`
-        <tr>
-
-          <td class="fw-semibold">${n.news_title}</td>
-
-          <td class="text-center">${kind}</td>
-
-          <td class="text-center">${n.category_name || "-"}</td>
-
-          <td class="text-center">${date}</td>
-
-          <td class="text-center">
-            <span class="status-badge status-published">เผยแพร่แล้ว</span>
-          </td>
-
-          <td class="text-center">
-            ${(n.author_fname || "")} ${(n.author_lname || "")}
-          </td>
-
-          <td class="text-center">
-
-            <button
-              class="btn btn-outline-primary btn-sm rounded-circle btn-view-public"
-              data-id="${n.news_id}">
-              <i class="bi bi-eye"></i>
-            </button>
-
-          </td>
-
-        </tr>
-      `);
-
-    });
-
-  } catch (err) {
-    console.error(err);
-  }
-
-}
+});
 
 // ======================================
 // reset search
 // ======================================
 $(document).on("click", "#btnReset", function () {
 
-  // ล้าง input
-  $("#searchInput").val("");
-
-  // โหลดข่าวทั้งหมดใหม่
-  searchNews("");
+  $("#searchInput").val("");   // ล้างช่องค้นหา
+  loadPage(1);                 // โหลดข่าวทั้งหมดใหม่
 
 });
 
-  function safeSetImg($img, $empty, src) {
+function safeSetImg($img, $empty, src) {
   if (src && String(src).trim() !== "") {
 
     const finalSrc = src.startsWith("http")
@@ -244,4 +160,164 @@ $(document).on("click", "#btnReset", function () {
       await swalFire({ icon: "error", title: "ดูข้อมูลไม่ได้", text: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" });
     }
   });
+});
+
+
+
+async function loadPage(page){
+
+  if(page < 1) return;
+
+  const q = $("#searchInput").val().trim();
+
+  try{
+
+    const r = await fetch(`/reporter/news/pagination?page=${page}&q=${encodeURIComponent(q)}`);
+
+    const j = await r.json();
+
+    if(!j.ok) return;
+
+    renderRows(j.rows);
+    renderPagination(page, j.total_pages);
+
+  }catch(err){
+    console.error(err);
+  }
+
+}
+
+
+function renderRows(rows){
+
+  const tbody = $("#newsTableBody");
+
+  tbody.empty();
+
+  if(!rows.length){
+    tbody.append(`
+      <tr>
+        <td colspan="7" class="text-center text-muted py-4">
+        ไม่พบข่าว
+        </td>
+      </tr>
+    `);
+    return;
+  }
+
+  rows.forEach(n=>{
+
+    const kind = n.is_featured == 1
+      ? `<span class="badge bg-danger">ข่าวยอดฮิต</span>`
+      : `<span class="badge bg-secondary">ข่าวทั่วไป</span>`;
+
+    const date = n.published_at
+      ? new Date(n.published_at).toLocaleDateString("th-TH")
+      : "-";
+
+    tbody.append(`
+      <tr>
+        <td class="fw-semibold">${n.news_title}</td>
+        <td class="text-center">${kind}</td>
+        <td class="text-center">${n.category_name||"-"}</td>
+        <td class="text-center">${date}</td>
+        <td class="text-center">
+          <span class="status-badge status-published">เผยแพร่แล้ว</span>
+        </td>
+        <td class="text-center">
+          ${(n.author_fname||"")} ${(n.author_lname||"")}
+        </td>
+        <td class="text-center">
+          <button
+          class="btn btn-outline-primary btn-sm rounded-circle btn-view-public"
+          data-id="${n.news_id}">
+          <i class="bi bi-eye"></i>
+          </button>
+        </td>
+      </tr>
+    `)
+
+  })
+
+}
+
+
+$(document).on("click",".page-btn",function(e){
+
+  e.preventDefault();
+
+  const page = parseInt($(this).data("page"));
+
+  if(!page || page < 1) return; // ✅ ป้องกัน error
+
+  loadPage(page);
+
+});
+
+
+
+function renderPagination(currentPage, totalPages){
+
+  const container = $(".pagination");
+  container.empty();
+
+  // prev
+  container.append(`
+  <li class="page-item ${currentPage==1?"disabled":""}">
+    <a class="page-link page-btn" data-page="${currentPage-1}">&laquo;</a>
+  </li>`);
+
+  let start = Math.max(1, currentPage-2);
+  let end = Math.min(totalPages, currentPage+2);
+
+  if(start > 1){
+
+    container.append(`
+    <li class="page-item">
+      <a class="page-link page-btn" data-page="1">1</a>
+    </li>`);
+
+    if(start > 2){
+      container.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+    }
+
+  }
+
+  for(let i=start;i<=end;i++){
+
+    container.append(`
+    <li class="page-item ${i==currentPage?"active":""}">
+      <a class="page-link page-btn" data-page="${i}">${i}</a>
+    </li>`);
+
+  }
+
+  if(end < totalPages){
+
+    if(end < totalPages-1){
+      container.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+    }
+
+    container.append(`
+    <li class="page-item">
+      <a class="page-link page-btn" data-page="${totalPages}">${totalPages}</a>
+    </li>`);
+
+  }
+
+  // next
+  container.append(`
+  <li class="page-item ${currentPage==totalPages?"disabled":""}">
+    <a class="page-link page-btn" data-page="${currentPage+1}">&raquo;</a>
+  </li>`);
+
+}
+
+
+
+$(function(){
+
+  // โหลดหน้าแรกทันที
+  loadPage(1);
+
 });
