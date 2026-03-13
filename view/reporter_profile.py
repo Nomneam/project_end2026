@@ -255,7 +255,7 @@ def update_profile():
                 ).strip()
 
             if emp_profile_file and emp_profile_file.filename:
-                session["user"]["avatar_url"] = "/" + relative_path
+                session["user"]["avatar_url"] = relative_path
 
             session.modified = True
 

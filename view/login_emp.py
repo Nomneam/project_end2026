@@ -76,18 +76,19 @@ def login_emp():
 
             cursor.execute("""
                 SELECT 
-                    e.emp_id,
-                    e.emp_username,
-                    e.emp_password_hash,
-                    e.emp_fname,
-                    e.emp_lname,
-                    e.role_id,
-                    r.role_name
-                FROM employee e
-                LEFT JOIN role r ON r.role_id = e.role_id
-                WHERE e.emp_username = %s
-                  AND e.del_flg = 0
-                LIMIT 1
+                e.emp_id,
+                e.emp_username,
+                e.emp_password_hash,
+                e.emp_fname,
+                e.emp_lname,
+                e.emp_profile,
+                e.role_id,
+                r.role_name
+            FROM employee e
+            LEFT JOIN role r ON r.role_id = e.role_id
+            WHERE e.emp_username = %s
+            AND e.del_flg = 0
+            LIMIT 1
             """, (username,))
 
             user = cursor.fetchone()
@@ -125,7 +126,7 @@ def login_emp():
             "lname": user.get("emp_lname") or "",
             "role_id": user.get("role_id"),
             "role_name": user.get("role_name") or "",
-            "avatar_url": None,
+            "avatar_url": user.get("emp_profile")
         }
 
         audit_log(

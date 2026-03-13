@@ -60,7 +60,7 @@
               <div class="position-relative d-inline-block">
                 {% if session.get('user', {}).get('avatar_url') %}
                   <img
-                    src="{{ session.get('user', {}).get('avatar_url') }}"
+                    src="/{{ session.get('user', {}).get('avatar_url') }}"
                     class="profile-avatar nav-avatar"
                     id="navAvatar"
                   />
@@ -109,10 +109,11 @@
             <div class="position-relative d-inline-block">
               {% if session.get('user', {}).get('avatar_url') %}
                 <img
-                  src="{{ session.get('user', {}).get('avatar_url') }}"
+                  src="/{{ session.get('user', {}).get('avatar_url') }}"
                   class="profile-avatar side-avatar"
                   id="sideAvatar"
                 />
+                
               {% else %}
                 <div class="profile-avatar side-avatar avatar-text">
                   {% set fname = session.get('user', {}).get('fname', '') %}

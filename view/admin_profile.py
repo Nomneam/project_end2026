@@ -200,7 +200,7 @@ def update_profile():
                     update_values.append(relative_path)
 
                     # ✅ อัปเดต session ทันที
-                    session["user"]["avatar_url"] = "/" + relative_path
+                    session["user"]["avatar_url"] = relative_path
 
             if not update_fields:
                 return jsonify({"error": "no valid fields"}), 400
