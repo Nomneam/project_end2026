@@ -155,38 +155,7 @@
             </table>
 
             <!-- ✅ Pagination wrap ให้ JS replace -->
-            <div id="paginationWrap">
-              {% if total_pages > 1 %}
-                <div class="pagination-wrap mt-3">
-                  <nav aria-label="Pagination">
-                    <ul class="pagination mb-0">
-
-                      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                        <a class="page-link js-page"
-                           data-page="{{ page-1 }}"
-                           href="#"
-                           aria-label="Previous">&laquo;</a>
-                      </li>
-
-                      {% for p in range(1, total_pages + 1) %}
-                        <li class="page-item {% if p == page %}active{% endif %}">
-                          <a class="page-link js-page"
-                             data-page="{{ p }}"
-                             href="#">{{ p }}</a>
-                        </li>
-                      {% endfor %}
-
-                      <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-                        <a class="page-link js-page"
-                           data-page="{{ page+1 }}"
-                           href="#"
-                           aria-label="Next">&raquo;</a>
-                      </li>
-
-                    </ul>
-                  </nav>
-                </div>
-              {% endif %}
+            <div id="paginationWrap"></div>
             </div>
 
           </div>

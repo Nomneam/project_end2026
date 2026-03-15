@@ -788,5 +788,5 @@ $(document).on("click", ".remove-sub", function () {
   });
 
   // ✅ ไม่บังคับโหลดหน้า 1 ผ่าน API (ปล่อยให้ SSR แสดงก่อน แล้วค่อย AJAX ตอนกด)
-  // loadPage(1);
+  loadPage(1);
 });
