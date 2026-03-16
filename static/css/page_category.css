@@ -375,8 +375,23 @@ a:hover .cat-card {
 }
 
 /* ======================================================
-  Big Hero Ad (Index)
+  Big Hero Ad (Category)
 ====================================================== */
+#bigCatHeroAd {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.bigCatHeroAdSwiper {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.bigCatHeroAdSwiper .swiper-slide {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
 .big-ad-wrap {
   position: relative;
   display: block;
