@@ -153,47 +153,68 @@ $(function () {
 }
 
 
+let bigHeroAdSwiper = null;
+
 async function loadHeroAd() {
   const container = document.getElementById("bigHeroAd");
-  if (!container) return;
+  const wrapper = document.getElementById("bigHeroAdWrapper");
+  if (!container || !wrapper) return;
 
   try {
     const res = await fetch("/api/ads/hero");
     const data = await res.json();
 
-    if (!data.ok || !data.item) {
+    const items = data?.items || [];
+    if (!data.ok || !items.length) {
       container.style.display = "none";
       return;
     }
 
-    const ad = data.item;
+    wrapper.innerHTML = items
+      .map((ad) => `
+        <div class="swiper-slide">
+          <a href="${ad.target_url}" target="_blank" rel="noopener noreferrer"
+             class="big-ad-wrap text-decoration-none">
 
-    container.innerHTML = `
-      <a href="${ad.target_url}" target="_blank" rel="noopener noreferrer"
-         class="big-ad-wrap text-decoration-none">
+            <img src="${ad.adv_image_url}" 
+                 class="big-ad-img"
+                 loading="lazy"
+                 onerror="this.style.display='none'">
 
-        <img src="${ad.adv_image_url}" 
-             class="big-ad-img"
-             loading="lazy"
-             onerror="this.style.display='none'">
+            <div class="big-ad-overlay"></div>
 
-        <div class="big-ad-overlay"></div>
+            <div class="big-ad-content">
+              <span class="ad-badge ad-badge-ad mb-2">ad</span>
+              <h2 class="font-kanit fw-bold big-ad-title">
+                ${ad.adv_name}
+              </h2>
+              <p class="big-ad-desc">
+                ${ad.adv_description || ""}
+              </p>
+              <div class="mt-3">
+                <span class="btn btn-bkk-red px-4">ดูรายละเอียด</span>
+              </div>
+            </div>
 
-        <div class="big-ad-content">
-          <span class="ad-badge ad-badge-ad mb-2">ad</span>
-          <h2 class="font-kanit fw-bold big-ad-title">
-            ${ad.adv_name}
-          </h2>
-          <p class="big-ad-desc">
-            ${ad.adv_description || ""}
-          </p>
-          <div class="mt-3">
-            <span class="btn btn-bkk-red px-4">ดูรายละเอียด</span>
-          </div>
+          </a>
         </div>
+      `)
+      .join("");
 
-      </a>
-    `;
+    if (bigHeroAdSwiper) {
+      bigHeroAdSwiper.destroy(true, true);
+      bigHeroAdSwiper = null;
+    }
+
+    bigHeroAdSwiper = new Swiper(".bigHeroAdSwiper", {
+      slidesPerView: 1,
+      loop: items.length > 1,
+      autoplay: { delay: 4500, disableOnInteraction: false },
+      navigation: {
+        nextEl: "#bigHeroAdNext",
+        prevEl: "#bigHeroAdPrev",
+      },
+    });
 
   } catch (err) {
     console.error("Hero Ad Load Error:", err);
