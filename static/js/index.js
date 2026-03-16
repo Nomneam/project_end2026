@@ -164,14 +164,16 @@ async function loadHeroAd() {
     const res = await fetch("/api/ads/hero");
     const data = await res.json();
 
-    const items = data?.items || [];
+    const items = (data?.items || (data?.item ? [data.item] : [])).filter(Boolean);
+
     if (!data.ok || !items.length) {
       container.style.display = "none";
       return;
     }
 
     wrapper.innerHTML = items
-      .map((ad) => `
+      .map(
+        (ad) => `
         <div class="swiper-slide">
           <a href="${ad.target_url}" target="_blank" rel="noopener noreferrer"
              class="big-ad-wrap text-decoration-none">
@@ -198,7 +200,8 @@ async function loadHeroAd() {
 
           </a>
         </div>
-      `)
+      `
+      )
       .join("");
 
     if (bigHeroAdSwiper) {
@@ -215,7 +218,6 @@ async function loadHeroAd() {
         prevEl: "#bigHeroAdPrev",
       },
     });
-
   } catch (err) {
     console.error("Hero Ad Load Error:", err);
     container.style.display = "none";
