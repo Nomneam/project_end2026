@@ -419,6 +419,21 @@ img { display: block; }
 /* ======================================================
   Big Hero Ad (Index)
 ====================================================== */
+#bigHeroAd {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.bigHeroAdSwiper {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.bigHeroAdSwiper .swiper-slide {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
 .big-ad-wrap {
   position: relative;
   display: block;

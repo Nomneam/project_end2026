@@ -309,21 +309,19 @@ def api_ads_hero():
                   AND (valid_from IS NULL OR valid_from <= NOW())
                   AND (valid_to IS NULL OR valid_to >= NOW())
                 ORDER BY adv_id DESC
-                LIMIT 1
             """)
-            ad = cur.fetchone()
+            items = cur.fetchall()
 
-            # ถ้าไม่มีโฆษณา
-            if not ad:
-                return jsonify({"ok": True, "item": None})
+            if not items:
+                return jsonify({"ok": True, "items": []})
 
-            # กันค่า NULL
-            ad["target_url"] = ad["target_url"] or "#"
-            ad["adv_description"] = ad["adv_description"] or ""
-
-            # กัน path รูปว่าง
-            if not ad["adv_image_url"]:
-                return jsonify({"ok": True, "item": None})
+            cleaned = []
+            for ad in items:
+                if not ad.get("adv_image_url"):
+                    continue
+                ad["target_url"] = ad.get("target_url") or "#"
+                ad["adv_description"] = ad.get("adv_description") or ""
+                cleaned.append(ad)
 
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -331,7 +329,7 @@ def api_ads_hero():
     finally:
         db.close()
 
-    return jsonify({"ok": True, "item": ad})
+    return jsonify({"ok": True, "items": cleaned})
 
 
 @index_bp.route("/api/categories")
