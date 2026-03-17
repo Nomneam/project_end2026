@@ -174,11 +174,15 @@ $(function () {
     // เปิด modal
     // ===============================
     $(document).on('click', '.btn-view', function () {
-        currentAd = $(this).data('ad');
+        const $button = $(this);
+        currentAd = $button.data('ad');
 
         const imageUrl = currentAd.adv_image_url
             ? currentAd.adv_image_url
             : '/static/images/no-image.png';
+
+        const validFromFallback = $button.data('valid-from');
+        const validToFallback = $button.data('valid-to');
 
         if (currentAd.status === 'draft') {
             $('#modalImage').attr('src', imageUrl);
@@ -186,7 +190,11 @@ $(function () {
             $('#modalCustomer').text(`${currentAd.cus_fname} ${currentAd.cus_lname}`);
             $('#modalArea').text(currentAd.adc_cat_name || '-');
             $('#modalPrice').text(Number(currentAd.adv_price || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 }));
-            $('#modalDate').text(formatDate(currentAd.valid_from) + ' - ' + formatDate(currentAd.valid_to));
+
+            const fromText = formatDate(currentAd.valid_from) || formatDate(validFromFallback);
+            const toText = formatDate(currentAd.valid_to) || formatDate(validToFallback);
+            const dateText = fromText && toText ? `${fromText} - ${toText}` : '-';
+            $('#modalDate').text(dateText);
 
             new bootstrap.Modal('#adDetailModal').show();
         } else {
@@ -315,9 +323,26 @@ $(function () {
     });
 
     function formatDate(dateStr) {
-        if (!dateStr) return '-';
-        const d = new Date(String(dateStr).replace(' ', 'T'));
-        return d.toLocaleDateString('th-TH');
+        if (!dateStr) return '';
+
+        const raw = String(dateStr).trim();
+        let parsed = new Date(raw.replace(' ', 'T'));
+
+        if (Number.isNaN(parsed.getTime())) {
+            const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (match) {
+                const day = Number(match[1]);
+                const month = Number(match[2]) - 1;
+                const year = Number(match[3]);
+                parsed = new Date(year, month, day);
+            }
+        }
+
+        if (Number.isNaN(parsed.getTime())) {
+            return '';
+        }
+
+        return parsed.toLocaleDateString('th-TH');
     }
 
     $(document).on('click', '.btn-pause', function () {

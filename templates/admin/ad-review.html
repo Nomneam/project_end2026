@@ -71,7 +71,12 @@
                 <td class="small">{{ ad.valid_from.strftime('%d/%m/%Y') }} - {{ ad.valid_to.strftime('%d/%m/%Y') }}</td>
                 <td><span class="badge bg-warning text-dark">รออนุมัติ</span></td>
                 <td class="text-center">
-                  <button class="btn btn-outline-primary btn-sm px-3 btn-view" data-ad='{{ ad | tojson }}'>ดูรายละเอียด</button>
+                  <button
+                    class="btn btn-outline-primary btn-sm px-3 btn-view"
+                    data-ad='{{ ad | tojson }}'
+                    data-valid-from="{{ ad.valid_from.strftime('%d/%m/%Y') if ad.valid_from else '' }}"
+                    data-valid-to="{{ ad.valid_to.strftime('%d/%m/%Y') if ad.valid_to else '' }}"
+                  >ดูรายละเอียด</button>
                 </td>
               </tr>
               {% endfor %}
@@ -196,7 +201,13 @@
                 </td>
                 <td class="text-center">
                   <div class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-outline-primary btn-sm btn-view" data-ad='{{ ad | tojson }}' title="รายละเอียด">ดูรายละเอียด</button>
+                    <button
+                      class="btn btn-outline-primary btn-sm btn-view"
+                      data-ad='{{ ad | tojson }}'
+                      data-valid-from="{{ ad.valid_from.strftime('%d/%m/%Y') if ad.valid_from else '' }}"
+                      data-valid-to="{{ ad.valid_to.strftime('%d/%m/%Y') if ad.valid_to else '' }}"
+                      title="รายละเอียด"
+                    >ดูรายละเอียด</button>
                     {% if ad.status == 'running' %}
                     <button class="btn btn-outline-warning btn-sm btn-pause" data-id="{{ ad.adv_id }}" title="หยุดโฆษณา">หยุดโฆษณา</button>
                     {% endif %}
