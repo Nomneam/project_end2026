@@ -75,7 +75,7 @@ body{
 }
 
 /* ---------- Sidebar ---------- */
-.sidebar{
+.app-shell .sidebar{
   width: var(--sidebar-w);
   flex: 0 0 var(--sidebar-w);
   background: #fff;
@@ -128,7 +128,7 @@ body{
 }
 
 /* ---------- Main Content ---------- */
-.main{
+.app-shell .main{
   flex: 1 1 auto;
   padding: 18px;
 }
@@ -178,17 +178,18 @@ body{
 
 /* ---------- Mobile Sidebar ---------- */
 @media (max-width: 992px){
-  .sidebar{
+  .app-shell .sidebar{
     position: fixed;
     top: 56px;
     left: 0;
     height: calc(100vh - 56px);
     transform: translateX(-105%);
     transition: .2s ease;
-    z-index: 2500;
+    z-index: 2600;
     box-shadow: 0 24px 60px rgba(17,24,39,.22);
+    pointer-events: auto;
   }
-  .sidebar.show{ transform: translateX(0); }
+  .app-shell .sidebar.show{ transform: translateX(0); }
 
   /* ✅ backdrop ไม่ให้บังคลิกตอนปกติ */
   .sidebar-backdrop{
@@ -200,12 +201,12 @@ body{
     opacity: 0;
     pointer-events: none;
     transition: .2s ease;
-    z-index: 2400;
+    z-index: 2000;
   }
   .sidebar-backdrop.show{
     opacity: 1;
     pointer-events: auto;
   }
 
-  .main{ padding: 14px; }
+  .app-shell .main{ padding: 14px; }
 }
