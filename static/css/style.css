@@ -214,3 +214,40 @@ body {
 
 /* กัน parent ตัด dropdown */
 .app-shell, #main, .main { overflow: visible !important; }
+
+/* =========================
+   Fix layout clash in app-shell
+   ========================= */
+.app-shell .sidebar {
+    position: sticky;
+    top: var(--nav-h);
+    height: calc(100vh - var(--nav-h));
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    transform: none;
+    box-shadow: none;
+}
+
+.app-shell .main-content {
+    margin-left: 0;
+}
+
+@media (max-width: 992px) {
+    .app-shell .sidebar {
+        position: fixed;
+        top: var(--nav-h);
+        height: calc(100vh - var(--nav-h));
+        transform: translateX(-105%);
+        z-index: 2600;
+    }
+
+    .app-shell .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .app-shell .main-content {
+        margin-left: 0;
+    }
+}
+
+.app-shell, #main, .main { overflow: visible !important; }
