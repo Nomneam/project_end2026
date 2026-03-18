@@ -177,5 +177,5 @@ def logout_emp():
             detail="Employee logout"
         )
 
-    session.clear()
+    session.pop("user", None)
     return redirect(url_for("login_emp.login_emp"))
