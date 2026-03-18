@@ -130,7 +130,7 @@ def admin_dashboard():
             # ดึงพนักงานออนไลน์แบบแบ่งหน้า
             # =============================
             cursor.execute("""
-                SELECT e.emp_id, e.emp_fname, e.emp_lname, 
+                SELECT e.emp_id, e.emp_fname, e.emp_lname, e.emp_code,
                        e.emp_email, e.role_id
                 FROM employee e
                 JOIN (
