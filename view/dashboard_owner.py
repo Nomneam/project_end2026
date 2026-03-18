@@ -117,7 +117,7 @@ def api_owner_dashboard():
                   ON e.emp_id = al.emp_id
                 WHERE e.del_flg = 0
                 ORDER BY e.created_at DESC
-                LIMIT 5
+                
             """)
             employees = cur.fetchall() or []
 
