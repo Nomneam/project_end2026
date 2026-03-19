@@ -159,6 +159,7 @@ def get_news_by_id(news_id):
                     n.video_path,
                     n.cat_id,
                     n.subcat_id,
+                    n.is_featured,
 
                     -- ผู้เขียน
                     IFNULL(e.emp_fname, '') AS emp_fname,
@@ -266,6 +267,9 @@ def update_news(news_id):
 
     video_path = (request.form.get("video_url") or "").strip()
 
+    # ✅ FIX: รับ is_featured
+    is_featured = request.form.get("is_featured", type=int, default=0)
+
     main_image = request.files.get("cover_image")
     sub_images = request.files.getlist("sub_images")
 
@@ -293,27 +297,23 @@ def update_news(news_id):
             if not old:
                 return jsonify(success=False, message="ไม่พบข่าว"), 404
 
-            # ---------------- COVER ----------------
-
+            # ================= COVER =================
             old_cover = (old.get("cover_image") or "").strip()
 
             if remove_cover:
                 final_cover = None
 
             elif main_image and main_image.filename:
-
                 new_cover = save_image(main_image, "cover")
 
                 if not new_cover:
                     return jsonify(success=False, message="ไฟล์รูปไม่ถูกต้อง"), 400
 
                 final_cover = new_cover
-
             else:
                 final_cover = old_cover
 
-            # ---------------- SUB IMAGES ----------------
-
+            # ================= SUB IMAGES =================
             old_sub_raw = old.get("sub_images")
 
             try:
@@ -324,11 +324,8 @@ def update_news(news_id):
                 old_subs = []
 
             if remove_subs:
-
                 final_subs = []
-
             else:
-
                 deleted = []
 
                 if deleted_sub_images:
@@ -342,7 +339,6 @@ def update_news(news_id):
                 picked = [f for f in (sub_images or []) if f and f.filename]
 
                 for f in picked:
-
                     p = save_image(f, "sub")
 
                     if not p:
@@ -353,6 +349,7 @@ def update_news(news_id):
                 # จำกัด 5 รูป
                 final_subs = old_subs[:5]
 
+            # ================= UPDATE =================
             cursor.execute("""
                 UPDATE news
                 SET
@@ -365,6 +362,7 @@ def update_news(news_id):
                     cover_image=%s,
                     sub_images=%s,
                     updated_at=NOW(),
+                    is_featured=%s,
                     updated_by=%s
                 WHERE news_id=%s
             """, (
@@ -376,6 +374,7 @@ def update_news(news_id):
                 video_path if video_path else None,
                 final_cover,
                 json.dumps(final_subs, ensure_ascii=False),
+                is_featured,   # ✅ สำคัญ
                 user_id,
                 news_id
             ))
