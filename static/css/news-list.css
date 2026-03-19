@@ -115,3 +115,12 @@
   padding: 6px 10px;
   font-weight: 600;
 }
+
+/* กันสถานะตัดบรรทัด */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1;
+}
