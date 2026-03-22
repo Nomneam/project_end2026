@@ -279,12 +279,18 @@ def news_detail(news_id: int):
                     n.view_count,
                     n.published_at,
                     n.created_at,
-                    c.cat_name AS category_name
+                    c.cat_name AS category_name,
+
+                    e.emp_fname,
+                    e.emp_lname
+
                 FROM news n
                 LEFT JOIN news_category c ON c.cat_id = n.cat_id
+                LEFT JOIN employee e ON e.emp_id = n.created_by
+
                 WHERE n.news_id = %s
-                  AND n.status = 'publish'
-                  AND (n.del_flg IS NULL OR n.del_flg = 0)
+                AND n.status = 'publish'
+                AND (n.del_flg IS NULL OR n.del_flg = 0)
                 LIMIT 1
                 """,
                 (news_id,),
@@ -292,6 +298,11 @@ def news_detail(news_id: int):
             article = cur.fetchone()
             if not article:
                 abort(404)
+            
+            fname = safe_str(article.get("emp_fname"), "")
+            lname = safe_str(article.get("emp_lname"), "")
+
+            article["author_name"] = (fname + " " + lname).strip() or "ไม่ระบุผู้เขียน"
 
             # 2) view_count +1
             cur.execute(

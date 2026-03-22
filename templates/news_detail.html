@@ -49,10 +49,18 @@
 
               <div class="meta-row mb-3">
                 <div class="small text-muted">
-                  <span>{{ article.date_text }}</span>
-                  <span class="mx-1">•</span>
-                  เข้าชม <span class="fw-bold">{{ article.view_count }}</span>
-                </div>
+                <span>{{ article.date_text }}</span>
+
+                <span class="mx-1">•</span>
+                เข้าชม <span class="fw-bold">{{ article.view_count }}</span>
+
+                <span class="mx-1">•</span>
+
+                เขียนโดย <span class="fw-bold">{{ article.author_name }}</span>
+              </div>
+
+
+              
 
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                   <button class="btn-page" type="button" id="btnShare">
