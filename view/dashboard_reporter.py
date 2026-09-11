@@ -12,7 +12,7 @@ load_dotenv()
 dashboard_reporter_bp = Blueprint("dashboard_reporter", __name__)
 
 # ======================================================
-# Upload config (แยก cover / sub) ✅ เก็บลงโปรเจค + เก็บ DB เป็น path แบบ relative
+# Upload config (แยก cover / sub) เก็บลงโปรเจค + เก็บ DB เป็น path แบบ relative
 # ======================================================
 BASE_UPLOAD_DIR = os.path.join("static", "uploads", "news")
 COVER_DIR = os.path.join(BASE_UPLOAD_DIR, "cover")
@@ -38,7 +38,7 @@ def save_image(file_storage, kind: str = "cover"):
       - uploads/news/cover/uuid.ext
       - uploads/news/sub/uuid.ext
 
-    ✅ ไม่คืนค่าแบบ /static/... เพื่อให้หน้าอ่านข่าวใช้ url_for('static', filename=...) ได้ถูก
+    ไม่คืนค่าแบบ /static/... เพื่อให้หน้าอ่านข่าวใช้ url_for('static', filename=...) ได้ถูก
     """
     if not file_storage or not getattr(file_storage, "filename", ""):
         return None
@@ -59,7 +59,7 @@ def save_image(file_storage, kind: str = "cover"):
     full_path = os.path.join(target_dir, new_name)
     file_storage.save(full_path)
 
-    # ✅ เก็บ DB แบบ relative (ห้ามมี /static/)
+    # เก็บ DB แบบ relative (ห้ามมี /static/)
     return f"uploads/news/{kind}/{new_name}"
 
 
@@ -368,7 +368,7 @@ def reporter_soft_delete(news_id):
                 (user_id, news_id),
             )
             
-         # ✅ เพิ่มตรงนี้
+         # เพิ่มตรงนี้
         write_audit_log(
             emp_id=user_id,
             action="Delete",
@@ -578,7 +578,7 @@ def reporter_news_update(news_id):
                     except:
                         deleted = []
 
-                # ✅ ลบออกจาก list เท่านั้น (ไม่ลบไฟล์จริง)
+                # ลบออกจาก list เท่านั้น (ไม่ลบไฟล์จริง)
                 old_subs = [img for img in old_subs if img not in deleted]
 
                 picked = [f for f in (sub_files or []) if f and f.filename]

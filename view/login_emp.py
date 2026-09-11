@@ -150,7 +150,7 @@ def login_emp():
                 error="Role ไม่ถูกต้อง"
             )
 
-        # 🔥 ส่ง success + redirect ให้ JS ทำงาน
+        # ส่ง success + redirect ให้ JS ทำงาน
         return render_template(
             "login_emp.html",
             success=True,

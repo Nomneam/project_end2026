@@ -198,7 +198,7 @@ def api_news_list():
 
 @index_bp.get("/api/news/popular")
 def api_news_popular():
-    # ✅ คืนชื่อเป็น view_count ให้ JS ใช้ได้ตรงๆ
+    # คืนชื่อเป็น view_count ให้ JS ใช้ได้ตรงๆ
     limit = int(request.args.get("limit", 7) or 7)
 
     db = connect_db()

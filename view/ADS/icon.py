@@ -57,7 +57,7 @@ def icon_ads_page():
 @icon_ads_bp.route("/api/icon_ads", methods=["POST"])
 def create_icon_ad():
 
-    # ✅ ต้อง login ก่อน
+    # ต้อง login ก่อน
     if "front_user" not in session:
         return jsonify({"error": "กรุณาเข้าสู่ระบบก่อนลงโฆษณา"}), 401
 

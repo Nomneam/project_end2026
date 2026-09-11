@@ -124,7 +124,7 @@ def update_profile():
 
     update_fields = []
     update_values = []
-    change_logs = []  # ✅ เก็บรายละเอียดที่แก้
+    change_logs = []  # เก็บรายละเอียดที่แก้
 
     conn = connect_db()
     try:

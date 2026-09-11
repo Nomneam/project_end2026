@@ -13,7 +13,7 @@ load_dotenv()
 
 news_detail_bp = Blueprint("news_detail", __name__)
 
-# ✅ จำกัดรูปรองสูงสุด
+# จำกัดรูปรองสูงสุด
 MAX_INLINE_IMAGES = 5
 
 
@@ -123,7 +123,7 @@ def parse_sub_images(raw) -> list[str]:
 
 
 # ---------------------------
-# ✅ แปลง plain text ให้เป็นหลาย <p>
+# แปลง plain text ให้เป็นหลาย <p>
 # ---------------------------
 def text_to_paragraph_html(text: str) -> str:
     """
@@ -217,7 +217,7 @@ def insert_after_nth_br(html: str, insert_html: str, n: int) -> str:
 
 def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
     """
-    ✅ แทรกรูปรองสูงสุด MAX_INLINE_IMAGES รูป (ค่าเริ่มต้น 5)
+    แทรกรูปรองสูงสุด MAX_INLINE_IMAGES รูป (ค่าเริ่มต้น 5)
     - ถ้ามี </p> -> แทรกแบบกระจายทุก ๆ 2 ย่อหน้า (หลัง p2, p4, p6, ...)
     - ถ้าไม่มี </p> แต่มี <br> -> แทรกแบบกระจายหลัง br (4, 10, 16, 22, 28)
     - ถ้าไม่มีเลย -> ต่อท้ายทั้งหมด
@@ -226,7 +226,7 @@ def inject_sub_images_into_content(html: str, img_urls: list[str]) -> str:
     if not img_urls:
         return content
 
-    # 🔒 ล็อกจำนวนสูงสุด
+    # ล็อกจำนวนสูงสุด
     img_urls = img_urls[:MAX_INLINE_IMAGES]
     lower = content.lower()
 
@@ -322,21 +322,21 @@ def news_detail(news_id: int):
             article["time_ago"] = time_ago(base_dt)
             article["category_name"] = safe_str(article.get("category_name"), "news")
 
-            # ✅ cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
+            # cover image (เก็บเป็น path ก็ได้ / http ก็ได้)
             article["cover_image"] = safe_str(article.get("cover_image"), "")
             video = article.get("video_path")
             article["video_path"] = video
 
-            # ✅ เตรียมรูปรอง (จำกัด 5 รูป)
+            # เตรียมรูปรอง (จำกัด 5 รูป)
             raw_sub = article.get("sub_images")
             sub_list = parse_sub_images(raw_sub)
             sub_urls = [normalize_img_url(p) for p in sub_list if p][:MAX_INLINE_IMAGES]
 
-            # ✅ ทำให้ content เป็นหลาย <p> ก่อน (ถ้าเป็น plain text)
+            # ทำให้ content เป็นหลาย <p> ก่อน (ถ้าเป็น plain text)
             content = safe_str(article.get("news_content"), "")
             content = ensure_html_has_paragraphs(content)
 
-            # ✅ แทรกรูปรองลงในเนื้อหา
+            # แทรกรูปรองลงในเนื้อหา
             article["news_content"] = inject_sub_images_into_content(content, sub_urls)
 
             # 5) Hot 24 hours

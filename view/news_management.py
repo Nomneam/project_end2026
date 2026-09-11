@@ -267,7 +267,7 @@ def update_news(news_id):
 
     video_path = (request.form.get("video_url") or "").strip()
 
-    # ✅ FIX: รับ is_featured
+    # FIX: รับ is_featured
     is_featured = request.form.get("is_featured", type=int, default=0)
 
     main_image = request.files.get("cover_image")
@@ -374,7 +374,7 @@ def update_news(news_id):
                 video_path if video_path else None,
                 final_cover,
                 json.dumps(final_subs, ensure_ascii=False),
-                is_featured,   # ✅ สำคัญ
+                is_featured,   # สำคัญ
                 user_id,
                 news_id
             ))

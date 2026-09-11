@@ -113,7 +113,7 @@ def add_user():
     try:
         with conn.cursor() as cur:
 
-            # ✅ เช็ค email ซ้ำ
+            # เช็ค email ซ้ำ
             cur.execute("""
                 SELECT emp_id FROM employee
                 WHERE emp_email = %s AND del_flg = 0
@@ -121,7 +121,7 @@ def add_user():
             if cur.fetchone():
                 return "Email นี้ถูกใช้งานแล้ว", 400
 
-            # ✅ เช็ค username ซ้ำ (แนะนำให้มี)
+            # เช็ค username ซ้ำ (แนะนำให้มี)
             cur.execute("""
                 SELECT emp_id FROM employee
                 WHERE emp_username = %s AND del_flg = 0
@@ -129,7 +129,7 @@ def add_user():
             if cur.fetchone():
                 return "Username นี้ถูกใช้งานแล้ว", 400
 
-            # ✅ INSERT เพิ่ม emp_address และ emp_idcard
+            # INSERT เพิ่ม emp_address และ emp_idcard
             cur.execute("""
                 INSERT INTO employee (
                     role_id,
@@ -251,6 +251,5 @@ def delete_user(emp_id):
         return jsonify({"status": "success"})
     finally:
         conn.close()
-
 
 

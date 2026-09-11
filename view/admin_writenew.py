@@ -63,7 +63,7 @@ def save_image(file_storage, kind: str = "cover"):
     full_path = os.path.join(target_dir, new_name)
     file_storage.save(full_path)
 
-    # ✅ เก็บ path เหมือน reporter
+    # เก็บ path เหมือน reporter
     return f"uploads/news/{kind}/{new_name}"
 
 
@@ -113,7 +113,7 @@ def admin_writenew_post():
     content = (request.form.get("content") or "").strip()
     cat_id = int(request.form.get("cat_id") or 0)
 
-    # ✅ subcat ไม่บังคับ
+    # subcat ไม่บังคับ
     raw_subcat = (request.form.get("subcat_id") or "").strip()
     subcat_id = None
     try:
@@ -130,7 +130,7 @@ def admin_writenew_post():
     submit_action = (request.form.get("submit_action") or "publish").strip().lower()
     status = "draft" if submit_action == "draft" else "publish"
 
-    # ✅ validate (ไม่บังคับ subcat)
+    # validate (ไม่บังคับ subcat)
     if not title or not content or cat_id <= 0:
         return jsonify(ok=False, message="กรุณากรอกข้อมูลให้ครบ"), 400
 
@@ -145,7 +145,7 @@ def admin_writenew_post():
     if not cover_path:
         return jsonify(ok=False, message="ไฟล์รูปหลักไม่ถูกต้อง (รองรับ png/jpg/jpeg/webp)"), 400
 
-    # ✅ จำกัดสูงสุด 5 รูป
+    # จำกัดสูงสุด 5 รูป
     sub_list = []
     for f in (sub_images or [])[:MAX_SUB_IMAGES]:
         if not f or not f.filename:

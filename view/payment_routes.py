@@ -29,7 +29,7 @@ def connect_db():
         database=os.environ.get("DB"),
         port=int(os.environ.get("PORT", 3306)),
         cursorclass=pymysql.cursors.DictCursor,
-        autocommit=False,  # 🔥 ปิด autocommit
+        autocommit=False,  # ปิด autocommit
         charset="utf8mb4",
     )
 
@@ -44,7 +44,7 @@ def tmw_create(adv_id):
     cur = conn.cursor()
 
     try:
-        # 🔎 ดึง advert
+        # ดึง advert
         cur.execute("""
             SELECT adv_price, cus_id, adc_cat_id, status
             FROM advert
@@ -63,7 +63,7 @@ def tmw_create(adv_id):
 
         amount = int(float(ad["adv_price"]))
 
-        # 🔥 เคลียร์ order เก่าทั้งหมด
+        # เคลียร์ order เก่าทั้งหมด
         cur.execute("""
             SELECT adv_order_id
             FROM advert_order
@@ -87,7 +87,7 @@ def tmw_create(adv_id):
                 WHERE adv_order_id=%s
             """, (order_id,))
 
-        # 🔥 สร้าง order ใหม่
+        # สร้าง order ใหม่
         cur.execute("""
             INSERT INTO advert_order
             (adv_id, cus_id, adc_cat_id, start_date, end_date, total_amount, order_status)
@@ -96,7 +96,7 @@ def tmw_create(adv_id):
 
         new_order_id = cur.lastrowid
 
-        # 🔥 ยิง TMW create_pay
+        # ยิง TMW create_pay
         params = {
             "username": USERNAME,
             "password": PASSWORD,
@@ -115,7 +115,7 @@ def tmw_create(adv_id):
 
         id_pay = data.get("id_pay")
 
-        # 🔥 บันทึก payment
+        # บันทึก payment
         cur.execute("""
             INSERT INTO advert_payment
             (adv_order_id, amount, id_pay, currency, method, status)
@@ -197,7 +197,7 @@ def tmw_confirm():
             conn.rollback()
             return jsonify({"status": "invalid"}), 400
 
-        # 🔥 กัน confirm ของ expired
+        # กัน confirm ของ expired
         if payment["status"] != "pending":
             conn.rollback()
             return jsonify({"status": payment["status"]})
@@ -221,7 +221,7 @@ def tmw_confirm():
             conn.rollback()
             return jsonify({"status": "not_paid"})
 
-        # 🔥 เช็ค amount จาก API (กันยอดเพี้ยน)
+        # เช็ค amount จาก API (กันยอดเพี้ยน)
         api_amount = float(data.get("amount", payment["amount"]))
         if api_amount != float(payment["amount"]):
             conn.rollback()

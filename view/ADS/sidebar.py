@@ -58,7 +58,7 @@ def sidebar_ads_page():
 @sidebar_ads_bp.route('/api/sidebar_ads', methods=['POST'])
 def create_sidebar_ad():
 
-    # 🔐 ต้อง login
+    # ต้อง login
     if "front_user" not in session:
         return jsonify({"error": "กรุณาเข้าสู่ระบบก่อน"}), 401
 
@@ -79,7 +79,7 @@ def create_sidebar_ad():
     except:
         return jsonify({"error": "จำนวนเดือนไม่ถูกต้อง"}), 400
 
-    # ✅ ใช้ราคาจริงจาก DB
+    # ใช้ราคาจริงจาก DB
     sidebar_price = get_sidebar_price()
     total_price = sidebar_price * months
 
@@ -133,7 +133,7 @@ def create_sidebar_ad():
                 description,
                 image_url,
                 url,
-                total_price,   # ✅ ราคาที่คำนวณจาก DB จริง
+                total_price,   # ราคาที่คำนวณจาก DB จริง
                 "SIDEBAR",
                 valid_from,
                 valid_to

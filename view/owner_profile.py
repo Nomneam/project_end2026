@@ -189,7 +189,7 @@ def update_profile():
 
                     emp_profile_file.save(filepath)
 
-                    # ✅ สร้าง relative_path ตรงนี้
+                    # สร้าง relative_path ตรงนี้
                     relative_path = filepath.replace("\\", "/")
 
                     update_fields.append("emp_profile = %s")

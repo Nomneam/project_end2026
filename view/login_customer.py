@@ -67,7 +67,7 @@ def login_cus():
     except ValueError:
         return jsonify(ok=False, message="บัญชีนี้ไม่รองรับรูปแบบรหัสผ่านปัจจุบัน"), 401
 
-    # ✅ เก็บเฉพาะข้อมูลเล็ก ๆ ใน session (ห้ามเก็บ base64)
+    # เก็บเฉพาะข้อมูลเล็ก ๆ ใน session (ห้ามเก็บ base64)
     session["front_user"] = {
         "id": user["cus_id"],
         "username": user["cus_username"],
